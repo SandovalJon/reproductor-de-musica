@@ -444,9 +444,9 @@
         <span>⏭ <strong id="playlistNoteText"></strong></span>
       </div>
 
-      <div class="dropzone" id="dropzone" role="button" tabindex="0" aria-label="Añadir canciones arrastrando o haciendo clic">
-        <strong>Arrastra tus canciones aquí</strong>
-        <p>o haz clic para elegirlas desde tu dispositivo. También puedes soltar archivos en cualquier parte de la página.</p>
+      <div class="dropzone" id="dropzone" role="button" tabindex="0" aria-label="Añadir canciones o carpetas arrastrando o haciendo clic">
+        <strong>Arrastra canciones o carpetas aquí</strong>
+        <p>o haz clic para elegirlas desde tu dispositivo. Puedes soltar archivos sueltos o carpetas enteras (se leen sus subcarpetas) en cualquier parte de la página.</p>
         <div class="formats">MP3 · WAV · FLAC · OGG · M4A · AAC · Opus</div>
       </div>
 
@@ -481,7 +481,7 @@
   <div>
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M4 21h16"/></svg>
     <h3>Suelta para añadir</h3>
-    <p>Tus archivos se quedan en tu dispositivo.</p>
+    <p>Acepta archivos sueltos y carpetas completas. Tus archivos se quedan en tu dispositivo.</p>
   </div>
 </div>
 
@@ -1410,7 +1410,108 @@
   searchEl.addEventListener('input', function(){ filterText = searchEl.value.trim(); renderList(); });
   sortEl.addEventListener('change', function(){ renderList(); });
 
-  // ---------- Drag & drop ----------
+  // ---------- Drag & drop (archivos + carpetas) ----------
+  function traverseFileEntry(entry){
+    return new Promise(function(resolve){
+      if(!entry){ resolve([]); return; }
+      if(entry.isFile){
+        entry.file(function(f){ resolve([f]); }, function(){ resolve([]); });
+      } else if(entry.isDirectory){
+        var dirReader = entry.createReader();
+        var collected = [];
+        (function readMore(){
+          dirReader.readEntries(function(results){
+            if(!results || !results.length){
+              var chain = Promise.resolve([]);
+              collected.forEach(function(child){
+                chain = chain.then(function(acc){
+                  return traverseFileEntry(child).then(function(files){ return acc.concat(files); });
+                });
+              });
+              chain.then(resolve, function(){ resolve([]); });
+            } else {
+              for(var i=0;i<results.length;i++) collected.push(results[i]);
+              readMore();
+            }
+          }, function(){ resolve([]); });
+        })();
+      } else {
+        resolve([]);
+      }
+    });
+  }
+  function traverseFSHandle(handle){
+    if(handle.kind === 'file'){
+      return handle.getFile().then(function(f){ return [f]; }).catch(function(){ return []; });
+    }
+    if(handle.kind === 'directory'){
+      var out = [];
+      var chain = Promise.resolve();
+      // values() es async-iterable en navegadores modernos
+      var iterator = handle.values();
+      function step(){
+        return iterator.next().then(function(res){
+          if(res.done) return out;
+          return traverseFSHandle(res.value).then(function(files){
+            out = out.concat(files);
+            return step();
+          });
+        }).catch(function(){ return out; });
+      }
+      return step();
+    }
+    return Promise.resolve([]);
+  }
+  function filesFromDataTransfer(dt){
+    if(!dt) return Promise.resolve([]);
+    // 1) File System Access API (Chrome/Edge modernos): soporta carpetas
+    if(dt.items && dt.items.length && dt.items[0] && typeof dt.items[0].getAsFileSystemHandle === 'function'){
+      var handles = [];
+      for(var h=0; h<dt.items.length; h++){
+        if(dt.items[h].kind === 'file') handles.push(dt.items[h].getAsFileSystemHandle());
+      }
+      if(handles.length){
+        return Promise.all(handles).then(function(resolved){
+          var chain = Promise.resolve([]);
+          resolved.forEach(function(handle){
+            if(!handle) return;
+            chain = chain.then(function(acc){
+              return traverseFSHandle(handle).then(function(files){ return acc.concat(files); });
+            });
+          });
+          return chain;
+        }).catch(function(){
+          return Array.prototype.slice.call(dt.files || []);
+        });
+      }
+    }
+    // 2) webkitGetAsEntry (Chrome, Edge, Firefox parcial): soporta carpetas recursivas
+    if(dt.items && dt.items.length){
+      var entries = [];
+      var hasEntry = false;
+      for(var i=0; i<dt.items.length; i++){
+        var item = dt.items[i];
+        if(!item || item.kind !== 'file') continue;
+        var entry = (typeof item.webkitGetAsEntry === 'function') ? item.webkitGetAsEntry() : null;
+        if(entry){ hasEntry = true; entries.push(entry); }
+        else if(typeof item.getAsFile === 'function'){
+          var single = item.getAsFile();
+          if(single) entries.push(single);
+        }
+      }
+      if(hasEntry){
+        return Promise.all(entries.map(function(e){
+          return (e && (e.isFile || e.isDirectory)) ? traverseFileEntry(e) : Promise.resolve([e]);
+        })).then(function(groups){
+          var flat = [];
+          groups.forEach(function(g){ flat = flat.concat(g); });
+          return flat.length ? flat : Array.prototype.slice.call(dt.files || []);
+        });
+      }
+    }
+    // 3) Fallback clásico (solo archivos sueltos)
+    return Promise.resolve(Array.prototype.slice.call(dt.files || []));
+  }
   var dragDepth=0;
   window.addEventListener('dragenter', function(ev){
     ev.preventDefault();
@@ -1426,7 +1527,10 @@
   window.addEventListener('drop', function(ev){
     ev.preventDefault();
     dragDepth=0; dragOverlay.classList.remove('on'); dropzone.classList.remove('drag');
-    if(ev.dataTransfer && ev.dataTransfer.files && ev.dataTransfer.files.length) addFiles(ev.dataTransfer.files);
+    if(!ev.dataTransfer) return;
+    filesFromDataTransfer(ev.dataTransfer).then(function(files){
+      if(files && files.length) addFiles(files);
+    });
   });
 
   // ---------- Keyboard ----------
