@@ -206,13 +206,78 @@
   .thumb .mini-eq i{width:3.5px; background:#fff; border-radius:2px; animation:eq .8s ease-in-out infinite}
   .thumb .mini-eq i:nth-child(2){animation-delay:.18s}.thumb .mini-eq i:nth-child(3){animation-delay:.36s}
   .track-main{min-width:0}
-  .track-title{font-weight:700; font-size:14.5px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
+  .track-title{font-weight:700; font-size:14.5px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; display:flex; align-items:center; gap:6px}
+  .track-title > span:first-child{white-space:nowrap; overflow:hidden; text-overflow:ellipsis; min-width:0}
   .track-sub{color:var(--muted); font-size:12.8px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; margin-top:2px}
   .track-meta{display:flex; align-items:center; gap:10px}
   .track-dur{font-size:12.5px; color:var(--muted); font-variant-numeric:tabular-nums; font-weight:600; white-space:nowrap}
   .remove-btn{width:34px;height:34px;border-radius:50%; border:none; background:transparent; color:var(--muted); display:grid; place-items:center}
   .remove-btn:hover{background:var(--surface); color:#B42318}
   .remove-btn svg{width:17px;height:17px}
+
+  /* Like / Dislike */
+  .now-rating{display:flex; gap:8px; margin-top:16px; flex-wrap:wrap}
+  .rate-pill{
+    display:inline-flex; align-items:center; gap:7px; border:1.5px solid var(--line);
+    background:var(--surface-2); color:var(--muted); padding:8px 14px; border-radius:999px;
+    font-size:13px; font-weight:700; transition:.15s; line-height:1;
+  }
+  .rate-pill svg{width:17px;height:17px; flex:none}
+  .rate-pill:hover{border-color:var(--muted-2); color:var(--text)}
+  .rate-pill:disabled{opacity:.45; cursor:not-allowed}
+  .rate-pill.is-like{background:#EAF6EF; border-color:#137A4A; color:#137A4A}
+  .rate-pill.is-dislike{background:#FDECEA; border-color:#B42318; color:#B42318}
+  @media (prefers-color-scheme: dark){
+    .rate-pill.is-like{background:#12261A; border-color:#2FBF71; color:#7EE2A8}
+    .rate-pill.is-dislike{background:#2E1715; border-color:#FF6B5E; color:#FF9A90}
+  }
+  .rate-btn{
+    width:32px;height:32px;border-radius:50%; border:1px solid transparent; background:transparent; color:var(--muted-2);
+    display:grid; place-items:center; transition:.13s; flex:none;
+  }
+  .rate-btn svg{width:17px;height:17px}
+  .rate-btn:hover{background:var(--surface); color:var(--text); border-color:var(--line)}
+  .rate-btn.is-like{color:#137A4A; background:#EAF6EF; border-color:#CDEBD8}
+  .rate-btn.is-dislike{color:#B42318; background:#FDECEA; border-color:#F5C6C0}
+  @media (prefers-color-scheme: dark){
+    .rate-btn.is-like{color:#7EE2A8; background:#12261A; border-color:#1E3D2A}
+    .rate-btn.is-dislike{color:#FF9A90; background:#2E1715; border-color:#4A2320}
+  }
+  .track.disliked{opacity:.62}
+  .track.disliked .track-title{color:var(--muted)}
+  .track.disliked .thumb{filter:grayscale(.7)}
+  .badge-dislike{
+    display:inline-flex; align-items:center; gap:4px; font-size:10.5px; font-weight:800; letter-spacing:.04em; text-transform:uppercase;
+    color:#B42318; background:#FDECEA; border:1px solid #F5C6C0; padding:2px 7px; border-radius:999px; vertical-align:middle; white-space:nowrap; flex:none;
+  }
+  .badge-like{
+    display:inline-flex; align-items:center; gap:4px; font-size:10.5px; font-weight:800; letter-spacing:.04em; text-transform:uppercase;
+    color:#137A4A; background:#EAF6EF; border:1px solid #CDEBD8; padding:2px 7px; border-radius:999px; vertical-align:middle; white-space:nowrap; flex:none;
+  }
+  @media(max-width:560px){ .badge-dislike{font-size:9.5px; padding:2px 5px} }
+  @media (prefers-color-scheme: dark){
+    .badge-dislike{color:#FF9A90; background:#2E1715; border-color:#4A2320}
+    .badge-like{color:#7EE2A8; background:#12261A; border-color:#1E3D2A}
+  }
+  .filter-chips{display:flex; flex-wrap:wrap; gap:6px; margin-top:12px}
+  .chip{
+    border:1px solid var(--line); background:var(--surface); color:var(--muted);
+    padding:7px 12px; border-radius:999px; font-size:12.5px; font-weight:700; transition:.13s;
+  }
+  .chip:hover{color:var(--text); border-color:var(--muted-2)}
+  .chip.active{background:var(--text); color:var(--bg); border-color:var(--text)}
+  .chip .chip-count{opacity:.75; font-weight:600; margin-left:2px}
+  .playlist-note{
+    margin:12px 18px 0; display:none; gap:8px; align-items:flex-start;
+    background:var(--surface-2); border:1px solid var(--line); border-radius:12px; padding:10px 12px; font-size:12.8px; line-height:1.45; color:var(--muted);
+  }
+  .playlist-note strong{color:var(--text)}
+  .playlist-note.show{display:flex}
+  @media(max-width:560px){
+    .track{grid-template-columns:44px 1fr auto; gap:8px; padding:10px 6px}
+    .track-meta{gap:2px}
+    .track-dur{display:none}
+  }
 
   .empty{padding:34px 22px 40px; text-align:center}
   .empty-art{width:84px;height:84px; margin:0 auto 14px; border-radius:24px; background:var(--accent-soft); color:var(--accent); display:grid; place-items:center}
@@ -288,6 +353,18 @@
         <p class="now-artist" id="nowArtist">Añade archivos de audio para empezar</p>
         <p class="now-album" id="nowAlbum"></p>
 
+        <div class="now-rating" aria-label="Calificar canción actual">
+          <button class="rate-pill" id="btnLike" type="button" disabled aria-pressed="false" title="Me gusta — se queda en la playlist">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 10v12"/><path d="M15 5.88 14 10h5.83a2 2 0 0 1 1.92 2.56l-2.33 8A2 2 0 0 1 17.5 22H4a2 2 0 0 1-2-2v-8a2 2 0 0 1 2-2h2.76a2 2 0 0 0 1.79-1.11L12 2a3.13 3.13 0 0 1 3 3.88Z"/></svg>
+            <span id="labelLike">Me gusta</span>
+          </button>
+          <button class="rate-pill" id="btnDislike" type="button" disabled aria-pressed="false" title="No me gusta — no se reproducirá en la playlist">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 14V2"/><path d="M9 18.12 10 14H4.17a2 2 0 0 1-1.92-2.56l2.33-8A2 2 0 0 1 6.5 2H20a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2h-2.76a2 2 0 0 0-1.79 1.11L12 22a3.13 3.13 0 0 1-3-3.88Z"/></svg>
+            <span id="labelDislike">No me gusta</span>
+          </button>
+        </div>
+        <p id="ratingHint" style="margin:8px 0 0; font-size:12.5px; color:var(--muted-2); line-height:1.45">Con like se queda en la playlist. Con dislike se salta y ya no suena en la rotación.</p>
+
         <div class="progress-block">
           <div class="time-row"><span id="timeCurrent">0:00</span><span id="timeTotal">0:00</span></div>
           <input type="range" id="seek" min="0" max="1000" value="0" step="1" disabled aria-label="Progreso de la canción" />
@@ -355,6 +432,16 @@
             <option value="duration">Duración</option>
           </select>
         </div>
+        <div class="filter-chips" id="ratingFilters" role="group" aria-label="Filtrar por like o dislike">
+          <button class="chip active" type="button" data-rfilter="all">Todas <span class="chip-count" id="countAll"></span></button>
+          <button class="chip" type="button" data-rfilter="liked">Con like <span class="chip-count" id="countLiked"></span></button>
+          <button class="chip" type="button" data-rfilter="disliked">Con dislike <span class="chip-count" id="countDisliked"></span></button>
+          <button class="chip" type="button" data-rfilter="playable">En playlist <span class="chip-count" id="countPlayable"></span></button>
+        </div>
+      </div>
+
+      <div class="playlist-note" id="playlistNote">
+        <span>⏭ <strong id="playlistNoteText"></strong></span>
       </div>
 
       <div class="dropzone" id="dropzone" role="button" tabindex="0" aria-label="Añadir canciones arrastrando o haciendo clic">
@@ -440,13 +527,14 @@
   var vizCtx = viz.getContext('2d');
 
   // ---------- State ----------
-  var tracks = []; // {id,name,title,artist,album,duration,size,type,addedAt,url,coverUrl,color}
+  var tracks = []; // {id,name,title,artist,album,duration,size,type,addedAt,url,coverUrl,color,rating}
   var currentId = null;
   var isPlaying = false;
   var shuffle = false;
   var repeatMode = 0; // 0 off, 1 all, 2 one
   var shuffleOrder = [];
   var filterText = '';
+  var ratingFilter = 'all'; // all | liked | disliked | playable
   var seeking = false;
   var lastVolume = 0.85;
   var toastTimer = null;
@@ -481,6 +569,14 @@
   }
   function currentTrack(){ return tracks.find(function(t){return t.id===currentId;}) || null; }
   function currentIndex(){ return tracks.findIndex(function(t){return t.id===currentId;}); }
+  function isPlayable(t){ return t && t.rating !== 'dislike'; }
+  function playableTracks(){ return tracks.filter(isPlayable); }
+  function playableIndices(){
+    var out=[]; tracks.forEach(function(t,i){ if(isPlayable(t)) out.push(i); }); return out;
+  }
+  function firstPlayableId(){
+    var p = playableTracks(); return p.length ? p[0].id : null;
+  }
 
   // ---------- IndexedDB ----------
   var DB_NAME='reproductor-musica-local', DB_VER=1, STORE='tracks';
@@ -524,6 +620,21 @@
       return new Promise(function(resolve){
         var tx = db.transaction(STORE,'readwrite');
         tx.objectStore(STORE).delete(id);
+        tx.oncomplete = function(){ resolve(); };
+        tx.onerror = function(){ resolve(); };
+      });
+    }).catch(function(){});
+  }
+  function idbUpdateRating(id, rating){
+    return openDB().then(function(db){
+      return new Promise(function(resolve){
+        var tx = db.transaction(STORE,'readwrite');
+        var store = tx.objectStore(STORE);
+        var getReq = store.get(id);
+        getReq.onsuccess = function(){
+          var rec = getReq.result;
+          if(rec){ rec.rating = rating || null; store.put(rec); }
+        };
         tx.oncomplete = function(){ resolve(); };
         tx.onerror = function(){ resolve(); };
       });
@@ -637,7 +748,11 @@
       render();
       if(added===1) toast('1 canción añadida a tu biblioteca');
       else if(added>1) toast(added+' canciones añadidas a tu biblioteca');
-      if(!currentId && tracks.length) selectTrack(tracks[0].id, false);
+      if(!currentId && tracks.length){
+        var fp = firstPlayableId();
+        if(fp) selectTrack(fp, false);
+        else selectTrack(tracks[0].id, false);
+      }
       return added;
     });
   }
@@ -663,14 +778,14 @@
           var track = {
             id:id, name:file.name, title:title, artist:artist, album:meta.album||'',
             duration:dur, size:file.size, type:file.type, addedAt:Date.now(),
-            url:url, coverUrl:coverUrl, color:colorFor(title+file.name)
+            url:url, coverUrl:coverUrl, color:colorFor(title+file.name), rating:null
           };
           tracks.unshift(track);
           // Persist (blob + metadata + cover blob)
           return idbPut({
             id:id, blob:file, name:file.name, type:file.type, size:file.size,
             title:title, artist:artist, album:meta.album||'', duration:dur,
-            addedAt:track.addedAt, coverBlob:meta.coverBlob||null
+            addedAt:track.addedAt, coverBlob:meta.coverBlob||null, rating:null
           }).then(function(){ return track; });
         });
       });
@@ -687,7 +802,8 @@
           duration:r.duration||0, size:r.size||r.blob.size||0, type:r.type||r.blob.type||'',
           addedAt:r.addedAt||Date.now(), url:url,
           coverUrl: r.coverBlob ? URL.createObjectURL(r.coverBlob) : null,
-          color: colorFor((r.title||r.name)+'')
+          color: colorFor((r.title||r.name)+''),
+          rating: (r.rating==='like' || r.rating==='dislike') ? r.rating : null
         });
       });
       // Fill missing durations in background
@@ -700,7 +816,8 @@
       render();
       if(tracks.length){
         document.getElementById('savedNote').style.display='flex';
-        selectTrack(tracks[0].id, false);
+        var fp2 = firstPlayableId();
+        selectTrack(fp2 || tracks[0].id, false);
       }
     }).catch(function(){
       render();
@@ -710,6 +827,9 @@
   // ---------- Rendering ----------
   function visibleTracks(){
     var list = tracks.slice();
+    if(ratingFilter==='liked') list = list.filter(function(t){ return t.rating==='like'; });
+    else if(ratingFilter==='disliked') list = list.filter(function(t){ return t.rating==='dislike'; });
+    else if(ratingFilter==='playable') list = list.filter(function(t){ return isPlayable(t); });
     if(filterText){
       var q = filterText.toLowerCase();
       list = list.filter(function(t){
@@ -726,15 +846,32 @@
 
   function renderStats(){
     var total = tracks.reduce(function(s,t){ return s+(t.duration||0); },0);
+    var likedCount = tracks.filter(function(t){return t.rating==='like';}).length;
+    var dislikedCount = tracks.filter(function(t){return t.rating==='dislike';}).length;
+    var playableCount = tracks.length - dislikedCount;
     document.getElementById('statCount').textContent = tracks.length;
     document.getElementById('statTime').textContent = total>=3600 ? (total/3600).toFixed(1).replace('.',',')+' h' : Math.round(total/60)+' min';
     document.getElementById('libCount').textContent = tracks.length ? '· '+tracks.length+(tracks.length===1?' canción':' canciones') : '';
     document.getElementById('btnClear').style.display = tracks.length ? '' : 'none';
+    var cAll=document.getElementById('countAll'); if(cAll) cAll.textContent = tracks.length ? '('+tracks.length+')' : '';
+    var cL=document.getElementById('countLiked'); if(cL) cL.textContent = likedCount ? '('+likedCount+')' : '';
+    var cD=document.getElementById('countDisliked'); if(cD) cD.textContent = dislikedCount ? '('+dislikedCount+')' : '';
+    var cP=document.getElementById('countPlayable'); if(cP) cP.textContent = playableCount ? '('+playableCount+')' : '';
+    var note=document.getElementById('playlistNote');
+    var noteText=document.getElementById('playlistNoteText');
+    if(note && dislikedCount>0){
+      note.classList.add('show');
+      noteText.textContent = dislikedCount===1 ? '1 canción con dislike no se reproducirá en la playlist.' : dislikedCount+' canciones con dislike no se reproducirán en la playlist.';
+    } else if(note){ note.classList.remove('show'); }
+    // Update filter chips active state
+    var chips = document.querySelectorAll('#ratingFilters .chip');
+    chips.forEach(function(ch){ ch.classList.toggle('active', ch.getAttribute('data-rfilter')===ratingFilter); });
     var foot = document.getElementById('libFoot');
     if(tracks.length){
       foot.style.display='flex';
       var sizeTotal = tracks.reduce(function(s,t){ return s+(t.size||0); },0);
-      document.getElementById('footLeft').innerHTML = '<strong>'+fmtTime(total)+'</strong> de música en total';
+      var playableTime = playableTracks().reduce(function(s,t){ return s+(t.duration||0); },0);
+      document.getElementById('footLeft').innerHTML = '<strong>'+fmtTime(playableTime)+'</strong> en playlist · <strong>'+fmtTime(total)+'</strong> en total' + (likedCount? ' · '+likedCount+' con like' : '') + (dislikedCount? ' · '+dislikedCount+' con dislike' : '');
       document.getElementById('footRight').textContent = fmtSize(sizeTotal)+' guardados en este dispositivo';
     } else foot.style.display='none';
   }
@@ -745,13 +882,19 @@
     emptyState.style.display = has ? 'none' : '';
     trackListEl.style.display = has ? '' : 'none';
     noResults.style.display = (has && list.length===0) ? '' : 'none';
+    if(has && list.length===0){
+      if(ratingFilter==='liked') noResults.textContent = 'Todavía no tienes canciones con like. Toca “Me gusta” en una canción para que se quede aquí.';
+      else if(ratingFilter==='disliked') noResults.textContent = 'No tienes canciones con dislike. Las que marques con dislike aparecerán aquí y no sonarán en la playlist.';
+      else if(ratingFilter==='playable') noResults.textContent = 'No hay canciones en la playlist. Todas tienen dislike — quita el dislike a alguna para que vuelva a sonar.';
+      else noResults.textContent = 'Ninguna canción coincide con tu búsqueda.';
+    }
     trackListEl.innerHTML = '';
     list.forEach(function(t){
       var li = document.createElement('li');
-      li.className = 'track' + (t.id===currentId ? ' active' : '') + (t.id===currentId && isPlaying ? ' playing' : '');
+      li.className = 'track' + (t.id===currentId ? ' active' : '') + (t.id===currentId && isPlaying ? ' playing' : '') + (t.rating==='dislike' ? ' disliked' : '') + (t.rating==='like' ? ' liked' : '');
       li.setAttribute('role','button');
       li.setAttribute('tabindex','0');
-      li.setAttribute('aria-label', 'Reproducir '+t.title);
+      li.setAttribute('aria-label', (t.rating==='dislike' ? 'Canción con dislike, no se reproduce: ' : 'Reproducir ')+t.title);
 
       var thumb = document.createElement('div');
       thumb.className='thumb';
@@ -765,21 +908,45 @@
       thumb.appendChild(eq);
 
       var main = document.createElement('div'); main.className='track-main';
-      var tt = document.createElement('div'); tt.className='track-title'; tt.textContent=t.title;
+      var tt = document.createElement('div'); tt.className='track-title';
+      var titleSpan = document.createElement('span'); titleSpan.textContent=t.title; tt.appendChild(titleSpan);
+      if(t.rating==='like'){ var bl=document.createElement('span'); bl.className='badge-like'; bl.textContent='Like'; tt.appendChild(bl); }
+      if(t.rating==='dislike'){ var bd=document.createElement('span'); bd.className='badge-dislike'; bd.textContent='Dislike · fuera de playlist'; tt.appendChild(bd); }
       var sub = document.createElement('div'); sub.className='track-sub';
       sub.textContent = [t.artist, t.album].filter(Boolean).join(' · ') || t.name;
+      if(t.rating==='dislike') sub.textContent += ' — No se reproducirá';
       main.appendChild(tt); main.appendChild(sub);
 
       var meta = document.createElement('div'); meta.className='track-meta';
+      // Like button
+      var likeBtn = document.createElement('button'); likeBtn.className='rate-btn' + (t.rating==='like' ? ' is-like' : ''); likeBtn.type='button';
+      likeBtn.title = t.rating==='like' ? 'Quitar like' : 'Me gusta — se queda en la playlist';
+      likeBtn.setAttribute('aria-label', (t.rating==='like' ? 'Quitar like de ' : 'Dar like a ')+t.title);
+      likeBtn.setAttribute('aria-pressed', t.rating==='like' ? 'true' : 'false');
+      likeBtn.innerHTML = '<svg viewBox="0 0 24 24" fill="'+(t.rating==='like'?'currentColor':'none')+'" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 10v12"/><path d="M15 5.88 14 10h5.83a2 2 0 0 1 1.92 2.56l-2.33 8A2 2 0 0 1 17.5 22H4a2 2 0 0 1-2-2v-8a2 2 0 0 1 2-2h2.76a2 2 0 0 0 1.79-1.11L12 2a3.13 3.13 0 0 1 3 3.88Z"/></svg>';
+      likeBtn.addEventListener('click', function(ev){ ev.stopPropagation(); setRating(t.id, t.rating==='like' ? null : 'like'); });
+      // Dislike button
+      var dislikeBtn = document.createElement('button'); dislikeBtn.className='rate-btn' + (t.rating==='dislike' ? ' is-dislike' : ''); dislikeBtn.type='button';
+      dislikeBtn.title = t.rating==='dislike' ? 'Quitar dislike — vuelve a la playlist' : 'No me gusta — no se reproducirá en la playlist';
+      dislikeBtn.setAttribute('aria-label', (t.rating==='dislike' ? 'Quitar dislike de ' : 'Dar dislike a ')+t.title);
+      dislikeBtn.setAttribute('aria-pressed', t.rating==='dislike' ? 'true' : 'false');
+      dislikeBtn.innerHTML = '<svg viewBox="0 0 24 24" fill="'+(t.rating==='dislike'?'currentColor':'none')+'" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 14V2"/><path d="M9 18.12 10 14H4.17a2 2 0 0 1-1.92-2.56l2.33-8A2 2 0 0 1 6.5 2H20a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2h-2.76a2 2 0 0 0-1.79 1.11L12 22a3.13 3.13 0 0 1-3-3.88Z"/></svg>';
+      dislikeBtn.addEventListener('click', function(ev){ ev.stopPropagation(); setRating(t.id, t.rating==='dislike' ? null : 'dislike'); });
       var dur = document.createElement('span'); dur.className='track-dur'; dur.textContent = t.duration ? fmtTime(t.duration) : '—:—';
       var rm = document.createElement('button'); rm.className='remove-btn'; rm.type='button';
       rm.title='Quitar de la biblioteca'; rm.setAttribute('aria-label','Quitar '+t.title+' de la biblioteca');
       rm.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>';
       rm.addEventListener('click', function(ev){ ev.stopPropagation(); removeTrack(t.id); });
-      meta.appendChild(dur); meta.appendChild(rm);
+      meta.appendChild(likeBtn); meta.appendChild(dislikeBtn); meta.appendChild(dur); meta.appendChild(rm);
 
       li.appendChild(thumb); li.appendChild(main); li.appendChild(meta);
       li.addEventListener('click', function(){
+        if(t.rating==='dislike'){
+          toast('“'+t.title+'” tiene dislike y no se reproduce. Quita el dislike para volver a escucharla.');
+          // Select it for display so user can undo from player, but do not play
+          if(t.id!==currentId){ currentId=t.id; audio.src=t.url; setSeekUI(0); renderNow(); renderList(); pause(); }
+          return;
+        }
         if(t.id===currentId) togglePlay();
         else { selectTrack(t.id, true); }
       });
@@ -790,9 +957,41 @@
     });
   }
 
+  function updateRatingUI(t){
+    var btnLike = document.getElementById('btnLike');
+    var btnDislike = document.getElementById('btnDislike');
+    var hint = document.getElementById('ratingHint');
+    if(!btnLike || !btnDislike) return;
+    var has = !!t;
+    btnLike.disabled = !has;
+    btnDislike.disabled = !has;
+    btnPlay.disabled = !t || (t && t.rating==='dislike');
+    if(!has){
+      btnLike.classList.remove('is-like'); btnDislike.classList.remove('is-dislike');
+      btnLike.setAttribute('aria-pressed','false'); btnDislike.setAttribute('aria-pressed','false');
+      document.getElementById('labelLike').textContent='Me gusta';
+      document.getElementById('labelDislike').textContent='No me gusta';
+      if(hint) hint.textContent='Con like se queda en la playlist. Con dislike se salta y ya no suena en la rotación.';
+      return;
+    }
+    var isLiked = t.rating==='like';
+    var isDisliked = t.rating==='dislike';
+    btnLike.classList.toggle('is-like', isLiked);
+    btnDislike.classList.toggle('is-dislike', isDisliked);
+    btnLike.setAttribute('aria-pressed', isLiked?'true':'false');
+    btnDislike.setAttribute('aria-pressed', isDisliked?'true':'false');
+    document.getElementById('labelLike').textContent = isLiked ? 'Te gusta' : 'Me gusta';
+    document.getElementById('labelDislike').textContent = isDisliked ? 'No te gusta' : 'No me gusta';
+    if(hint){
+      if(isLiked) hint.textContent='Te gusta — esta canción se queda en la playlist.';
+      else if(isDisliked) hint.textContent='Con dislike — esta canción está fuera de la playlist y no se reproducirá. Toca “No te gusta” otra vez para quitar el dislike.';
+      else hint.textContent='Con like se queda en la playlist. Con dislike se salta y ya no suena en la rotación.';
+    }
+  }
+
   function renderNow(){
     var t = currentTrack();
-    btnPlay.disabled = !t;
+    btnPlay.disabled = !t || (t && t.rating==='dislike');
     seek.disabled = !t;
     if(!t){
       nowKicker.textContent='Listo para reproducir';
@@ -808,12 +1007,14 @@
       setSeekUI(0);
       playingBadge.classList.remove('on');
       document.title='Reproductor de Música';
+      updateRatingUI(null);
       return;
     }
-    nowKicker.textContent = isPlaying ? 'Reproduciendo' : 'En pausa';
+    nowKicker.textContent = t.rating==='dislike' ? 'Fuera de la playlist · Dislike' : (t.rating==='like' ? (isPlaying ? 'Reproduciendo · Te gusta' : 'En pausa · Te gusta') : (isPlaying ? 'Reproduciendo' : 'En pausa'));
     nowTitle.textContent = t.title;
     nowArtist.textContent = t.artist || t.name;
     nowAlbum.textContent = t.album || '';
+    updateRatingUI(t);
     if(t.coverUrl){
       coverImg.src = t.coverUrl; coverImg.style.display='block'; coverFallback.style.display='none';
     } else {
@@ -829,6 +1030,51 @@
   }
 
   function render(){ renderStats(); renderList(); renderNow(); }
+
+  // ---------- Like / Dislike ----------
+  function setRating(id, newRating){
+    var t = tracks.find(function(x){return x.id===id;});
+    if(!t) return;
+    var prev = t.rating;
+    t.rating = newRating;
+    idbUpdateRating(id, newRating);
+    rebuildShuffle();
+    var wasPlayingCurrent = (id===currentId && isPlaying);
+    if(newRating==='dislike'){
+      toast('Dislike en “'+t.title+'” — ya no se reproducirá en la playlist');
+      if(id===currentId){
+        // Stop current and jump to next playable if any
+        pause();
+        var playable = playableTracks();
+        if(playable.length){
+          // Find next playable after this one
+          var curIdx = tracks.findIndex(function(x){return x.id===id;});
+          var nextId = null;
+          for(var k=1;k<=tracks.length;k++){
+            var cand = tracks[(curIdx+k)%tracks.length];
+            if(isPlayable(cand)){ nextId=cand.id; break; }
+          }
+          if(nextId){
+            selectTrack(nextId, wasPlayingCurrent);
+            if(wasPlayingCurrent) play();
+          } else {
+            render();
+          }
+        } else {
+          render();
+          toast('Todas las canciones tienen dislike. Quita el dislike a alguna para poder reproducir.');
+        }
+        render();
+        return;
+      }
+    } else if(newRating==='like'){
+      toast('Like en “'+t.title+'” — se queda en la playlist');
+    } else {
+      if(prev==='dislike') toast('Dislike quitado de “'+t.title+'” — vuelve a la playlist');
+      else if(prev==='like') toast('Like quitado de “'+t.title+'”');
+    }
+    render();
+  }
 
   // ---------- Playback ----------
   var audioCtx=null, analyser=null, vizRAF=null;
@@ -877,6 +1123,13 @@
   function selectTrack(id, autoplay){
     var t = tracks.find(function(x){return x.id===id;});
     if(!t) return;
+    // If trying to autoplay a disliked track, skip it
+    if(autoplay && t.rating==='dislike'){
+      var fp = firstPlayableId();
+      if(!fp){ toast('No hay canciones en la playlist. Todas tienen dislike.'); return; }
+      if(fp!==id){ id = fp; t = tracks.find(function(x){return x.id===id;}); }
+      else return;
+    }
     currentId = id;
     audio.src = t.url;
     audio.playbackRate = parseFloat(document.getElementById('speed').value)||1;
@@ -886,17 +1139,44 @@
     if(autoplay) play();
   }
   function play(){
-    if(!currentTrack()){ if(tracks.length) selectTrack(tracks[0].id, true); return; }
+    var cur = currentTrack();
+    if(!cur){
+      var fp0 = firstPlayableId();
+      if(fp0) selectTrack(fp0, true);
+      else if(tracks.length) toast('No hay canciones reproducibles. Todas tienen dislike.');
+      return;
+    }
+    if(cur.rating==='dislike'){
+      toast('“'+cur.title+'” tiene dislike y no se reproduce. Saltando a la siguiente…');
+      next(false);
+      // try to play next playable
+      var np = currentTrack();
+      if(np && np.rating!=='dislike'){
+        ensureVisualizer();
+        if(audioCtx && audioCtx.state==='suspended') audioCtx.resume();
+        var pp = audio.play();
+        if(pp && pp.catch) pp.catch(function(){});
+      }
+      return;
+    }
     ensureVisualizer();
     if(audioCtx && audioCtx.state==='suspended') audioCtx.resume();
     var p = audio.play();
     if(p && p.catch) p.catch(function(){ toast('No se pudo reproducir este archivo.'); });
   }
   function pause(){ audio.pause(); }
-  function togglePlay(){ isPlaying ? pause() : play(); }
+  function togglePlay(){
+    var cur = currentTrack();
+    if(cur && cur.rating==='dislike' && !isPlaying){
+      toast('“'+cur.title+'” tiene dislike y no se reproduce. Quita el dislike para escucharla.');
+      return;
+    }
+    isPlaying ? pause() : play();
+  }
 
   function rebuildShuffle(){
-    shuffleOrder = tracks.map(function(_,i){return i;});
+    // Only playable (non-disliked) indices enter the shuffle rotation
+    shuffleOrder = playableIndices();
     for(var i=shuffleOrder.length-1;i>0;i--){
       var j = Math.floor(Math.random()*(i+1));
       var tmp=shuffleOrder[i]; shuffleOrder[i]=shuffleOrder[j]; shuffleOrder[j]=tmp;
@@ -904,22 +1184,33 @@
   }
   function step(dir){
     if(!tracks.length) return;
+    var playable = playableIndices();
+    if(!playable.length){ toast('No hay canciones en la playlist. Todas tienen dislike.'); pause(); return; }
     if(repeatMode===2 && dir!==0 && audio.currentTime>3 && dir<0){ audio.currentTime=0; return; }
     var idx = currentIndex();
-    if(idx<0){ selectTrack(tracks[0].id, true); return; }
+    if(idx<0 || !isPlayable(tracks[idx])){
+      var wasP0 = isPlaying;
+      selectTrack(tracks[playable[0]].id, wasP0);
+      return;
+    }
     var nextIdx;
-    if(shuffle && shuffleOrder.length===tracks.length){
+    if(shuffle && shuffleOrder.length){
+      // Ensure shuffleOrder is in sync; rebuild if stale
+      if(shuffleOrder.length!==playable.length) rebuildShuffle();
       var pos = shuffleOrder.indexOf(idx);
-      pos = (pos + dir + shuffleOrder.length) % shuffleOrder.length;
+      if(pos<0){ pos = 0; }
+      else pos = (pos + dir + shuffleOrder.length) % shuffleOrder.length;
       nextIdx = shuffleOrder[pos];
     } else {
-      nextIdx = idx + dir;
-      if(nextIdx>=tracks.length){
-        if(repeatMode===1 || dir>0 && repeatMode!==0) nextIdx=0;
-        else if(dir>0){ /* handled by ended */ nextIdx = tracks.length-1; }
-        else nextIdx=0;
+      // Walk in track order skipping disliked
+      var posInPlayable = playable.indexOf(idx);
+      var nextPos = posInPlayable + dir;
+      if(nextPos >= playable.length){
+        if(repeatMode===1 || dir>0) nextPos = 0;
+        else nextPos = playable.length-1;
       }
-      if(nextIdx<0) nextIdx = tracks.length-1;
+      if(nextPos < 0) nextPos = playable.length-1;
+      nextIdx = playable[nextPos];
     }
     var wasPlaying = isPlaying;
     selectTrack(tracks[nextIdx].id, wasPlaying);
@@ -927,8 +1218,15 @@
   }
   function next(auto){
     if(!tracks.length) return;
-    if(auto && repeatMode===2){ audio.currentTime=0; play(); return; }
-    if(auto && repeatMode===0 && !shuffle && currentIndex()===tracks.length-1){ pause(); audio.currentTime=0; return; }
+    var playable = playableTracks();
+    if(!playable.length){ pause(); return; }
+    var cur = currentTrack();
+    if(auto && cur && cur.rating==='dislike'){ step(1); play(); return; }
+    if(auto && repeatMode===2 && cur && isPlayable(cur)){ audio.currentTime=0; play(); return; }
+    if(auto && repeatMode===0 && !shuffle){
+      var pIdx = playableIndices();
+      if(currentIndex()===pIdx[pIdx.length-1]){ pause(); audio.currentTime=0; return; }
+    }
     step(1);
     if(auto) play();
   }
@@ -950,7 +1248,14 @@
       pause();
       audio.removeAttribute('src'); audio.load();
       currentId = null;
-      if(tracks.length) selectTrack(tracks[Math.min(idx, tracks.length-1)].id, false);
+      if(tracks.length){
+        var candidate = tracks[Math.min(idx, tracks.length-1)];
+        if(candidate && isPlayable(candidate)) selectTrack(candidate.id, false);
+        else {
+          var fp = firstPlayableId();
+          selectTrack(fp || candidate.id, false);
+        }
+      }
     }
     render();
     toast('“'+t.title+'” se quitó de la biblioteca');
@@ -1067,6 +1372,29 @@
     toast(repeatMode===0 ? 'Repetición desactivada' : repeatMode===1 ? 'Repetir toda la lista' : 'Repetir esta canción');
   });
   document.getElementById('btnClear').addEventListener('click', clearAll);
+
+  // Like / Dislike in player
+  var btnLikeEl = document.getElementById('btnLike');
+  var btnDislikeEl = document.getElementById('btnDislike');
+  if(btnLikeEl) btnLikeEl.addEventListener('click', function(){
+    var t = currentTrack(); if(!t) return;
+    setRating(t.id, t.rating==='like' ? null : 'like');
+  });
+  if(btnDislikeEl) btnDislikeEl.addEventListener('click', function(){
+    var t = currentTrack(); if(!t) return;
+    setRating(t.id, t.rating==='dislike' ? null : 'dislike');
+  });
+
+  // Rating filter chips
+  var ratingFiltersEl = document.getElementById('ratingFilters');
+  if(ratingFiltersEl){
+    ratingFiltersEl.addEventListener('click', function(ev){
+      var btn = ev.target.closest ? ev.target.closest('[data-rfilter]') : null;
+      if(!btn) return;
+      ratingFilter = btn.getAttribute('data-rfilter') || 'all';
+      renderStats(); renderList();
+    });
+  }
 
   // ---------- Add buttons / inputs ----------
   function openPicker(){ fileInput.value=''; fileInput.click(); }
