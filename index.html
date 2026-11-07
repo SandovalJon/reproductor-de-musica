@@ -723,15 +723,22 @@
   }
 
   // ---------- Adding files ----------
-  var AUDIO_EXT = /\.(mp3|wav|flac|ogg|oga|m4a|aac|opus|webm|aif|aiff)$/i;
+  var AUDIO_EXT = /\.(mp3|wav|flac|ogg|oga|m4a|m4b|m4r|aac|opus|weba|webm|aif|aiff|mp4|3gp|wma)$/i;
   function isAudioFile(f){
-    return (f.type && f.type.indexOf('audio')===0) || AUDIO_EXT.test(f.name||'');
+    var t = (f && f.type) || '';
+    if(t.indexOf('audio')===0 || t==='video/mp4' || t==='video/x-m4v') return true;
+    return AUDIO_EXT.test((f && f.name) || '');
   }
   var adding = false;
   function addFiles(fileList){
-    var files = Array.prototype.slice.call(fileList||[]).filter(isAudioFile);
+    var all = Array.prototype.slice.call(fileList||[]);
+    var files = all.filter(isAudioFile);
     if(!files.length){
-      if(fileList && fileList.length) toast('Ningún archivo era de audio. Prueba con MP3, WAV, FLAC, M4A u OGG.');
+      if(all.length){
+        var sample = all.slice(0,3).map(function(f){ return (f && f.name) || 'sin-nombre'; }).join(', ');
+        try{ console.log('[reproductor] archivos recibidos pero ninguno de audio:', all.map(function(f){ return {name:f.name, type:f.type, size:f.size}; })); }catch(e){}
+        toast('Ningún archivo era de audio. Revisé '+all.length+' archivo(s): '+sample+'. Prueba con MP3, WAV, FLAC, M4A u OGG.');
+      }
       return Promise.resolve(0);
     }
     adding = true;
@@ -1479,7 +1486,9 @@
               return traverseFSHandle(handle).then(function(files){ return acc.concat(files); });
             });
           });
-          return chain;
+          return chain.then(function(flat){
+            return flat.length ? flat : Array.prototype.slice.call(dt.files || []);
+          });
         }).catch(function(){
           return Array.prototype.slice.call(dt.files || []);
         });
@@ -1530,6 +1539,7 @@
     if(!ev.dataTransfer) return;
     filesFromDataTransfer(ev.dataTransfer).then(function(files){
       if(files && files.length) addFiles(files);
+      else toast('No se encontró ningún archivo en lo que soltaste. Si era una carpeta, prueba con el botón “Carpeta”.');
     });
   });
 
