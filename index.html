@@ -571,6 +571,7 @@
   var shuffle = false;
   var repeatMode = 0; // 0 off, 1 all, 2 one
   var shuffleOrder = [];
+  var everPlayed = false; // ya sonó alguna canción en esta sesión
   var filterText = '';
   var ratingFilter = 'all'; // all | liked | disliked | playable
   var seeking = false;
@@ -1245,10 +1246,17 @@
   }
   function play(){
     var cur = currentTrack();
-    if(!cur){
-      var fp0 = firstPlayableId();
-      if(fp0) selectTrack(fp0, true);
-      else if(tracks.length) toast('No hay canciones reproducibles. Todas tienen dislike.');
+    // Arranque: con aleatorio activado, la primera canción es al azar
+    if(!cur || (shuffle && !everPlayed && !isPlaying && audio.currentTime===0)){
+      var ids = playableTracks();
+      if(!ids.length){
+        if(tracks.length) toast('No hay canciones reproducibles. Todas tienen dislike.');
+        return;
+      }
+      var startId;
+      if(shuffle && ids.length>1){ rebuildShuffle(); startId = tracks[shuffleOrder[0]].id; }
+      else startId = ids[0].id;
+      selectTrack(startId, true);
       return;
     }
     if(cur.rating==='dislike'){
@@ -1259,6 +1267,7 @@
       if(np && np.rating!=='dislike'){
         ensureVisualizer();
         if(audioCtx && audioCtx.state==='suspended') audioCtx.resume();
+        everPlayed = true;
         var pp = audio.play();
         if(pp && pp.catch) pp.catch(function(){});
       }
@@ -1266,6 +1275,7 @@
     }
     ensureVisualizer();
     if(audioCtx && audioCtx.state==='suspended') audioCtx.resume();
+    everPlayed = true;
     var p = audio.play();
     if(p && p.catch) p.catch(function(){ toast('No se pudo reproducir este archivo.'); });
   }
@@ -1295,7 +1305,10 @@
     var idx = currentIndex();
     if(idx<0 || !isPlayable(tracks[idx])){
       var wasP0 = isPlaying;
-      selectTrack(tracks[playable[0]].id, wasP0);
+      var pickId;
+      if(shuffle && playable.length>1){ rebuildShuffle(); pickId = tracks[shuffleOrder[0]].id; }
+      else pickId = tracks[playable[0]].id;
+      selectTrack(pickId, wasP0);
       return;
     }
     var nextIdx;
