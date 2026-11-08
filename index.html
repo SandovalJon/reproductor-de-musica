@@ -240,6 +240,8 @@
   .mini-star{border:none; background:transparent; color:var(--muted-2); font-size:15px; line-height:1; padding:2px 4px; border-radius:6px; opacity:.85}
   .mini-star.on{color:#D98E0B; opacity:1}
   .mini-star:hover{background:var(--surface-3); opacity:1}
+  #nowStars{display:inline-flex; gap:8px; vertical-align:middle}
+  .btn.has-update{border-color:var(--accent); color:var(--accent)}
   .rate-pill{
     display:inline-flex; align-items:center; gap:7px; border:1.5px solid var(--line);
     background:var(--surface-2); color:var(--muted); padding:8px 14px; border-radius:999px;
@@ -350,6 +352,10 @@
       <button class="btn primary" id="btnAddTop" type="button">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
         Añadir canciones
+      </button>
+      <button class="btn small" id="btnUpdate" type="button" title="Buscar e instalar actualizaciones sin cerrar la app">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-2.64-6.36"/><path d="M21 3v6h-6"/></svg>
+        Actualizar
       </button>
     </div>
   </header>
@@ -1674,12 +1680,80 @@
     }catch(e){}
   }
 
+  // ---------- PWA: service worker + botón de actualización ----------
+  var updateReloaded = false;
+  function watchRegistration(reg, silent){
+    if(!reg || reg._rvWatched) return;
+    reg._rvWatched = true;
+    if(reg.waiting && navigator.serviceWorker.controller){
+      if(silent){
+        var b0 = document.getElementById('btnUpdate');
+        if(b0) b0.classList.add('has-update');
+        toast('Nueva versión disponible: toca Actualizar.');
+      } else {
+        reg.waiting.postMessage({type:'SKIP_WAITING'});
+      }
+      return;
+    }
+    reg.addEventListener('updatefound', function(){
+      var nw = reg.installing;
+      if(!nw) return;
+      nw.addEventListener('statechange', function(){
+        if(nw.state==='installed'){
+          if(navigator.serviceWorker.controller){
+            if(silent){
+              var b1 = document.getElementById('btnUpdate');
+              if(b1) b1.classList.add('has-update');
+              toast('Nueva versión disponible: toca Actualizar.');
+            } else if(reg.waiting){
+              reg.waiting.postMessage({type:'SKIP_WAITING'});
+            }
+          } else if(!silent){
+            toast('App lista para usar sin conexión.');
+          }
+        }
+      });
+    });
+  }
+  function checkForUpdate(){
+    if(!('serviceWorker' in navigator)){ toast('Tu navegador no soporta actualización en segundo plano. Recarga la página.'); return; }
+    var b = document.getElementById('btnUpdate');
+    if(b) b.disabled = true;
+    toast('Buscando actualizaciones…');
+    navigator.serviceWorker.getRegistration().then(function(reg){
+      if(b) b.disabled = false;
+      if(!reg){ toast('Aún no hay registro offline. Recarga la página una vez.'); return; }
+      watchRegistration(reg, false);
+      if(reg.waiting && navigator.serviceWorker.controller){
+        reg.waiting.postMessage({type:'SKIP_WAITING'});
+        return;
+      }
+      if(!reg.installing){
+        reg.update().then(function(){
+          setTimeout(function(){
+            if(!reg.installing && !reg.waiting) toast('Ya tienes la última versión.');
+          }, 3000);
+        }).catch(function(){ toast('No se pudo buscar. Revisa tu conexión.'); });
+      }
+    }).catch(function(){
+      if(b) b.disabled = false;
+      toast('No se pudo buscar. Revisa tu conexión.');
+    });
+  }
+
   // ---------- Init ----------
   if('serviceWorker' in navigator){
     window.addEventListener('load', function(){
-      navigator.serviceWorker.register('./sw.js').catch(function(){});
+      navigator.serviceWorker.register('./sw.js').then(function(reg){
+        watchRegistration(reg, true); // aviso silencioso si hay versión nueva
+      }).catch(function(){});
+    });
+    navigator.serviceWorker.addEventListener('controllerchange', function(){
+      if(!updateReloaded){ updateReloaded = true; window.location.reload(); }
     });
   }
+  var btnUpdateEl = document.getElementById('btnUpdate');
+  if(btnUpdateEl) btnUpdateEl.addEventListener('click', checkForUpdate);
   audio.volume = 0.85;
   setVolumeUI(); updateVolIcon(); setSeekUI(0);
   render();

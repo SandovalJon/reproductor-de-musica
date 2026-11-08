@@ -1,5 +1,5 @@
 /* Service worker del Reproductor de Música: app shell offline-first. */
-var CACHE = 'reproductor-musica-v2';
+var CACHE = 'reproductor-musica-v3';
 var ASSETS = [
   './',
   './index.html',
@@ -34,6 +34,10 @@ self.addEventListener('activate', function(event) {
       return self.clients.claim();
     })
   );
+});
+
+self.addEventListener('message', function(event) {
+  if (event.data && event.data.type === 'SKIP_WAITING') self.skipWaiting();
 });
 
 self.addEventListener('fetch', function(event) {
