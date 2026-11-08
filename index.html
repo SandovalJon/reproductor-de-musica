@@ -225,6 +225,21 @@
 
   /* Like / Dislike */
   .now-rating{display:flex; gap:8px; margin-top:16px; flex-wrap:wrap}
+  .stars-row{display:flex; align-items:center; gap:10px; margin-top:12px; flex-wrap:wrap}
+  .stars-label{font-size:12.5px; color:var(--muted); font-weight:700}
+  .star-btn{
+    width:38px; height:38px; border-radius:50%; border:1px solid var(--line);
+    background:var(--surface-2); color:var(--muted-2); font-size:19px; line-height:1;
+    display:grid; place-items:center; transition:.13s; padding:0 0 2px;
+  }
+  .star-btn:hover{border-color:var(--accent); transform:scale(1.07)}
+  .star-btn.on{background:#FDF3E3; border-color:#E8A51B; color:#D98E0B}
+  .star-btn:disabled{opacity:.45; cursor:not-allowed; transform:none}
+  @media (prefers-color-scheme: dark){ .star-btn.on{background:#2A2118} }
+  .mini-stars{display:flex; gap:0; margin-top:3px}
+  .mini-star{border:none; background:transparent; color:var(--muted-2); font-size:15px; line-height:1; padding:2px 4px; border-radius:6px; opacity:.85}
+  .mini-star.on{color:#D98E0B; opacity:1}
+  .mini-star:hover{background:var(--surface-3); opacity:1}
   .rate-pill{
     display:inline-flex; align-items:center; gap:7px; border:1.5px solid var(--line);
     background:var(--surface-2); color:var(--muted); padding:8px 14px; border-radius:999px;
@@ -372,6 +387,14 @@
           </button>
         </div>
         <p id="ratingHint" style="margin:8px 0 0; font-size:12.5px; color:var(--muted-2); line-height:1.45">Con like se queda en la playlist. Con dislike se salta y ya no suena en la rotación.</p>
+        <div class="stars-row" aria-label="Calificar con estrellas de 1 a 3">
+          <span class="stars-label">Estrellas</span>
+          <span id="nowStars">
+            <button class="star-btn" type="button" data-star="1" disabled aria-label="1 estrella">★</button>
+            <button class="star-btn" type="button" data-star="2" disabled aria-label="2 estrellas">★</button>
+            <button class="star-btn" type="button" data-star="3" disabled aria-label="3 estrellas">★</button>
+          </span>
+        </div>
 
         <div class="progress-block">
           <div class="time-row"><span id="timeCurrent">0:00</span><span id="timeTotal">0:00</span></div>
@@ -435,6 +458,7 @@
           <label class="sr-only" for="sort">Ordenar</label>
           <select id="sort" class="sort-select">
             <option value="added">Añadidas recientes</option>
+            <option value="stars">Mejor calificadas ★</option>
             <option value="title">Título A–Z</option>
             <option value="artist">Artista A–Z</option>
             <option value="duration">Duración</option>
@@ -535,7 +559,7 @@
   var vizCtx = viz.getContext('2d');
 
   // ---------- State ----------
-  var tracks = []; // {id,name,title,artist,album,duration,size,type,addedAt,url,coverUrl,color,rating}
+  var tracks = []; // {id,name,title,artist,album,duration,size,type,addedAt,url,coverUrl,color,rating,stars}
   var currentId = null;
   var isPlaying = false;
   var shuffle = false;
@@ -642,6 +666,27 @@
         getReq.onsuccess = function(){
           var rec = getReq.result;
           if(rec){ rec.rating = rating || null; store.put(rec); }
+        };
+        tx.oncomplete = function(){ resolve(); };
+        tx.onerror = function(){ resolve(); };
+      });
+    }).catch(function(){});
+  }
+  function clampStars(n){
+    n = parseInt(n, 10);
+    if(!isFinite(n) || n < 0) return 0;
+    if(n > 3) return 3;
+    return n;
+  }
+  function idbUpdateStars(id, stars){
+    return openDB().then(function(db){
+      return new Promise(function(resolve){
+        var tx = db.transaction(STORE,'readwrite');
+        var store = tx.objectStore(STORE);
+        var getReq = store.get(id);
+        getReq.onsuccess = function(){
+          var rec = getReq.result;
+          if(rec){ rec.stars = clampStars(stars); store.put(rec); }
         };
         tx.oncomplete = function(){ resolve(); };
         tx.onerror = function(){ resolve(); };
@@ -793,14 +838,14 @@
           var track = {
             id:id, name:file.name, title:title, artist:artist, album:meta.album||'',
             duration:dur, size:file.size, type:file.type, addedAt:Date.now(),
-            url:url, coverUrl:coverUrl, color:colorFor(title+file.name), rating:null
+            url:url, coverUrl:coverUrl, color:colorFor(title+file.name), rating:null, stars:0
           };
           tracks.unshift(track);
           // Persist (blob + metadata + cover blob)
           return idbPut({
             id:id, blob:file, name:file.name, type:file.type, size:file.size,
             title:title, artist:artist, album:meta.album||'', duration:dur,
-            addedAt:track.addedAt, coverBlob:meta.coverBlob||null, rating:null
+            addedAt:track.addedAt, coverBlob:meta.coverBlob||null, rating:null, stars:0
           }).then(function(){ return track; });
         });
       });
@@ -818,7 +863,8 @@
           addedAt:r.addedAt||Date.now(), url:url,
           coverUrl: r.coverBlob ? URL.createObjectURL(r.coverBlob) : null,
           color: colorFor((r.title||r.name)+''),
-          rating: (r.rating==='like' || r.rating==='dislike') ? r.rating : null
+          rating: (r.rating==='like' || r.rating==='dislike') ? r.rating : null,
+          stars: clampStars(r.stars)
         });
       });
       // Fill missing durations in background
@@ -852,7 +898,8 @@
       });
     }
     var mode = sortEl.value;
-    if(mode==='title') list.sort(function(a,b){ return a.title.localeCompare(b.title,'es'); });
+    if(mode==='stars') list.sort(function(a,b){ return (b.stars||0)-(a.stars||0); });
+    else if(mode==='title') list.sort(function(a,b){ return a.title.localeCompare(b.title,'es'); });
     else if(mode==='artist') list.sort(function(a,b){ return (a.artist||'~').localeCompare(b.artist||'~','es') || a.title.localeCompare(b.title,'es'); });
     else if(mode==='duration') list.sort(function(a,b){ return (b.duration||0)-(a.duration||0); });
     else if(mode==='added' && !filterText){ /* tracks already newest-first, but keep library order for playback */ }
@@ -931,6 +978,22 @@
       sub.textContent = [t.artist, t.album].filter(Boolean).join(' · ') || t.name;
       if(t.rating==='dislike') sub.textContent += ' — No se reproducirá';
       main.appendChild(tt); main.appendChild(sub);
+      var miniStars = document.createElement('div'); miniStars.className='mini-stars';
+      miniStars.setAttribute('role','group');
+      miniStars.setAttribute('aria-label','Calificar '+t.title+' de 1 a 3 estrellas');
+      for(var s=1; s<=3; s++){
+        (function(val){
+          var sb = document.createElement('button');
+          sb.className='mini-star' + ((t.stars||0)>=val ? ' on' : '');
+          sb.type='button'; sb.textContent='★';
+          sb.title = val+(val===1?' estrella':' estrellas');
+          sb.setAttribute('aria-label', val+(val===1?' estrella para ':' estrellas para ')+t.title);
+          sb.setAttribute('aria-pressed', ((t.stars||0)>=val)?'true':'false');
+          sb.addEventListener('click', function(ev){ ev.stopPropagation(); setStars(t.id, val); });
+          miniStars.appendChild(sb);
+        })(s);
+      }
+      main.appendChild(miniStars);
 
       var meta = document.createElement('div'); meta.className='track-meta';
       // Like button
@@ -980,12 +1043,22 @@
     var has = !!t;
     btnLike.disabled = !has;
     btnDislike.disabled = !has;
+    var starBtns = document.querySelectorAll('#nowStars .star-btn');
+    function paintStars(n, disabled){
+      for(var i=0;i<starBtns.length;i++){
+        var v = parseInt(starBtns[i].getAttribute('data-star'),10);
+        starBtns[i].classList.toggle('on', v<=n);
+        starBtns[i].disabled = !!disabled;
+        starBtns[i].setAttribute('aria-pressed', v<=n?'true':'false');
+      }
+    }
     btnPlay.disabled = !t || (t && t.rating==='dislike');
     if(!has){
       btnLike.classList.remove('is-like'); btnDislike.classList.remove('is-dislike');
       btnLike.setAttribute('aria-pressed','false'); btnDislike.setAttribute('aria-pressed','false');
       document.getElementById('labelLike').textContent='Me gusta';
       document.getElementById('labelDislike').textContent='No me gusta';
+      paintStars(0, true);
       if(hint) hint.textContent='Con like se queda en la playlist. Con dislike se salta y ya no suena en la rotación.';
       return;
     }
@@ -1002,6 +1075,7 @@
       else if(isDisliked) hint.textContent='Con dislike — esta canción está fuera de la playlist y no se reproducirá. Toca “No te gusta” otra vez para quitar el dislike.';
       else hint.textContent='Con like se queda en la playlist. Con dislike se salta y ya no suena en la rotación.';
     }
+    paintStars(t.stars||0, false);
   }
 
   function renderNow(){
@@ -1046,7 +1120,17 @@
 
   function render(){ renderStats(); renderList(); renderNow(); }
 
-  // ---------- Like / Dislike ----------
+  // ---------- Like / Dislike + Estrellas ----------
+  function setStars(id, val){
+    var st = tracks.find(function(x){return x.id===id;});
+    if(!st) return;
+    val = clampStars(val);
+    st.stars = (st.stars===val) ? 0 : val; // tocar el mismo valor la quita
+    idbUpdateStars(id, st.stars);
+    if(st.stars===0) toast('Calificación quitada de “'+st.title+'”');
+    else toast('“'+st.title+'”: '+st.stars+' de 3 estrellas');
+    render();
+  }
   function setRating(id, newRating){
     var t = tracks.find(function(x){return x.id===id;});
     if(!t) return;
@@ -1399,6 +1483,15 @@
     var t = currentTrack(); if(!t) return;
     setRating(t.id, t.rating==='dislike' ? null : 'dislike');
   });
+  var nowStarBtns = document.querySelectorAll('#nowStars .star-btn');
+  for(var qi=0; qi<nowStarBtns.length; qi++){
+    (function(btn){
+      btn.addEventListener('click', function(){
+        var t = currentTrack(); if(!t) return;
+        setStars(t.id, parseInt(btn.getAttribute('data-star'),10));
+      });
+    })(nowStarBtns[qi]);
+  }
 
   // Rating filter chips
   var ratingFiltersEl = document.getElementById('ratingFilters');

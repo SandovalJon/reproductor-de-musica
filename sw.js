@@ -1,5 +1,5 @@
 /* Service worker del Reproductor de Música: app shell offline-first. */
-var CACHE = 'reproductor-musica-v1';
+var CACHE = 'reproductor-musica-v2';
 var ASSETS = [
   './',
   './index.html',
