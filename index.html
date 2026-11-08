@@ -567,7 +567,7 @@
 
   // ---------- State ----------
   var tracks = []; // {id,name,title,artist,album,duration,size,type,addedAt,url,coverUrl,color,rating,stars}
-  var APP_VERSION = '1.0.0'; // al publicar cambios, subir este número y el CACHE de sw.js
+  var APP_VERSION = '1.0.1'; // al publicar cambios, subir este número y el CACHE de sw.js
   var currentId = null;
   var isPlaying = false;
   var shuffle = false;
@@ -1231,6 +1231,7 @@
   function selectTrack(id, autoplay){
     var t = tracks.find(function(x){return x.id===id;});
     if(!t) return;
+    if(autoplay) everPlayed = true; // ya se inició reproducción: play() no debe re-elegir al azar
     // If trying to autoplay a disliked track, skip it
     if(autoplay && t.rating==='dislike'){
       var fp = firstPlayableId();
@@ -1256,7 +1257,11 @@
         return;
       }
       var startId;
-      if(shuffle && ids.length>1){ rebuildShuffle(); startId = tracks[shuffleOrder[0]].id; }
+      if(shuffle && ids.length>1){
+        rebuildShuffle();
+        var s0 = shuffleOrder.length ? tracks[shuffleOrder[0]] : null;
+        startId = (s0 || ids[0]).id;
+      }
       else startId = ids[0].id;
       selectTrack(startId, true);
       return;
@@ -1308,7 +1313,11 @@
     if(idx<0 || !isPlayable(tracks[idx])){
       var wasP0 = isPlaying;
       var pickId;
-      if(shuffle && playable.length>1){ rebuildShuffle(); pickId = tracks[shuffleOrder[0]].id; }
+      if(shuffle && playable.length>1){
+        rebuildShuffle();
+        var p0 = shuffleOrder.length ? tracks[shuffleOrder[0]] : null;
+        pickId = (p0 || tracks[playable[0]]).id;
+      }
       else pickId = tracks[playable[0]].id;
       selectTrack(pickId, wasP0);
       return;
