@@ -353,9 +353,9 @@
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
         Añadir canciones
       </button>
-      <button class="btn small" id="btnUpdate" type="button" title="Buscar e instalar actualizaciones sin cerrar la app">
+      <button class="btn small" id="btnUpdate" type="button" title="Buscar e instalar actualizaciones de la app sin cerrar nada">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-2.64-6.36"/><path d="M21 3v6h-6"/></svg>
-        Actualizar
+        Actualizar app
       </button>
     </div>
   </header>
@@ -1689,7 +1689,7 @@
       if(silent){
         var b0 = document.getElementById('btnUpdate');
         if(b0) b0.classList.add('has-update');
-        toast('Nueva versión disponible: toca Actualizar.');
+        toast('Nueva versión de la app disponible: toca Actualizar app.');
       } else {
         reg.waiting.postMessage({type:'SKIP_WAITING'});
       }
@@ -1704,7 +1704,7 @@
             if(silent){
               var b1 = document.getElementById('btnUpdate');
               if(b1) b1.classList.add('has-update');
-              toast('Nueva versión disponible: toca Actualizar.');
+              toast('Nueva versión de la app disponible: toca Actualizar app.');
             } else if(reg.waiting){
               reg.waiting.postMessage({type:'SKIP_WAITING'});
             }
