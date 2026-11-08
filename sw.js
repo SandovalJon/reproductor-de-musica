@@ -1,5 +1,6 @@
 /* Service worker del Reproductor de Música: app shell offline-first. */
-var CACHE = 'reproductor-musica-v3';
+/* Al publicar cambios, subir APP_VERSION en index.html y este CACHE juntos. */
+var CACHE = 'reproductor-musica-1.0.0';
 var ASSETS = [
   './',
   './index.html',

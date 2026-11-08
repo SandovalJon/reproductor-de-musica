@@ -513,6 +513,7 @@
   </main>
 
   <p style="text-align:center; color:var(--muted-2); font-size:12.5px; margin:18px 0 0">Consejo: en el celular, añade la carpeta completa de música una vez y quedará guardada para la próxima vez que abras esta página en el mismo navegador.</p>
+  <p style="text-align:center; color:var(--muted-2); font-size:11.5px; margin:8px 0 0">Reproductor <span id="appVersion"></span> · 100% local, sin cuentas ni servidores</p>
 </div>
 
 <div class="drag-overlay" id="dragOverlay" aria-hidden="true">
@@ -566,6 +567,7 @@
 
   // ---------- State ----------
   var tracks = []; // {id,name,title,artist,album,duration,size,type,addedAt,url,coverUrl,color,rating,stars}
+  var APP_VERSION = '1.0.0'; // al publicar cambios, subir este número y el CACHE de sw.js
   var currentId = null;
   var isPlaying = false;
   var shuffle = false;
@@ -1744,7 +1746,7 @@
       if(!reg.installing){
         reg.update().then(function(){
           setTimeout(function(){
-            if(!reg.installing && !reg.waiting) toast('Ya tienes la última versión.');
+            if(!reg.installing && !reg.waiting) toast('Ya tienes la última versión (v'+APP_VERSION+').');
           }, 3000);
         }).catch(function(){ toast('No se pudo buscar. Revisa tu conexión.'); });
       }
@@ -1755,6 +1757,8 @@
   }
 
   // ---------- Init ----------
+  var appVersionEl = document.getElementById('appVersion');
+  if(appVersionEl) appVersionEl.textContent = 'v'+APP_VERSION;
   if('serviceWorker' in navigator){
     window.addEventListener('load', function(){
       navigator.serviceWorker.register('./sw.js').then(function(reg){
