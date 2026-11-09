@@ -11,7 +11,10 @@
   "orientation": "any",
   "background_color": "#F4F1EC",
   "theme_color": "#E94E1B",
-  "categories": ["music", "entertainment"],
+  "categories": [
+    "music",
+    "entertainment"
+  ],
   "icons": [
     {
       "src": "./icon-192.png",
@@ -33,6 +36,23 @@
       "src": "./apple-touch-icon.png",
       "sizes": "180x180",
       "type": "image/png"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Aleatorio",
+      "short_name": "Aleatorio",
+      "url": "./?go=aleatorio"
+    },
+    {
+      "name": "Descubrir",
+      "short_name": "Descubrir",
+      "url": "./?go=descubrir"
+    },
+    {
+      "name": "Seguir donde ibas",
+      "short_name": "Continuar",
+      "url": "./?go=continuar"
     }
   ]
 }
