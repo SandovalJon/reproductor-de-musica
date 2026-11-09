@@ -345,6 +345,31 @@
   }
   @media (prefers-color-scheme: dark){ .toast{background:#F5F1EB; color:#191613} }
   .toast.show{opacity:1; transform:translate(-50%,0)}
+  /* ===== Pack de mejoras: deshacer, reanudar, sincronizar letra, actualización ===== */
+  .undo-bar{
+    position:fixed; left:50%; bottom:20px; transform:translate(-50%, 0); z-index:71;
+    background:#191613; color:#fff; padding:10px 12px 10px 16px; border-radius:999px; font-size:13.5px; font-weight:600;
+    box-shadow:0 12px 30px rgba(0,0,0,.28); max-width:min(94vw, 560px);
+    display:none; align-items:center; gap:10px;
+  }
+  @media (prefers-color-scheme: dark){ .undo-bar{background:#F5F1EB; color:#191613} }
+  .undo-bar.show{display:flex}
+  .undo-bar button{flex:none}
+  .undo-bar .undo-x{background:none; border:none; color:inherit; font-size:17px; line-height:1; padding:4px 6px; cursor:pointer; opacity:.75}
+  .resume-bar{
+    margin-top:12px; padding:11px 13px; border:1px solid var(--accent); border-radius:14px;
+    background:var(--accent-soft); display:flex; flex-wrap:wrap; align-items:center; gap:9px;
+    font-size:13.5px; font-weight:600; line-height:1.45;
+  }
+  .resume-bar span{flex:1 1 200px}
+  .update-row{display:flex; flex-wrap:wrap; gap:8px; align-items:center; margin-top:8px}
+  .sync-box{margin-top:12px; border-top:1px dashed var(--line); padding-top:12px}
+  .sync-current{
+    font-size:19px; font-weight:800; line-height:1.4; margin:12px 0 4px; min-height:27px; letter-spacing:-.01em;
+  }
+  .sync-done{color:var(--muted); font-size:13px; font-weight:600; margin:2px 0 0; overflow-wrap:anywhere}
+  #syncText{width:100%; box-sizing:border-box; margin-top:10px; padding:10px 12px; border:1px solid var(--line); border-radius:12px; background:var(--surface-2); color:var(--text); font:inherit; font-size:13.5px; resize:vertical}
+  .tap-flash{border-color:var(--accent) !important; color:var(--accent) !important}
   /* ===== Pack completo: pestañas, playlists, cola, historial, sonido ===== */
   .view-tabs{display:flex; flex-wrap:wrap; gap:6px; margin-top:14px}
   .view-tab{
@@ -634,6 +659,11 @@
           </button>
         </div>
         <p class="voice-status" id="voiceStatus" role="status" style="display:none"></p>
+        <div class="resume-bar" id="resumeBar" style="display:none" role="status">
+          <span id="resumeText"></span>
+          <button class="btn small primary" id="btnResumePlay" type="button">Reproducir</button>
+          <button class="btn small" id="btnResumeDismiss" type="button">Cerrar</button>
+        </div>
 
         <div class="now-rating" aria-label="Calificar canción actual">
           <button class="rate-pill" id="btnLike" type="button" disabled aria-pressed="false" title="Me gusta — se queda en la playlist">
@@ -842,6 +872,13 @@
               </div>
               <p class="sound-note" id="alarmStatus">A la hora elegida, con la app abierta, empezará a sonar la playlist y verás un aviso. Se repite cada día mientras esté activada.</p>
             </div>
+            <div class="sound-group">
+              <div class="sound-group-head"><h4>Control por voz</h4></div>
+              <div class="sound-inline">
+                <button class="toggle-pill" id="btnVoiceContinuous" type="button" aria-pressed="false"><span class="dot"></span><span>Escucha continua:&nbsp;</span><span id="voiceContinuousState">Desactivada</span></button>
+              </div>
+              <p class="sound-note">Con la escucha continua activada, tras ejecutar cada comando la app vuelve a escuchar sola (con la música bajada mientras tanto) para que des varios comandos seguidos sin tocar el botón. Se detiene si pulsas «Voz» de nuevo, si la desactivas aquí o si ocurre un error. Funciona bajo el mismo aviso y consentimiento de la voz: el reconocimiento lo procesa el servicio del fabricante del navegador, fuera del dispositivo. Además, «reproduce» seguido de un nombre busca primero una playlist y, si no coincide, la canción en tu biblioteca.</p>
+            </div>
           </div>
         </div>
 
@@ -856,7 +893,27 @@
             <div class="lyrics-actions">
               <button class="btn small" id="btnLoadLrc" type="button">Cargar archivo .lrc</button>
               <button class="btn small" id="btnEditPlainLyrics" type="button">Letra en texto plano…</button>
+              <button class="btn small" id="btnSyncMode" type="button">Sincronizar letra</button>
               <button class="btn small danger" id="btnRemoveLrc" type="button" style="display:none">Quitar letra</button>
+            </div>
+            <div class="sync-box" id="syncBox" style="display:none">
+              <p class="sound-note" style="margin-top:0">Sincronizador: la canción suena desde el inicio y tú marcas el momento en que empieza cada línea. Al terminar se genera el .lrc sincronizado, se guarda como la letra de la canción (se verá en el karaoke normal) y podrás descargarlo.</p>
+              <textarea id="syncText" rows="6" maxlength="20000" placeholder="Pega aquí la letra de la canción, una línea por verso…"></textarea>
+              <div class="lyrics-actions">
+                <button class="btn small primary" id="btnSyncStart" type="button">Empezar a sincronizar</button>
+                <button class="btn small" id="btnSyncCancel" type="button">Salir</button>
+              </div>
+              <div id="syncLive" style="display:none">
+                <p class="sync-current" id="syncCurrentLine"></p>
+                <p class="sync-done" id="syncProgress"></p>
+                <div class="lyrics-actions">
+                  <button class="btn small primary" id="btnSyncMark" type="button">Marcar línea</button>
+                  <button class="btn small" id="btnSyncUndo" type="button">Deshacer marca</button>
+                  <button class="btn small" id="btnSyncRestart" type="button">Reiniciar</button>
+                  <button class="btn small" id="btnSyncFinish" type="button">Terminar y guardar .lrc</button>
+                </div>
+                <p class="sound-note">En la computadora también puedes pulsar la tecla <kbd>Espacio</kbd> para marcar cada línea mientras suena.</p>
+              </div>
             </div>
             <div class="sound-inline" style="margin-top:10px">
               <span style="font-size:12.5px; font-weight:700; color:var(--muted)">Desfase de la letra</span>
@@ -954,6 +1011,11 @@
           <button class="btn small" id="btnExportBackup" type="button">Exportar respaldo</button>
           <button class="btn small" id="btnImportBackup" type="button">Importar respaldo</button>
           <span class="backup-note">El respaldo guarda playlists, likes, letras, historial, contadores y ajustes en un archivo. No incluye los archivos de audio.</span>
+        </div>
+        <div class="update-row">
+          <button class="btn small" id="btnCheckUpdate" type="button">Actualizar app</button>
+          <button class="btn small danger" id="btnForceUpdate" type="button">Forzar actualización</button>
+          <span class="backup-note" id="updateStatus">Versión de esta app: v<span id="appVersionNote">1.7.0</span>. «Actualizar app» consulta la versión publicada y te dice si ya estás al día antes de recargar. «Forzar actualización» limpia el service worker y las cachés de la app si una actualización se quedó atascada; tu biblioteca, playlists y ajustes (IndexedDB) nunca se tocan.</span>
         </div>
       </div>
 
@@ -1095,6 +1157,7 @@
         <div class="subview-actions" style="padding-top:4px">
           <button class="btn small" id="btnAnalyzeBpmAll" type="button">Analizar ritmo (BPM) de la biblioteca</button>
           <button class="btn small" id="btnAnalyzeBpmCurrent" type="button">Analizar la canción actual</button>
+          <button class="btn small" id="btnTapTempoCurrent" type="button">Tocar el ritmo (canción actual)</button>
           <span class="sleep-status" id="bpmStatus" role="status"></span>
         </div>
         <p class="sound-note" style="margin:0 4px 12px">El ritmo se detecta analizando el audio en tu dispositivo (valor aproximado), se guarda por canción y se ve junto a cada canción de la biblioteca. Las canciones sin BPM no entran en las mezclas por energía hasta analizarlas.</p>
@@ -1346,6 +1409,15 @@
       </div>
       <p class="sound-note">El momento real donde empieza y termina el sonido, detectado automáticamente. Ajústalos a mano si la detección falló; déjalos vacíos para volver a detectar.</p>
     </div>
+    <div class="field">
+      <label for="editBpm">Ritmo (BPM) de esta canción</label>
+      <div class="sound-inline">
+        <input type="number" id="editBpm" min="30" max="300" step="1" placeholder="Sin detectar" style="flex:0 1 130px" />
+        <button class="btn small" id="btnTapTempoEdit" type="button">Tocar el ritmo</button>
+        <span class="sleep-status" id="tapEditStatus" role="status"></span>
+      </div>
+      <p class="sound-note">Escribe el BPM o tócalo: pulsa «Tocar el ritmo» al pulso de la canción (4 toques o más) y se calcula el promedio. El BPM que fijes a mano queda marcado como <strong>manual</strong> <span id="editBpmManualTag"></span>y el análisis automático de la biblioteca no lo sobrescribirá; solo cambiará si lo editas, vuelves a tocar el ritmo o pides re-analizar esta canción. Déjalo vacío al guardar para quitar el BPM.</p>
+    </div>
     <div class="modal-actions">
       <button class="btn small" id="editModalCancel" type="button">Cancelar</button>
       <button class="btn small primary" id="editModalSave" type="button">Guardar</button>
@@ -1418,6 +1490,11 @@
 </div>
 
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
+<div class="undo-bar" id="undoBar" role="alert">
+  <span id="undoMsg"></span>
+  <button class="btn small primary" id="btnUndo" type="button">Deshacer</button>
+  <button class="undo-x" id="btnUndoDismiss" type="button" aria-label="Cerrar aviso">×</button>
+</div>
 
 <input type="file" id="fileInput" class="hidden-input" accept="audio/*,.mp3,.wav,.flac,.ogg,.oga,.m4a,.aac,.opus,.webm,.aif,.aiff" multiple />
 <input type="file" id="folderInput" class="hidden-input" webkitdirectory directory multiple />
@@ -1465,7 +1542,7 @@
 
   // ---------- State ----------
   var tracks = []; // {id,name,title,artist,album,duration,size,type,addedAt,url,coverUrl,color,rating,stars}
-  var APP_VERSION = '1.6.2'; // al publicar cambios, subir este número y el CACHE de sw.js
+  var APP_VERSION = '1.7.0'; // al publicar cambios, subir este número y el CACHE de sw.js
   var currentId = null;
   var isPlaying = false;
   var shuffle = false;
@@ -1507,7 +1584,8 @@
     accent: 'naranja', // Pack 6: id de color de acento
     vizStyle: 'bars', // Pack 6: 'bars' | 'wave' | 'circle'
     alarm: { on: false, time: '08:00', playlistId: '' }, // Pack 6: alarma musical
-    voiceOk: false // Pack 6: el usuario aceptó que el reconocimiento de voz del navegador procesa el audio fuera del dispositivo
+    voiceOk: false, // Pack 6: el usuario aceptó que el reconocimiento de voz del navegador procesa el audio fuera del dispositivo
+    voiceContinuous: false // Pack de mejoras: escucha continua de comandos de voz (desactivada por defecto)
   };
   // Pack 5: valida y fusiona un objeto de ajustes (estado guardado o respaldo) sin perder lo existente
   function sanitizeFx(fx){
@@ -1546,6 +1624,7 @@
     if(typeof ds.vizStyle === 'string') settings.vizStyle = (ds.vizStyle === 'wave' || ds.vizStyle === 'circle') ? ds.vizStyle : 'bars';
     if(ds.alarm) settings.alarm = sanitizeAlarm(ds.alarm);
     if(typeof ds.voiceOk === 'boolean') settings.voiceOk = ds.voiceOk;
+    if(typeof ds.voiceContinuous === 'boolean') settings.voiceContinuous = ds.voiceContinuous;
   }
   var sleepEndsAt = 0; // timestamp, 0 = sin temporizador por minutos
   var sleepAfterTrack = false;
@@ -1675,7 +1754,11 @@
       stateReady = true;
       applySettingsToUI();
       renderPack();
-    }).catch(function(){ stateReady = true; });
+      // Pack de mejoras: resolver borrados que quedaron pendientes al cerrar la
+      // app (se restauran, nunca se pierde nada) y reanudar donde ibas.
+      restorePendingFromDisk();
+      idbMetaGet('resumeState').then(function(rs){ restoreResume(rs); resumeArmed = true; });
+    }).catch(function(){ stateReady = true; resumeArmed = true; });
   }
   function idbAll(){
     return openDB().then(function(db){
@@ -1952,7 +2035,7 @@
             url:url, coverUrl:coverUrl, color:colorFor(title+file.name), rating:null, stars:0,
             lyrics:null, plainLyrics:'', normDb:null, volAdj:0,
             genre:meta.genre||'', year:meta.year||'', tags:[], memSpeed:null, memEq:null, lyricShift:0,
-            folder:folderPath, abLoop:null, bookmarks:[], silence:null, bpm:null
+            folder:folderPath, abLoop:null, bookmarks:[], silence:null, bpm:null, bpmManual:false
           };
           tracks.unshift(track);
           // Persist (blob + metadata + cover blob)
@@ -1961,7 +2044,7 @@
             title:title, artist:artist, album:meta.album||'', duration:dur,
             addedAt:track.addedAt, coverBlob:meta.coverBlob||null, rating:null, stars:0, lyrics:null, plainLyrics:'', normDb:null, volAdj:0,
             genre:meta.genre||'', year:meta.year||'', tags:[], memSpeed:null, memEq:null, lyricShift:0,
-            folder:folderPath, abLoop:null, bookmarks:[], silence:null, bpm:null
+            folder:folderPath, abLoop:null, bookmarks:[], silence:null, bpm:null, bpmManual:false
           }).then(function(){ return track; });
         });
       });
@@ -1995,7 +2078,8 @@
           abLoop: (r.abLoop && typeof r.abLoop.a==='number' && typeof r.abLoop.b==='number' && r.abLoop.b>r.abLoop.a) ? {a:r.abLoop.a, b:r.abLoop.b} : null,
           bookmarks: Array.isArray(r.bookmarks) ? r.bookmarks.filter(function(b){ return b && typeof b.time==='number' && isFinite(b.time); }).map(function(b){ return { name:(typeof b.name==='string' && b.name) ? b.name : 'Marcador', time:b.time }; }) : [],
           silence: (r.silence && typeof r.silence.start==='number' && typeof r.silence.end==='number' && r.silence.end>r.silence.start) ? {start:r.silence.start, end:r.silence.end} : null,
-          bpm: (typeof r.bpm==='number' && isFinite(r.bpm) && r.bpm>0) ? Math.round(r.bpm) : null
+          bpm: (typeof r.bpm==='number' && isFinite(r.bpm) && r.bpm>0) ? Math.round(r.bpm) : null,
+          bpmManual: !!r.bpmManual
         });
       });
       // Fill missing durations in background
@@ -2116,7 +2200,7 @@
       sub.textContent = [t.artist, t.album, t.year].filter(Boolean).join(' · ') || t.name;
       if(t.genre) sub.textContent += ' · ' + t.genre;
       if(t.tags && t.tags.length) sub.textContent += ' · ' + t.tags.map(function(x){ return '#'+x; }).join(' ');
-      if(typeof t.bpm==='number' && t.bpm) sub.textContent += ' · ' + t.bpm + ' BPM';
+      if(typeof t.bpm==='number' && t.bpm) sub.textContent += ' · ' + t.bpm + ' BPM' + (t.bpmManual ? ' (manual)' : '');
       var cnt0 = playCounts[t.id] || 0;
       if(cnt0>0) sub.textContent += ' · ' + cnt0 + (cnt0===1 ? ' escucha' : ' escuchas');
       if(t.rating==='dislike') sub.textContent += ' — No se reproducirá';
@@ -2372,7 +2456,7 @@
     if(t.rating==='dislike'){ var bd=document.createElement('span'); bd.className='badge-dislike'; bd.textContent='Dislike'; tt.appendChild(bd); }
     var sub = document.createElement('div'); sub.className='track-sub';
     sub.textContent = [t.artist, t.album].filter(Boolean).join(' · ') || t.name;
-    if(typeof t.bpm==='number' && t.bpm) sub.textContent += ' · ' + t.bpm + ' BPM';
+    if(typeof t.bpm==='number' && t.bpm) sub.textContent += ' · ' + t.bpm + ' BPM' + (t.bpmManual ? ' (manual)' : '');
     main.appendChild(tt); main.appendChild(sub);
     var meta = document.createElement('div'); meta.className='track-meta';
     if(opts.when){ var w=document.createElement('span'); w.className='hist-when'; w.textContent=opts.when; meta.appendChild(w); }
@@ -2481,7 +2565,7 @@
         buttons: [
           { title:'Subir en la playlist', svg:SVG_UP, fn:function(){ if(idx>0){ var tmp=pl.trackIds[idx-1]; pl.trackIds[idx-1]=pl.trackIds[idx]; pl.trackIds[idx]=tmp; saveState(); renderPack(); } } },
           { title:'Bajar en la playlist', svg:SVG_DOWN, fn:function(){ if(idx<pl.trackIds.length-1){ var tmp=pl.trackIds[idx+1]; pl.trackIds[idx+1]=pl.trackIds[idx]; pl.trackIds[idx]=tmp; saveState(); renderPack(); } } },
-          { title:'Quitar de esta playlist', svg:SVG_MINUS, fn:function(){ pl.trackIds.splice(idx,1); saveState(); renderPack(); toast('“'+t.title+'” se quitó de “'+pl.name+'”'); } }
+          { title:'Quitar de esta playlist', svg:SVG_MINUS, fn:function(){ deferRemoveFromPlaylist(pl, idx, t); } }
         ]
       }));
     });
@@ -2515,11 +2599,20 @@
       return;
     }
     window.__confirmPlDelete = false;
+    // Pack de mejoras: borrado diferido con «Deshacer» (la playlist vive en el
+    // estado guardado; el snapshot permite restaurarla intacta durante 8 s).
+    var plIdx = playlists.findIndex(function(p){ return p.id===pl.id; });
+    var entry = {
+      kind: 'playlist', id: pl.id, pl: { id: pl.id, name: pl.name, trackIds: pl.trackIds.slice() },
+      index: plIdx, prevSelected: selectedPlaylistId,
+      prevContext: { type: playContext.type, playlistId: playContext.playlistId },
+      timer: null
+    };
     playlists = playlists.filter(function(p){ return p.id!==pl.id; });
     if(playContext.playlistId===pl.id) playContext = { type:'library', playlistId:null };
     selectedPlaylistId = playlists.length ? playlists[0].id : null;
     rebuildShuffle(); saveState(); renderPack();
-    toast('Playlist “'+pl.name+'” borrada');
+    registerPendingDelete(entry, 'Playlist “'+pl.name+'” borrada');
   });
 
   // ---------- Cola de reproducción ----------
@@ -2975,6 +3068,7 @@
     setSeekUI(0);
     timeCurrent.textContent='0:00';
     renderNow(); renderList();
+    saveResume(true);
     if(autoplay) play();
   }
   function play(){
@@ -3309,9 +3403,25 @@
     if(idx<0) return;
     var t = tracks[idx];
     var wasCurrent = (id===currentId);
+    // Pack de mejoras: borrado DIFERIDO. La interfaz refleja el cambio al momento,
+    // pero el registro de IndexedDB y las URL del archivo solo se destruyen cuando
+    // vence el plazo de «Deshacer» (8 s). El snapshot guarda las posiciones exactas
+    // de la canción en la cola, las playlists y el historial para restaurarla tal cual.
+    var entry = {
+      kind: 'track', id: id, track: t, index: idx,
+      wasCurrent: wasCurrent, pos: wasCurrent ? (audio.currentTime || 0) : 0,
+      queuePos: [], plPos: {}, histPos: [],
+      count: (typeof playCounts[id] === 'number') ? playCounts[id] : null,
+      timer: null
+    };
+    queue.forEach(function(q, i){ if(q === id) entry.queuePos.push(i); });
+    playlists.forEach(function(p){
+      var pos = [];
+      p.trackIds.forEach(function(x, i){ if(x === id) pos.push(i); });
+      if(pos.length) entry.plPos[p.id] = pos;
+    });
+    playHistory.forEach(function(h, i){ if(h && h.id === id) entry.histPos.push({ i: i, h: h }); });
     tracks.splice(idx,1);
-    try{ URL.revokeObjectURL(t.url); if(t.coverUrl) URL.revokeObjectURL(t.coverUrl); }catch(e){}
-    idbDelete(id);
     queue = queue.filter(function(q){ return q!==id; });
     delete selectedIds[id];
     playlists.forEach(function(p){ p.trackIds = p.trackIds.filter(function(x){ return x!==id; }); });
@@ -3335,7 +3445,8 @@
       }
     }
     render();
-    if(!quiet) toast('“'+t.title+'” se quitó de la biblioteca');
+    registerPendingDelete(entry, '“'+t.title+'” se quitó de la biblioteca');
+    if(quiet) updateUndoBar();
   }
   function clearAll(){
     if(!tracks.length) return;
@@ -3358,6 +3469,11 @@
     playlists=[]; queue=[]; playHistory=[]; playCounts={}; statsLog=[]; lastCountedId=null;
     listen.id = null; listen.acc = 0;
     selectedPlaylistId=null; playContext={ type:'library', playlistId:null };
+    // Pack de mejoras: un vaciado total cancela cualquier borrado diferido pendiente
+    pendingDeletes.forEach(function(e){ clearTimeout(e.timer); });
+    pendingDeletes = [];
+    idbMetaSet('pendingDeletes', []);
+    document.getElementById('undoBar').classList.remove('show');
     audio.removeAttribute('src'); audio.load();
     idbClear();
     saveState();
@@ -3388,6 +3504,11 @@
     });
     el.addEventListener('loadedmetadata', function(){
       if(el!==audio) return;
+      // Pack de mejoras: posición pendiente de la reanudación («seguir donde ibas»)
+      if(typeof pendingSeekPos === 'number' && isFinite(pendingSeekPos)){
+        try{ el.currentTime = pendingSeekPos; }catch(e){}
+        pendingSeekPos = null;
+      }
       timeTotal.textContent = fmtTime(el.duration);
       var t = currentTrack();
       if(t && !t.duration && isFinite(el.duration)){ t.duration = el.duration; renderStats(); renderList(); }
@@ -3406,6 +3527,7 @@
     });
     el.addEventListener('pause', function(){
       if(el!==audio) return;
+      saveResume(true);
       isPlaying = false;
       iconPlay.style.display='block'; iconPause.style.display='none';
       btnPlay.setAttribute('aria-label','Reproducir');
@@ -4274,6 +4396,10 @@
     document.getElementById('editVolAdjOut').textContent = fmtDb(t.volAdj || 0);
     document.getElementById('editSilStart').value = t.silence ? t.silence.start : '';
     document.getElementById('editSilEnd').value = t.silence ? t.silence.end : '';
+    document.getElementById('editBpm').value = (typeof t.bpm === 'number' && t.bpm) ? t.bpm : '';
+    document.getElementById('editBpmManualTag').textContent = t.bpmManual ? '(ahora está fijado a mano) ' : '';
+    document.getElementById('tapEditStatus').textContent = '';
+    tapEditTimes = [];
     editModal.classList.add('on'); editModal.setAttribute('aria-hidden', 'false');
   }
   function closeEditor(){ editModal.classList.remove('on'); editModal.setAttribute('aria-hidden', 'true'); }
@@ -4312,6 +4438,18 @@
         var newSil = { start: Math.round(sStart*100)/100, end: Math.round(sEnd*100)/100 };
         if(!t.silence || t.silence.start !== newSil.start || t.silence.end !== newSil.end){ t.silence = newSil; patch.silence = newSil; }
       }
+    }
+    // Pack de mejoras: BPM editable. Lo que el usuario escriba o toque aquí se
+    // guarda como manual para que el análisis automático no lo sobrescriba.
+    var bpmRaw = document.getElementById('editBpm').value;
+    var bpmVal = parseInt(bpmRaw, 10);
+    if(bpmRaw === '' || !isFinite(bpmVal)){
+      if(typeof t.bpm === 'number'){ t.bpm = null; patch.bpm = null; }
+      if(t.bpmManual){ t.bpmManual = false; patch.bpmManual = false; }
+    } else {
+      bpmVal = Math.max(30, Math.min(300, bpmVal));
+      if(bpmVal !== t.bpm){ t.bpm = bpmVal; patch.bpm = bpmVal; }
+      if(!t.bpmManual){ t.bpmManual = true; patch.bpmManual = true; }
     }
     t.color = colorFor(t.title + t.name);
     if(Object.keys(patch).length) idbPatch(t.id, patch);
@@ -4575,7 +4713,7 @@
     var data = {
       app: 'reproductor-de-musica',
       kind: 'respaldo',
-      version: 6,
+      version: 7,
       exportedAt: new Date().toISOString(),
       playlists: playlists,
       queue: queue,
@@ -4590,6 +4728,7 @@
         fx: { bassOn: settings.fx.bassOn, bassDb: settings.fx.bassDb, reverb: settings.fx.reverb, vocal: settings.fx.vocal },
         customPresets: settings.customPresets,
         theme: settings.theme, accent: settings.accent, vizStyle: settings.vizStyle, voiceOk: settings.voiceOk,
+        voiceContinuous: settings.voiceContinuous,
         alarm: { on: settings.alarm.on, time: settings.alarm.time, playlistId: settings.alarm.playlistId }
       },
       tracks: tracks.map(function(t){
@@ -4610,7 +4749,8 @@
           memSpeed: (typeof t.memSpeed === 'number' ? t.memSpeed : null),
           memEq: (Array.isArray(t.memEq) ? t.memEq : null),
           lyricShift: (typeof t.lyricShift === 'number' ? t.lyricShift : 0),
-          bpm: (typeof t.bpm === 'number' ? t.bpm : null)
+          bpm: (typeof t.bpm === 'number' ? t.bpm : null),
+          bpmManual: !!t.bpmManual
         };
       })
     };
@@ -4650,6 +4790,7 @@
         if(Array.isArray(td.memEq) && td.memEq.length === 5 && td.memEq.every(function(v){ return typeof v === 'number' && isFinite(v); })){ t.memEq = td.memEq.map(function(v){ return Math.max(-12, Math.min(12, v)); }); patch.memEq = t.memEq; }
         if(typeof td.lyricShift === 'number' && isFinite(td.lyricShift)){ t.lyricShift = Math.max(-10, Math.min(10, td.lyricShift)); patch.lyricShift = t.lyricShift; }
         if(typeof td.bpm === 'number' && isFinite(td.bpm) && td.bpm > 0){ t.bpm = Math.round(td.bpm); patch.bpm = t.bpm; }
+        if(typeof td.bpmManual === 'boolean'){ t.bpmManual = td.bpmManual; patch.bpmManual = td.bpmManual; }
         t.color = colorFor(t.title + t.name);
         if(Object.keys(patch).length) idbPatch(t.id, patch);
       });
@@ -6569,14 +6710,23 @@
       return Math.round(bpm);
     }catch(e){ return null; }
   }
-  function analyzeBpm(t){
-    if(!t || typeof t.bpm === 'number') return Promise.resolve(false);
+  function analyzeBpm(t, force){
+    if(!t) return Promise.resolve(false);
+    // Pack de mejoras: un BPM fijado a mano (bpmManual) no lo sobrescribe el
+    // análisis automático; solo un re-análisis expreso de esa canción (force).
+    if(t.bpmManual && !force) return Promise.resolve(false);
+    if(typeof t.bpm === 'number' && !force) return Promise.resolve(false);
     if(t._bpming) return t._bpming;
     t._bpming = fetch(t.url).then(function(r){ return r.arrayBuffer(); })
       .then(function(buf){ return decodeAudio(buf); })
       .then(function(ab){
         var bpm = estimateBpm(ab);
-        if(bpm){ t.bpm = bpm; idbPatch(t.id, { bpm: bpm }); return true; }
+        if(bpm){
+          t.bpm = bpm;
+          if(force && t.bpmManual){ t.bpmManual = false; idbPatch(t.id, { bpm: bpm, bpmManual: false }); }
+          else idbPatch(t.id, { bpm: bpm });
+          return true;
+        }
         return false;
       })
       .catch(function(){ return false; })
@@ -6587,9 +6737,9 @@
   function analyzeAllBpm(){
     if(analyzingBpmAll) return;
     var st = document.getElementById('bpmStatus');
-    var pending = tracks.filter(function(t){ return typeof t.bpm !== 'number'; });
+    var pending = tracks.filter(function(t){ return typeof t.bpm !== 'number' && !t.bpmManual; });
     if(!tracks.length){ if(st) st.textContent = 'Añade canciones primero.'; return; }
-    if(!pending.length){ if(st) st.textContent = 'Todas las canciones ya tienen su BPM detectado.'; return; }
+    if(!pending.length){ if(st) st.textContent = 'Todas las canciones ya tienen su BPM (los fijados a mano se respetan y no se re-analizan).'; return; }
     analyzingBpmAll = true;
     var done = 0;
     var chain = Promise.resolve();
@@ -6612,9 +6762,12 @@
     var t = currentTrack();
     var st = document.getElementById('bpmStatus');
     if(!t){ toast('Elige primero la canción que quieres analizar.'); return; }
-    if(typeof t.bpm === 'number'){ toast('“' + t.title + '” ya tiene su ritmo: ' + t.bpm + ' BPM.'); return; }
-    if(st) st.textContent = 'Analizando “' + t.title + '”…';
-    analyzeBpm(t).then(function(ok){
+    // Con BPM automático ya detectado no hace falta repetir; con BPM manual,
+    // este botón es el re-análisis expreso de esta canción y sí lo sustituye.
+    if(typeof t.bpm === 'number' && !t.bpmManual){ toast('“' + t.title + '” ya tiene su ritmo: ' + t.bpm + ' BPM.'); return; }
+    var force = !!t.bpmManual;
+    if(st) st.textContent = (force ? 'Re-analizando “' : 'Analizando “') + t.title + '”…';
+    analyzeBpm(t, force).then(function(ok){
       if(st) st.textContent = '';
       if(ok){ renderList(); renderPack(); toast('Ritmo de “' + t.title + '”: ' + t.bpm + ' BPM (aprox.).'); }
       else toast('No se pudo detectar el ritmo de “' + t.title + '”.');
@@ -6716,7 +6869,29 @@
           act('reproduciendo la playlist “' + pl.name + '”');
           return;
         }
-        act('no encontré la playlist “' + m[2] + '”');
+        // Pack de mejoras: si no es una playlist, busca la CANCIÓN en la
+        // biblioteca por título o artista (normalizado, coincidencia parcial).
+        var bestSong = null, bestScore = 0;
+        tracks.forEach(function(t){
+          if(t.rating === 'dislike') return;
+          var tt = normCmd(t.title), ta = normCmd(t.artist);
+          var sc = 0;
+          if(tt && (tt.indexOf(want) >= 0 || want.indexOf(tt) >= 0)) sc = 3;
+          else if(ta && (ta.indexOf(want) >= 0 || want.indexOf(ta) >= 0)) sc = 2;
+          else {
+            var words = want.split(' '), hits = 0;
+            words.forEach(function(w){ if(w.length > 2 && (tt.indexOf(w) >= 0 || ta.indexOf(w) >= 0)) hits++; });
+            if(words.length && hits === words.length) sc = 1;
+          }
+          if(sc > bestScore){ bestScore = sc; bestSong = t; }
+        });
+        if(bestSong){
+          playContext = { type:'library', playlistId:null }; saveState();
+          selectTrack(bestSong.id, true);
+          act('reproduciendo “' + bestSong.title + '”' + (bestSong.artist ? ' de ' + bestSong.artist : ''));
+          return;
+        }
+        act('no encontré la playlist ni la canción “' + m[2] + '”');
         return;
       }
       if(!isPlaying) play();
@@ -6728,9 +6903,10 @@
       act('reproduciendo');
       return;
     }
-    setVoiceStatus('Escuché “' + raw + '”, pero no es un comando que conozca. Prueba: «siguiente» (o «adelante», «la que sigue»), «anterior» (o «atrás», «regresa»), «pausa», «aleatorio» o «reproduce» y el nombre de una playlist.');
+    setVoiceStatus('Escuché “' + raw + '”, pero no es un comando que conozca. Prueba: «siguiente» (o «adelante», «la que sigue»), «anterior» (o «atrás», «regresa»), «pausa», «aleatorio» o «reproduce» y el nombre de una playlist o de una canción.');
   }
   var voiceConfirmPending = false;
+  var voiceRestartWanted = false; // Pack de mejoras: escucha continua — volver a escuchar tras ejecutar un comando
   var voiceLangFallback = false; // true tras el reintento con lang «es» genérico (error language-not-supported)
   var voiceStarting = false; // true mientras corre la prueba previa de micrófono
 
@@ -6776,13 +6952,17 @@
     r.interimResults = false;
     r.maxAlternatives = 1;
     r.onresult = function(ev){
-      voiceUnduck();
+      // Escucha continua: si está activada, al terminar esta sesión se vuelve a
+      // escuchar sola y el ducking se mantiene (la música sigue baja).
+      if(settings.voiceContinuous && settings.voiceOk) voiceRestartWanted = true;
+      else voiceUnduck();
       var txt = '';
       try{ txt = ev.results[0][0].transcript || ''; }catch(e){}
       if(txt) runVoiceCommand(txt);
       else setVoiceStatus('No te escuché bien. Toca el micrófono y prueba otra vez.');
     };
     r.onerror = function(ev){
+      voiceRestartWanted = false; // los errores detienen la escucha continua
       voiceUnduck();
       if(recog === r){ recogActive = false; syncVoiceBtns(); }
       var code = (ev && ev.error) || '';
@@ -6803,10 +6983,21 @@
       }
       else setVoiceStatus('No se pudo usar el micrófono ahora mismo. Inténtalo de nuevo.' + (code ? ' (' + code + ')' : ''));
     };
-    r.onend = function(){ voiceUnduck(); if(recog === r){ recogActive = false; syncVoiceBtns(); } };
+    r.onend = function(){
+      if(recog !== r) return;
+      if(voiceRestartWanted && settings.voiceContinuous && settings.voiceOk){
+        voiceRestartWanted = false;
+        // Se sigue escuchando: el botón queda en estado «escuchando» y el
+        // ducking no se restaura entre comandos.
+        setTimeout(function(){ if(settings.voiceContinuous && settings.voiceOk && !voiceStarting) beginRecog(); }, 300);
+        return;
+      }
+      voiceUnduck();
+      recogActive = false; syncVoiceBtns();
+    };
     recogActive = true; syncVoiceBtns();
     voiceDuck();
-    setVoiceStatus('Escuchando… di «siguiente», «pausa», «aleatorio» o «reproduce» y el nombre de una playlist.');
+    setVoiceStatus('Escuchando… di «siguiente», «pausa», «aleatorio» o «reproduce» y el nombre de una playlist o de una canción.');
     toast('Escuchando… di un comando.');
     tryStartRecog(r, prev, false);
   }
@@ -6835,7 +7026,7 @@
       settings.voiceOk = true;
       saveState();
     }
-    if(recogActive && recog){ try{ recog.stop(); }catch(e){} return; }
+    if(recogActive && recog){ voiceRestartWanted = false; try{ recog.stop(); }catch(e){} return; }
     if(voiceStarting) return;
     voiceLangFallback = false;
     // Prueba previa de micrófono: solo comprueba permiso y disponibilidad;
@@ -6870,6 +7061,7 @@
     applyTheme();
     syncThemeUI();
     syncAlarmUI();
+    syncVoiceContinuousUI();
     updateSleepSongsUI();
     updateEnergyCounts();
     checkAlarm();
@@ -6882,6 +7074,401 @@
   applyTheme();
   syncThemeUI();
   syncAlarmUI();
+
+  // ---------- Pack de mejoras: actualización, reanudar, deshacer, sincronizar, tap tempo ----------
+
+  // ----- 1. Actualización sin atascos -----
+  var APP_VERSION = '1.7.0';
+  document.getElementById('appVersionNote').textContent = APP_VERSION;
+  function cmpVersion(a, b){
+    var pa = a.split('.').map(function(x){ return parseInt(x, 10) || 0; });
+    var pb = b.split('.').map(function(x){ return parseInt(x, 10) || 0; });
+    for(var i = 0; i < 3; i++){ if(pa[i] !== pb[i]) return pa[i] > pb[i] ? 1 : -1; }
+    return 0;
+  }
+  document.getElementById('btnCheckUpdate').addEventListener('click', function(){
+    var st = document.getElementById('updateStatus');
+    st.textContent = 'Consultando la versión publicada (sin caché)…';
+    fetch('sw.js', { cache: 'no-store' }).then(function(r){
+      if(!r.ok) throw new Error('sw');
+      return r.text();
+    }).then(function(txt){
+      var m = /reproductor-musica-(\d+\.\d+\.\d+)/.exec(txt || '');
+      if(!m){
+        st.textContent = 'No se pudo leer la versión publicada en el servidor. Tu versión: v' + APP_VERSION + '. Si una actualización se quedó atascada, usa «Forzar actualización».';
+        return;
+      }
+      if(cmpVersion(m[1], APP_VERSION) > 0){
+        st.textContent = 'Hay una versión nueva (v' + m[1] + '). Recargando para actualizar…';
+        setTimeout(function(){ location.reload(); }, 1400);
+      } else {
+        st.textContent = 'Ya estás al día (v' + APP_VERSION + ').';
+      }
+    }).catch(function(){
+      st.textContent = 'No se pudo consultar la versión publicada (sin conexión o sin service worker en este contexto). Tu versión: v' + APP_VERSION + '. Si una actualización se quedó atascada, usa «Forzar actualización».';
+    });
+  });
+  var forceUpdateArmed = false;
+  document.getElementById('btnForceUpdate').addEventListener('click', function(){
+    var st = document.getElementById('updateStatus');
+    if(!forceUpdateArmed){
+      forceUpdateArmed = true;
+      st.textContent = '¿Seguro? Toca «Forzar actualización» otra vez para confirmar: se desregistrarán los service workers y se borrarán las cachés de la app, y la página se recargará. Tu biblioteca, tus playlists y tus ajustes NO se tocan: viven en IndexedDB y se conservan.';
+      setTimeout(function(){ forceUpdateArmed = false; }, 7000);
+      return;
+    }
+    forceUpdateArmed = false;
+    st.textContent = 'Limpiando service workers y cachés de la app… (IndexedDB no se toca)';
+    var jobs = [];
+    if('serviceWorker' in navigator && navigator.serviceWorker.getRegistrations){
+      jobs.push(navigator.serviceWorker.getRegistrations().then(function(regs){
+        return Promise.all(regs.map(function(r){ return r.unregister(); }));
+      }).catch(function(){}));
+    }
+    if(window.caches && caches.keys){
+      jobs.push(caches.keys().then(function(ks){
+        return Promise.all(ks.map(function(k){ return caches.delete(k); }));
+      }).catch(function(){}));
+    }
+    Promise.all(jobs).then(function(){
+      setTimeout(function(){ location.reload(); }, 400);
+    }).catch(function(){ location.reload(); });
+  });
+
+  // ----- 3. Seguir donde ibas -----
+  var resumeArmed = false, pendingSeekPos = null, lastResumeSave = 0;
+  function saveResume(force){
+    if(!resumeArmed || !stateReady || !currentId) return;
+    var now = Date.now();
+    if(!force && now - lastResumeSave < 2000) return;
+    lastResumeSave = now;
+    saveState(); // la cola y el contexto viajan en el estado guardado
+    idbMetaSet('resumeState', {
+      id: currentId,
+      pos: Math.max(0, audio.currentTime || 0),
+      context: { type: playContext.type, playlistId: playContext.playlistId },
+      at: now
+    });
+  }
+  function restoreResume(rs){
+    if(!rs || !rs.id) return;
+    var t = trackById(rs.id);
+    if(!t) return;
+    if(rs.context && rs.context.type === 'playlist' && playlists.some(function(p){ return p.id === rs.context.playlistId; }))
+      playContext = { type: 'playlist', playlistId: rs.context.playlistId };
+    selectTrack(rs.id, false);
+    var pos = (typeof rs.pos === 'number' && isFinite(rs.pos)) ? rs.pos : 0;
+    var dur = t.duration || 0;
+    var showPos = (pos > 2 && (!dur || pos < dur - 3)) ? pos : 0;
+    if(showPos){
+      pendingSeekPos = showPos;
+      setTimeout(function(){
+        if(pendingSeekPos != null && audio.readyState >= 1){
+          try{ audio.currentTime = pendingSeekPos; }catch(e){}
+          pendingSeekPos = null;
+        }
+      }, 700);
+    }
+    document.getElementById('resumeText').textContent = 'Seguimos donde ibas: “' + t.title + '”' + (showPos ? ' en ' + fmtTime(showPos) : '') + ' — pulsa play para continuar.';
+    document.getElementById('resumeBar').style.display = '';
+  }
+  document.getElementById('btnResumePlay').addEventListener('click', function(){
+    document.getElementById('resumeBar').style.display = 'none';
+    play();
+  });
+  document.getElementById('btnResumeDismiss').addEventListener('click', function(){
+    document.getElementById('resumeBar').style.display = 'none';
+  });
+  setInterval(function(){ if(isPlaying) saveResume(false); }, 5000);
+  document.addEventListener('visibilitychange', function(){ if(document.visibilityState === 'hidden') saveResume(true); });
+  window.addEventListener('pagehide', function(){ saveResume(true); });
+
+  // ----- 6. Deshacer al borrar (eliminación diferida, 8 s) -----
+  var pendingDeletes = [];
+  var UNDO_MS = 8000;
+  function serializePending(){
+    return pendingDeletes.map(function(e){
+      if(e.kind === 'track') return { kind: 'track', id: e.id, index: e.index, queuePos: e.queuePos, plPos: e.plPos, histPos: e.histPos, count: e.count, wasCurrent: e.wasCurrent };
+      if(e.kind === 'playlist') return { kind: 'playlist', id: e.id, pl: e.pl, index: e.index, prevSelected: e.prevSelected, prevContext: e.prevContext };
+      return { kind: 'plTrack', id: e.id, playlistId: e.playlistId, trackId: e.trackId, index: e.index, plName: e.plName };
+    });
+  }
+  function persistPending(){ idbMetaSet('pendingDeletes', serializePending()); }
+  function registerPendingDelete(entry, msg){
+    entry.msg = msg;
+    pendingDeletes.push(entry);
+    persistPending();
+    entry.timer = setTimeout(function(){ commitPendingDelete(entry); }, UNDO_MS);
+    showUndoBar(msg);
+  }
+  function showUndoBar(msg){
+    var extra = pendingDeletes.length > 1
+      ? ' Hay ' + pendingDeletes.length + ' borrados pendientes; «Deshacer» restaura el último.'
+      : ' Tienes 8 segundos para deshacerlo.';
+    document.getElementById('undoMsg').textContent = msg + extra;
+    document.getElementById('undoBar').classList.add('show');
+  }
+  function updateUndoBar(){
+    if(pendingDeletes.length){
+      var last = pendingDeletes[pendingDeletes.length - 1];
+      showUndoBar(last.msg || 'Borrado pendiente');
+    } else {
+      document.getElementById('undoBar').classList.remove('show');
+    }
+  }
+  function commitPendingDelete(entry){
+    var i = pendingDeletes.indexOf(entry);
+    if(i < 0) return;
+    pendingDeletes.splice(i, 1);
+    persistPending();
+    if(entry.kind === 'track'){
+      // Ahora sí: se borra el registro de IndexedDB y se liberan las URL.
+      idbDelete(entry.id);
+      try{ URL.revokeObjectURL(entry.track.url); if(entry.track.coverUrl) URL.revokeObjectURL(entry.track.coverUrl); }catch(e){}
+    }
+    updateUndoBar();
+  }
+  function restoreTrackEntry(entry, interactive){
+    var t = entry.track || trackById(entry.id);
+    if(!t) return;
+    if(!trackById(entry.id)) tracks.splice(Math.min(entry.index, tracks.length), 0, t);
+    (entry.queuePos || []).slice().sort(function(a, b){ return a - b; }).forEach(function(p){
+      queue.splice(Math.min(p, queue.length), 0, entry.id);
+    });
+    Object.keys(entry.plPos || {}).forEach(function(pid){
+      var pl = playlists.find(function(p){ return p.id === pid; });
+      if(!pl) return;
+      entry.plPos[pid].slice().sort(function(a, b){ return a - b; }).forEach(function(p2){
+        pl.trackIds.splice(Math.min(p2, pl.trackIds.length), 0, entry.id);
+      });
+    });
+    (entry.histPos || []).slice().sort(function(a, b){ return a.i - b.i; }).forEach(function(hp){
+      playHistory.splice(Math.min(hp.i, playHistory.length), 0, hp.h);
+    });
+    if(typeof entry.count === 'number') playCounts[entry.id] = entry.count;
+    saveState();
+    rebuildShuffle();
+    if(interactive && entry.wasCurrent){
+      selectTrack(entry.id, false);
+      if(entry.pos > 0) pendingSeekPos = entry.pos;
+    }
+    render();
+    if(interactive) toast('“' + t.title + '” está de vuelta en tu biblioteca');
+  }
+  function undoLastDelete(){
+    var entry = pendingDeletes.pop();
+    if(!entry){ updateUndoBar(); return; }
+    clearTimeout(entry.timer);
+    persistPending();
+    if(entry.kind === 'track'){
+      restoreTrackEntry(entry, true);
+    } else if(entry.kind === 'playlist'){
+      if(!playlists.some(function(p){ return p.id === entry.pl.id; }))
+        playlists.splice(Math.min(entry.index, playlists.length), 0, { id: entry.pl.id, name: entry.pl.name, trackIds: entry.pl.trackIds.slice() });
+      if(entry.prevSelected && playlists.some(function(p){ return p.id === entry.prevSelected; })) selectedPlaylistId = entry.prevSelected;
+      if(entry.prevContext && entry.prevContext.type === 'playlist' && playlists.some(function(p){ return p.id === entry.prevContext.playlistId; })) playContext = entry.prevContext;
+      saveState(); rebuildShuffle(); renderPack(); render();
+      toast('Playlist “' + entry.pl.name + '” restaurada');
+    } else if(entry.kind === 'plTrack'){
+      var pl = playlists.find(function(p){ return p.id === entry.playlistId; });
+      if(pl && pl.trackIds.indexOf(entry.trackId) < 0)
+        pl.trackIds.splice(Math.min(entry.index, pl.trackIds.length), 0, entry.trackId);
+      saveState(); renderPack();
+      toast('Canción restaurada en “' + (entry.plName || 'la playlist') + '”');
+    }
+    updateUndoBar();
+  }
+  function deferRemoveFromPlaylist(pl, idx, t){
+    var entry = { kind: 'plTrack', id: pl.id + '|' + t.id, playlistId: pl.id, trackId: t.id, index: idx, plName: pl.name, timer: null };
+    pl.trackIds.splice(idx, 1);
+    saveState(); renderPack();
+    registerPendingDelete(entry, '“' + t.title + '” se quitó de “' + pl.name + '”');
+  }
+  function restorePendingFromDisk(){
+    idbMetaGet('pendingDeletes').then(function(list){
+      if(!Array.isArray(list) || !list.length) return;
+      idbMetaSet('pendingDeletes', []);
+      var restored = 0;
+      list.forEach(function(e){
+        if(!e) return;
+        if(e.kind === 'track'){
+          // El registro nunca se borró de IndexedDB: la canción ya volvió con
+          // loadLibrary; solo hay que devolverla a cola, playlists e historial.
+          if(trackById(e.id)){ restoreTrackEntry(e, false); restored++; }
+        } else if(e.kind === 'playlist'){
+          if(!playlists.some(function(p){ return p.id === e.pl.id; })){
+            playlists.splice(Math.min(e.index, playlists.length), 0, e.pl);
+            restored++;
+          }
+        } else if(e.kind === 'plTrack'){
+          var pl = playlists.find(function(p){ return p.id === e.playlistId; });
+          if(pl && pl.trackIds.indexOf(e.trackId) < 0){
+            pl.trackIds.splice(Math.min(e.index, pl.trackIds.length), 0, e.trackId);
+            restored++;
+          }
+        }
+      });
+      if(restored){
+        saveState(); rebuildShuffle(); render(); renderPack();
+        toast('Se restauró un borrado que quedó pendiente al cerrar la app. No se perdió nada.');
+      }
+    });
+  }
+  document.getElementById('btnUndo').addEventListener('click', undoLastDelete);
+  document.getElementById('btnUndoDismiss').addEventListener('click', function(){
+    document.getElementById('undoBar').classList.remove('show');
+  });
+
+  // ----- 2b. Escucha continua (interruptor) -----
+  function syncVoiceContinuousUI(){
+    var b = document.getElementById('btnVoiceContinuous');
+    if(!b) return;
+    b.classList.toggle('on', !!settings.voiceContinuous);
+    b.setAttribute('aria-pressed', settings.voiceContinuous ? 'true' : 'false');
+    var st = document.getElementById('voiceContinuousState');
+    if(st) st.textContent = settings.voiceContinuous ? 'Activada' : 'Desactivada';
+  }
+  document.getElementById('btnVoiceContinuous').addEventListener('click', function(){
+    settings.voiceContinuous = !settings.voiceContinuous;
+    if(!settings.voiceContinuous) voiceRestartWanted = false;
+    saveState(); syncVoiceContinuousUI();
+    toast(settings.voiceContinuous
+      ? 'Escucha continua activada: tras cada comando volverá a escuchar sola.'
+      : 'Escucha continua desactivada.');
+  });
+
+  // ----- 5b. Tocar el ritmo (tap tempo) -----
+  var tapEditTimes = [], tapCurTimes = [];
+  function tapTempoCalc(times){
+    var now = performance.now();
+    if(times.length && now - times[times.length - 1] > 2500) times.length = 0;
+    times.push(now);
+    if(times.length > 12) times.shift();
+    if(times.length < 4) return null;
+    var gaps = [];
+    for(var i = 1; i < times.length; i++) gaps.push(times[i] - times[i - 1]);
+    var avg = gaps.reduce(function(a, b){ return a + b; }, 0) / gaps.length;
+    if(!avg) return null;
+    return Math.max(30, Math.min(300, Math.round(60000 / avg)));
+  }
+  document.getElementById('btnTapTempoEdit').addEventListener('click', function(ev){
+    var bpm = tapTempoCalc(tapEditTimes);
+    var st = document.getElementById('tapEditStatus');
+    var btn = ev.currentTarget;
+    btn.classList.add('tap-flash');
+    setTimeout(function(){ btn.classList.remove('tap-flash'); }, 150);
+    if(bpm){
+      document.getElementById('editBpm').value = bpm;
+      st.textContent = '≈ ' + bpm + ' BPM (' + tapEditTimes.length + ' toques). Se guardará como manual al pulsar «Guardar».';
+    } else {
+      st.textContent = 'Toque ' + tapEditTimes.length + ' de 4 mínimo… sigue tocando al pulso.';
+    }
+  });
+  document.getElementById('btnTapTempoCurrent').addEventListener('click', function(ev){
+    var t = currentTrack();
+    var st = document.getElementById('bpmStatus');
+    if(!t){ toast('Elige primero la canción a la que quieres fijarle el ritmo.'); return; }
+    var btn = ev.currentTarget;
+    btn.classList.add('tap-flash');
+    setTimeout(function(){ btn.classList.remove('tap-flash'); }, 150);
+    var bpm = tapTempoCalc(tapCurTimes);
+    if(bpm){
+      t.bpm = bpm; t.bpmManual = true;
+      idbPatch(t.id, { bpm: bpm, bpmManual: true });
+      if(st) st.textContent = 'Ritmo de “' + t.title + '” fijado a mano: ' + bpm + ' BPM (manual; el análisis automático no lo sobrescribirá).';
+      renderList(); renderPack();
+    } else if(st){
+      st.textContent = 'Toca el ritmo al pulso de “' + t.title + '”… ' + tapCurTimes.length + '/4 toques.';
+    }
+  });
+
+  // ----- 4. Sincronizador de letras -----
+  var syncActive = false, syncTrackId = null, syncLines = [], syncMarks = [];
+  function fmtLrcTime(sec){
+    sec = Math.max(0, sec || 0);
+    var m = Math.floor(sec / 60), s = sec - m * 60;
+    return '[' + String(m).padStart(2, '0') + ':' + s.toFixed(2).padStart(5, '0') + ']';
+  }
+  function syncShowCurrent(){
+    var cur = document.getElementById('syncCurrentLine');
+    var prog = document.getElementById('syncProgress');
+    if(syncMarks.length >= syncLines.length) cur.textContent = '¡Letra completa marcada! Pulsa «Terminar y guardar .lrc».';
+    else cur.textContent = syncLines[syncMarks.length] || '';
+    prog.textContent = syncMarks.length + ' de ' + syncLines.length + ' líneas marcadas' +
+      (syncMarks.length ? ' · última a las ' + fmtTime(syncMarks[syncMarks.length - 1].time) : '');
+  }
+  function exitSync(){
+    syncActive = false;
+    document.getElementById('syncBox').style.display = 'none';
+    document.getElementById('syncLive').style.display = 'none';
+  }
+  document.getElementById('btnSyncMode').addEventListener('click', function(){
+    var t = currentTrack();
+    if(!t){ toast('Elige primero la canción cuya letra quieres sincronizar.'); return; }
+    syncTrackId = t.id;
+    var src = t.plainLyrics || '';
+    if(!src && t.lyrics) src = t.lyrics.split(/\r?\n/).map(function(l){ return l.replace(/\[[^\]]*\]/g, '').trim(); }).filter(function(l){ return l; }).join('\n');
+    document.getElementById('syncText').value = src;
+    document.getElementById('syncBox').style.display = '';
+    document.getElementById('syncLive').style.display = 'none';
+    toast(src ? 'Letra cargada en el sincronizador. Pulsa «Empezar a sincronizar».' : 'Pega la letra en el cuadro y pulsa «Empezar a sincronizar».');
+  });
+  document.getElementById('btnSyncStart').addEventListener('click', function(){
+    var t = trackById(syncTrackId) || currentTrack();
+    if(!t){ toast('Elige primero una canción.'); return; }
+    var lines = document.getElementById('syncText').value.split(/\r?\n/).map(function(l){ return l.trim(); }).filter(function(l){ return l; });
+    if(lines.length < 2){ toast('Pega al menos dos líneas de letra para poder sincronizarla.'); return; }
+    syncTrackId = t.id;
+    syncLines = lines;
+    syncMarks = [];
+    syncActive = true;
+    document.getElementById('syncLive').style.display = '';
+    if(currentId !== t.id) selectTrack(t.id, false);
+    try{ audio.currentTime = 0; }catch(e){}
+    play();
+    syncShowCurrent();
+    toast('Sincronizando “' + t.title + '”: marca cada línea cuando empiece a sonar.');
+  });
+  function syncMark(){
+    if(!syncActive || syncMarks.length >= syncLines.length) return;
+    syncMarks.push({ time: audio.currentTime || 0, text: syncLines[syncMarks.length] });
+    syncShowCurrent();
+  }
+  document.getElementById('btnSyncMark').addEventListener('click', syncMark);
+  document.getElementById('btnSyncUndo').addEventListener('click', function(){
+    if(syncMarks.length){ syncMarks.pop(); syncShowCurrent(); }
+  });
+  document.getElementById('btnSyncRestart').addEventListener('click', function(){
+    syncMarks = [];
+    try{ audio.currentTime = 0; }catch(e){}
+    if(!isPlaying) play();
+    syncShowCurrent();
+  });
+  document.getElementById('btnSyncFinish').addEventListener('click', function(){
+    var t = trackById(syncTrackId);
+    if(!t){ exitSync(); return; }
+    if(!syncMarks.length){ toast('Marca al menos una línea antes de terminar.'); return; }
+    var lrc = syncMarks.map(function(mk){ return fmtLrcTime(mk.time) + mk.text; }).join('\n');
+    if(!t.plainLyrics){
+      t.plainLyrics = syncLines.join('\n');
+      idbPatch(t.id, { plainLyrics: t.plainLyrics });
+    }
+    attachLyricsTo(t.id, lrc);
+    downloadFile((t.title || 'letra').replace(/[\\/:*?"<>|]/g, '') + '.lrc', new Blob([lrc], { type: 'text/plain' }));
+    exitSync();
+    toast('Letra sincronizada guardada para “' + t.title + '” y archivo .lrc descargado');
+  });
+  document.getElementById('btnSyncCancel').addEventListener('click', exitSync);
+  // La tecla Espacio marca líneas mientras el sincronizador está activo
+  // (captura: tiene prioridad sobre el play/pausa global de Espacio).
+  document.addEventListener('keydown', function(ev){
+    if(!syncActive || ev.code !== 'Space') return;
+    var tag = (ev.target && ev.target.tagName) || '';
+    if(tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return;
+    ev.preventDefault();
+    ev.stopPropagation();
+    syncMark();
+  }, true);
 
   // ---------- Init ----------
   var appVersionEl = document.getElementById('appVersion');
