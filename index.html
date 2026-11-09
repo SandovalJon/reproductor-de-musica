@@ -412,6 +412,31 @@
   .toggle-pill.on{border-color:var(--accent); color:var(--accent); background:var(--accent-soft)}
   .toggle-pill.on .dot{background:var(--accent)}
   .sleep-status{font-size:12.5px; font-weight:700; color:var(--accent)}
+  /* ===== Pack 2: letras, editor, inteligentes, artistas/álbumes, respaldo ===== */
+  .lyrics-panel{margin-top:14px; padding-top:14px; border-top:1px solid var(--line)}
+  .lyrics-body{padding-top:12px}
+  .lyrics-scroll{max-height:250px; overflow-y:auto; padding:8px 4px; border:1px solid var(--line); border-radius:14px; background:var(--surface-2); scroll-behavior:smooth}
+  .lyric-line{padding:6px 12px; border-radius:9px; color:var(--muted); font-size:14.5px; line-height:1.5; text-align:center; transition:.15s}
+  .lyric-line[data-time]{cursor:pointer}
+  .lyric-line[data-time]:hover{background:var(--surface-3); color:var(--text)}
+  .lyric-line.active{background:var(--accent-soft); color:var(--accent-dark); font-weight:800}
+  @media (prefers-color-scheme: dark){ .lyric-line.active{color:var(--accent)} }
+  .lyrics-empty{margin:0; padding:14px; text-align:center; color:var(--muted); font-size:13.5px; line-height:1.55}
+  .lyrics-actions{display:flex; flex-wrap:wrap; gap:8px; margin-top:10px}
+  .backup-row{display:flex; flex-wrap:wrap; gap:8px; align-items:center; margin-top:12px}
+  .backup-note{font-size:12px; color:var(--muted-2); line-height:1.45; flex:1 1 220px}
+  .cover-grid{display:grid; grid-template-columns:repeat(auto-fill,minmax(126px,1fr)); gap:14px; padding:16px 18px 10px}
+  .group-card{border:none; background:transparent; padding:0; text-align:left; color:var(--text); cursor:pointer; min-width:0}
+  .group-card .gc-cover{aspect-ratio:1/1; border-radius:14px; overflow:hidden; display:grid; place-items:center; color:#fff; font-family:"Fraunces",serif; font-size:34px; font-weight:700; box-shadow:var(--shadow-sm)}
+  .group-card .gc-cover img{width:100%; height:100%; object-fit:cover; display:block}
+  .group-card .gc-name{font-weight:700; font-size:13.5px; margin-top:8px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
+  .group-card .gc-sub{color:var(--muted); font-size:12px; margin-top:2px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
+  .modal .field{margin-bottom:12px}
+  .modal .field label{display:block; font-size:12px; font-weight:800; letter-spacing:.06em; text-transform:uppercase; color:var(--muted); margin-bottom:6px}
+  .modal input[type=range]{padding:0; border:none; background:transparent}
+  .cover-edit-row{display:flex; align-items:center; gap:12px}
+  .cover-edit-row img{width:64px; height:64px; border-radius:12px; object-fit:cover; border:1px solid var(--line); background:var(--surface-3)}
+  .cover-edit-btns{display:flex; flex-wrap:wrap; gap:8px}
   .hidden-input{display:none}
   .sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0)}
 </style>
@@ -461,6 +486,12 @@
         <h2 class="now-title" id="nowTitle">Ninguna canción seleccionada</h2>
         <p class="now-artist" id="nowArtist">Añade archivos de audio para empezar</p>
         <p class="now-album" id="nowAlbum"></p>
+        <div style="margin-top:10px">
+          <button class="btn small" id="btnEditCurrent" type="button" disabled>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:15px;height:15px"><path d="M17 3a2.8 2.8 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></svg>
+            Editar datos
+          </button>
+        </div>
 
         <div class="now-rating" aria-label="Calificar canción actual">
           <button class="rate-pill" id="btnLike" type="button" disabled aria-pressed="false" title="Me gusta — se queda en la playlist">
@@ -568,6 +599,14 @@
               <p class="sound-note">Fundido suave: la siguiente canción entra mientras la actual se va apagando.</p>
             </div>
             <div class="sound-group">
+              <div class="sound-group-head"><h4>Volumen parejo</h4></div>
+              <div class="sound-inline">
+                <button class="toggle-pill" id="btnNormalize" type="button" aria-pressed="false"><span class="dot"></span><span id="normalizeState">Desactivado</span></button>
+                <button class="btn small" id="btnAnalyzeNorm" type="button">Analizar biblioteca</button>
+              </div>
+              <p class="sound-note" id="normStatus">Mide el volumen real de cada canción y guarda la corrección por canción, para que todas suenen a un nivel parejo. El ajuste fino por canción está en “Editar datos”.</p>
+            </div>
+            <div class="sound-group">
               <div class="sound-group-head"><h4>Temporizador de apagado</h4></div>
               <div class="sound-inline">
                 <label class="sr-only" for="sleepSelect">Apagar en</label>
@@ -584,6 +623,22 @@
                 <span class="sleep-status" id="sleepStatus" role="status"></span>
               </div>
             </div>
+          </div>
+        </div>
+
+        <div class="lyrics-panel">
+          <button class="sound-toggle" id="btnLyricsPanel" type="button" aria-expanded="false" aria-controls="lyricsBody">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h16M4 12h10M4 18h13"/></svg>
+            Letra sincronizada
+            <svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+          </button>
+          <div class="lyrics-body" id="lyricsBody" style="display:none">
+            <div class="lyrics-scroll" id="lyricsScroll"></div>
+            <div class="lyrics-actions">
+              <button class="btn small" id="btnLoadLrc" type="button">Cargar archivo .lrc</button>
+              <button class="btn small danger" id="btnRemoveLrc" type="button" style="display:none">Quitar letra</button>
+            </div>
+            <p class="sound-note">La línea actual se resalta sola mientras suena la canción, y tocar una línea salta a ese momento. Si el .lrc se llama igual que la canción, también puedes soltarlo en la página y se adjunta solo.</p>
           </div>
         </div>
 
@@ -621,8 +676,16 @@
         <div class="view-tabs" id="viewTabs" role="tablist" aria-label="Vistas">
           <button class="view-tab active" type="button" role="tab" aria-selected="true" data-view="library">Biblioteca</button>
           <button class="view-tab" type="button" role="tab" aria-selected="false" data-view="playlists">Playlists <span class="tab-count" id="tabCountPlaylists" style="display:none"></span></button>
+          <button class="view-tab" type="button" role="tab" aria-selected="false" data-view="smart">Inteligentes</button>
+          <button class="view-tab" type="button" role="tab" aria-selected="false" data-view="artists">Artistas</button>
+          <button class="view-tab" type="button" role="tab" aria-selected="false" data-view="albums">Álbumes</button>
           <button class="view-tab" type="button" role="tab" aria-selected="false" data-view="queue">Cola <span class="tab-count" id="tabCountQueue" style="display:none"></span></button>
           <button class="view-tab" type="button" role="tab" aria-selected="false" data-view="history">Historial <span class="tab-count" id="tabCountHistory" style="display:none"></span></button>
+        </div>
+        <div class="backup-row">
+          <button class="btn small" id="btnExportBackup" type="button">Exportar respaldo</button>
+          <button class="btn small" id="btnImportBackup" type="button">Importar respaldo</button>
+          <span class="backup-note">El respaldo guarda playlists, likes, letras, historial, contadores y ajustes en un archivo. No incluye los archivos de audio.</span>
         </div>
       </div>
 
@@ -633,7 +696,7 @@
       <div class="dropzone" id="dropzone" role="button" tabindex="0" aria-label="Añadir canciones o carpetas arrastrando o haciendo clic">
         <strong>Arrastra canciones o carpetas aquí</strong>
         <p>o haz clic para elegirlas desde tu dispositivo. Puedes soltar archivos sueltos o carpetas enteras (se leen sus subcarpetas) en cualquier parte de la página.</p>
-        <div class="formats">MP3 · WAV · FLAC · OGG · M4A · AAC · Opus</div>
+        <div class="formats">MP3 · WAV · FLAC · OGG · M4A · AAC · Opus · Letras .LRC con el mismo nombre</div>
       </div>
 
       <div class="saved-note" id="savedNote" style="display:none">
@@ -666,6 +729,7 @@
           <button class="btn small primary" id="btnPlPlay" type="button">Reproducir</button>
           <button class="btn small" id="btnPlShuffle" type="button">Aleatoria</button>
           <button class="btn small" id="btnPlRename" type="button">Renombrar</button>
+          <button class="btn small" id="btnPlM3u" type="button">Exportar .m3u</button>
           <button class="btn small danger" id="btnPlDelete" type="button">Borrar playlist</button>
         </div>
         <ul class="track-list" id="plTrackList"></ul>
@@ -709,6 +773,76 @@
         <div class="no-results" id="historyEmpty">Aún no has reproducido ninguna canción. En cuanto suene la primera, aparecerá aquí.</div>
       </div>
 
+      <!-- LISTAS INTELIGENTES -->
+      <div class="subview" id="viewSmart" style="display:none">
+        <div class="pl-bar" id="smartBar"></div>
+        <div class="subview-head" id="smartHead" style="display:none">
+          <div>
+            <h3 id="smartName"></h3>
+            <p id="smartInfo"></p>
+          </div>
+        </div>
+        <div class="subview-actions" id="smartActions" style="display:none">
+          <button class="btn small primary" id="btnSmartPlay" type="button">Reproducir</button>
+          <button class="btn small" id="btnSmartShuffle" type="button">Aleatoria</button>
+          <button class="btn small" id="btnSmartM3u" type="button">Exportar .m3u</button>
+        </div>
+        <ul class="track-list" id="smartTrackList"></ul>
+        <div class="no-results" id="smartEmpty" style="display:none"></div>
+      </div>
+
+      <!-- ARTISTAS -->
+      <div class="subview" id="viewArtists" style="display:none">
+        <div class="subview-head" id="artistGridHead">
+          <div>
+            <h3>Artistas</h3>
+            <p>Tu biblioteca agrupada por artista, con mosaico de portadas. Toca un artista para ver sus canciones.</p>
+          </div>
+        </div>
+        <div class="cover-grid" id="artistGrid"></div>
+        <div class="no-results" id="artistsEmpty" style="display:none">Añade canciones para ver aquí a tus artistas.</div>
+        <div id="artistDetail" style="display:none">
+          <div class="subview-actions">
+            <button class="btn small" id="btnArtistBack" type="button">← Volver</button>
+            <button class="btn small primary" id="btnArtistPlay" type="button">Reproducir</button>
+            <button class="btn small" id="btnArtistShuffle" type="button">Aleatoria</button>
+          </div>
+          <div class="subview-head">
+            <div>
+              <h3 id="artistGroupName"></h3>
+              <p id="artistGroupInfo"></p>
+            </div>
+          </div>
+          <ul class="track-list" id="artistGroupList"></ul>
+        </div>
+      </div>
+
+      <!-- ÁLBUMES -->
+      <div class="subview" id="viewAlbums" style="display:none">
+        <div class="subview-head" id="albumGridHead">
+          <div>
+            <h3>Álbumes</h3>
+            <p>Tu biblioteca agrupada por álbum, con mosaico de portadas. Toca un álbum para ver sus canciones.</p>
+          </div>
+        </div>
+        <div class="cover-grid" id="albumGrid"></div>
+        <div class="no-results" id="albumsEmpty" style="display:none">Añade canciones para ver aquí tus álbumes.</div>
+        <div id="albumDetail" style="display:none">
+          <div class="subview-actions">
+            <button class="btn small" id="btnAlbumBack" type="button">← Volver</button>
+            <button class="btn small primary" id="btnAlbumPlay" type="button">Reproducir</button>
+            <button class="btn small" id="btnAlbumShuffle" type="button">Aleatoria</button>
+          </div>
+          <div class="subview-head">
+            <div>
+              <h3 id="albumGroupName"></h3>
+              <p id="albumGroupInfo"></p>
+            </div>
+          </div>
+          <ul class="track-list" id="albumGroupList"></ul>
+        </div>
+      </div>
+
       <div class="lib-foot" id="libFoot" style="display:none">
         <span id="footLeft"></span>
         <span id="footRight"></span>
@@ -742,10 +876,54 @@
   </div>
 </div>
 
+<div class="modal-overlay" id="editModal" aria-hidden="true">
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="editModalTitle">
+    <h3 id="editModalTitle">Editar datos</h3>
+    <p>Corrige los datos de la canción. Los cambios se guardan solo en este dispositivo, en tu biblioteca local; el archivo original no se toca.</p>
+    <div class="field">
+      <label for="editTitle">Título</label>
+      <input type="text" id="editTitle" maxlength="120" autocomplete="off" />
+    </div>
+    <div class="field">
+      <label for="editArtist">Artista</label>
+      <input type="text" id="editArtist" maxlength="120" autocomplete="off" />
+    </div>
+    <div class="field">
+      <label for="editAlbum">Álbum</label>
+      <input type="text" id="editAlbum" maxlength="120" autocomplete="off" />
+    </div>
+    <div class="field">
+      <label>Portada</label>
+      <div class="cover-edit-row">
+        <img id="editCoverPreview" alt="Portada actual" style="display:none" />
+        <div class="cover-edit-btns">
+          <button class="btn small" id="btnCoverChange" type="button">Cambiar portada</button>
+          <button class="btn small danger" id="btnCoverRemove" type="button">Quitar</button>
+        </div>
+      </div>
+    </div>
+    <div class="field">
+      <label for="editVolAdj">Ajuste de volumen de esta canción</label>
+      <div class="sound-inline">
+        <input type="range" id="editVolAdj" min="-12" max="12" step="0.5" value="0" />
+        <output id="editVolAdjOut" for="editVolAdj">0 dB</output>
+      </div>
+      <p class="sound-note">Ajuste fino guardado por canción. Con “Volumen parejo” activado, se suma a la corrección automática de esa canción.</p>
+    </div>
+    <div class="modal-actions">
+      <button class="btn small" id="editModalCancel" type="button">Cancelar</button>
+      <button class="btn small primary" id="editModalSave" type="button">Guardar</button>
+    </div>
+  </div>
+</div>
+
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
 <input type="file" id="fileInput" class="hidden-input" accept="audio/*,.mp3,.wav,.flac,.ogg,.oga,.m4a,.aac,.opus,.webm,.aif,.aiff" multiple />
 <input type="file" id="folderInput" class="hidden-input" webkitdirectory directory multiple />
+<input type="file" id="lrcInput" class="hidden-input" accept=".lrc,.txt,text/plain" />
+<input type="file" id="coverInput" class="hidden-input" accept="image/*" />
+<input type="file" id="backupInput" class="hidden-input" accept=".json,application/json" />
 <audio id="audio" preload="metadata"></audio>
 
 <script>
@@ -786,7 +964,7 @@
 
   // ---------- State ----------
   var tracks = []; // {id,name,title,artist,album,duration,size,type,addedAt,url,coverUrl,color,rating,stars}
-  var APP_VERSION = '1.1.0'; // al publicar cambios, subir este número y el CACHE de sw.js
+  var APP_VERSION = '1.2.0'; // al publicar cambios, subir este número y el CACHE de sw.js
   var currentId = null;
   var isPlaying = false;
   var shuffle = false;
@@ -814,7 +992,8 @@
     speed: 1,
     crossfade: false,
     crossfadeSec: 6,
-    volume: 0.85
+    volume: 0.85,
+    normalize: false
   };
   var sleepEndsAt = 0; // timestamp, 0 = sin temporizador por minutos
   var sleepAfterTrack = false;
@@ -934,6 +1113,7 @@
           settings.crossfade = !!s.settings.crossfade;
           var cf = parseInt(s.settings.crossfadeSec,10); if(isFinite(cf)) settings.crossfadeSec = Math.max(2, Math.min(12, cf));
           var vo = parseFloat(s.settings.volume); if(isFinite(vo)) settings.volume = Math.max(0, Math.min(1, vo));
+          settings.normalize = !!s.settings.normalize;
         }
         if(s.selectedPlaylistId) selectedPlaylistId = s.selectedPlaylistId;
         if(s.playContext && s.playContext.type==='playlist' && playlists.some(function(p){ return p.id===s.playContext.playlistId; })) playContext = s.playContext;
@@ -1162,14 +1342,15 @@
           var track = {
             id:id, name:file.name, title:title, artist:artist, album:meta.album||'',
             duration:dur, size:file.size, type:file.type, addedAt:Date.now(),
-            url:url, coverUrl:coverUrl, color:colorFor(title+file.name), rating:null, stars:0
+            url:url, coverUrl:coverUrl, color:colorFor(title+file.name), rating:null, stars:0,
+            lyrics:null, normDb:null, volAdj:0
           };
           tracks.unshift(track);
           // Persist (blob + metadata + cover blob)
           return idbPut({
             id:id, blob:file, name:file.name, type:file.type, size:file.size,
             title:title, artist:artist, album:meta.album||'', duration:dur,
-            addedAt:track.addedAt, coverBlob:meta.coverBlob||null, rating:null, stars:0
+            addedAt:track.addedAt, coverBlob:meta.coverBlob||null, rating:null, stars:0, lyrics:null, normDb:null, volAdj:0
           }).then(function(){ return track; });
         });
       });
@@ -1188,7 +1369,10 @@
           coverUrl: r.coverBlob ? URL.createObjectURL(r.coverBlob) : null,
           color: colorFor((r.title||r.name)+''),
           rating: (r.rating==='like' || r.rating==='dislike') ? r.rating : null,
-          stars: clampStars(r.stars)
+          stars: clampStars(r.stars),
+          lyrics: (typeof r.lyrics==='string' && r.lyrics) ? r.lyrics : null,
+          normDb: (typeof r.normDb==='number' && isFinite(r.normDb)) ? r.normDb : null,
+          volAdj: (typeof r.volAdj==='number' && isFinite(r.volAdj)) ? r.volAdj : 0
         });
       });
       // Fill missing durations in background
@@ -1432,6 +1616,8 @@
       playingBadge.classList.remove('on');
       document.title='Reproductor de Música';
       updateRatingUI(null);
+      var bec0=document.getElementById('btnEditCurrent'); if(bec0) bec0.disabled=true;
+      renderLyrics();
       return;
     }
     nowKicker.textContent = t.rating==='dislike' ? 'Fuera de la playlist · Dislike' : (t.rating==='like' ? (isPlaying ? 'Reproduciendo · Te gusta' : 'En pausa · Te gusta') : (isPlaying ? 'Reproduciendo' : 'En pausa'));
@@ -1439,6 +1625,8 @@
     nowArtist.textContent = t.artist || t.name;
     nowAlbum.textContent = t.album || '';
     updateRatingUI(t);
+    var bec1=document.getElementById('btnEditCurrent'); if(bec1) bec1.disabled=false;
+    renderLyrics();
     if(t.coverUrl){
       coverImg.src = t.coverUrl; coverImg.style.display='block'; coverFallback.style.display='none';
     } else {
@@ -1471,6 +1659,9 @@
     document.getElementById('viewPlaylists').style.display = v==='playlists' ? '' : 'none';
     document.getElementById('viewQueue').style.display = v==='queue' ? '' : 'none';
     document.getElementById('viewHistory').style.display = v==='history' ? '' : 'none';
+    document.getElementById('viewSmart').style.display = v==='smart' ? '' : 'none';
+    document.getElementById('viewArtists').style.display = v==='artists' ? '' : 'none';
+    document.getElementById('viewAlbums').style.display = v==='albums' ? '' : 'none';
     if(!isLib){ emptyState.style.display='none'; trackListEl.style.display='none'; noResults.style.display='none'; var pn=document.getElementById('playlistNote'); if(pn) pn.classList.remove('show'); }
     else { renderStats(); renderList(); }
     renderPack();
@@ -1533,6 +1724,9 @@
     var ch = document.getElementById('tabCountHistory');
     ch.style.display = playHistory.length ? '' : 'none'; ch.textContent = playHistory.length || '';
     renderPlaylists(); renderQueueView(); renderHistoryView();
+    if(view==='smart') renderSmart();
+    if(view==='artists') renderGroups('artist');
+    if(view==='albums') renderGroups('album');
   }
 
   // ---------- Playlists personalizadas ----------
@@ -1759,6 +1953,14 @@
     var SVG_LIST = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M8 6h13M8 12h13M8 18h13"/><path d="M3.5 6h.01M3.5 12h.01M3.5 18h.01"/></svg>';
     item('Tocar siguiente', SVG_NEXT, function(){ queueNext(id); });
     item('Añadir a la cola', SVG_QUEUE, function(){ queueAdd(id); });
+    var SVG_EDIT = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.8 2.8 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></svg>';
+    var SVG_LYR = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h16M4 12h10M4 18h13"/></svg>';
+    item('Editar datos', SVG_EDIT, function(){ openEditor(id); });
+    item(t.lyrics ? 'Cambiar letra (.lrc)' : 'Cargar letra (.lrc)', SVG_LYR, function(){
+      lrcTargetId = id;
+      var li2 = document.getElementById('lrcInput');
+      li2.value=''; li2.click();
+    });
     var sep = document.createElement('div'); sep.className='menu-sep'; menuEl.appendChild(sep);
     var sub = document.createElement('div'); sub.className='menu-title'; sub.textContent='Añadir a una playlist';
     menuEl.appendChild(sub);
@@ -1875,7 +2077,7 @@
   audioB.preload = 'metadata';
   function otherDeck(){ return audio === audioB ? audioEl : audioB; }
   var audioCtx=null, analyser=null, vizRAF=null;
-  var eqFilters=[], deckGains={}, masterGain=null;
+  var eqFilters=[], deckGains={}, normGains={}, masterGain=null;
   var EQ_FREQS = [60, 250, 1000, 4000, 12000];
   function ensureVisualizer(){
     if(audioCtx) return;
@@ -1902,13 +2104,18 @@
       // Cada deck (audio principal y deck de crossfade) entra a la cadena con su propio gain
       [audioEl, audioB].forEach(function(el){
         var src = audioCtx.createMediaElementSource(el);
+        var ng = audioCtx.createGain();
+        ng.gain.value = 1;
         var g = audioCtx.createGain();
         g.gain.value = (el === audio) ? 1 : 0;
-        src.connect(g);
+        src.connect(ng);
+        ng.connect(g);
         g.connect(eqFilters[0]);
         deckGains[el === audioEl ? 'a' : 'b'] = g;
+        normGains[el === audioEl ? 'a' : 'b'] = ng;
       });
-    }catch(e){ audioCtx=null; analyser=null; eqFilters=[]; deckGains={}; masterGain=null; }
+      refreshNorm();
+    }catch(e){ audioCtx=null; analyser=null; eqFilters=[]; deckGains={}; normGains={}; masterGain=null; }
   }
   function gainOf(el){ return deckGains[el === audioEl ? 'a' : 'b'] || null; }
   function applyEq(){
@@ -1959,6 +2166,7 @@
     audio.src = t.url;
     audio.playbackRate = settings.speed;
     audio.volume = settings.volume;
+    applyNorm(audio, t);
     setSeekUI(0);
     timeCurrent.textContent='0:00';
     renderNow(); renderList();
@@ -2020,6 +2228,12 @@
   // Contexto de reproducción: biblioteca completa o una playlist personalizada.
   // Solo entran canciones reproducibles (sin dislike), igual que siempre.
   function contextPlayableIds(){
+    if(playContext.type==='smart'){
+      return computeSmart(playContext.smartId).filter(isPlayable).map(function(t){ return t.id; });
+    }
+    if(playContext.type==='group'){
+      return groupTracks(playContext.groupKind, playContext.groupKey).filter(isPlayable).map(function(t){ return t.id; });
+    }
     if(playContext.type==='playlist'){
       var pl = playlists.find(function(p){ return p.id===playContext.playlistId; });
       if(pl) return pl.trackIds.filter(function(id){ var t=trackById(id); return t && isPlayable(t); });
@@ -2127,6 +2341,7 @@
     inDeck.src = t.url;
     inDeck.playbackRate = settings.speed;
     inDeck.volume = settings.volume;
+    applyNorm(inDeck, t);
     try{ inDeck.currentTime = 0; }catch(e){}
     var now = audioCtx.currentTime;
     try{
@@ -2251,6 +2466,7 @@
     el.addEventListener('timeupdate', function(){
       if(el!==audio || fading) return;
       maybeCrossfade();
+      syncLyrics();
       if(seeking) return;
       if(el.duration){
         setSeekUI(el.currentTime/el.duration);
@@ -2269,6 +2485,10 @@
       iconPlay.style.display='none'; iconPause.style.display='block';
       btnPlay.setAttribute('aria-label','Pausar');
       if(currentId && lastCountedId!==currentId){ lastCountedId = currentId; recordPlay(currentId); }
+      var ctN = currentTrack();
+      if(ctN && settings.normalize && typeof ctN.normDb!=='number'){
+        analyzeTrack(ctN).then(function(){ if(currentId===ctN.id) applyNorm(audio, ctN); });
+      }
       renderNow(); renderList(); renderPack();
     });
     el.addEventListener('pause', function(){
@@ -2514,8 +2734,12 @@
     dragDepth=0; dragOverlay.classList.remove('on'); dropzone.classList.remove('drag');
     if(!ev.dataTransfer) return;
     filesFromDataTransfer(ev.dataTransfer).then(function(files){
-      if(files && files.length) addFiles(files);
-      else toast('No se encontró ningún archivo en lo que soltaste. Si era una carpeta, prueba con el botón “Carpeta”.');
+      files = files || [];
+      var lrcF = files.filter(function(f){ return /\.(lrc|txt)$/i.test(f.name||''); });
+      var audF = files.filter(function(f){ return !/\.(lrc|txt)$/i.test(f.name||''); });
+      lrcF.forEach(function(f){ attachDroppedLrc(f); });
+      if(audF.length) addFiles(audF);
+      else if(!files.length) toast('No se encontró ningún archivo en lo que soltaste. Si era una carpeta, prueba con el botón “Carpeta”.');
     });
   });
 
@@ -2667,6 +2891,7 @@
     document.getElementById('eqPreset').value = settings.eqPreset;
     setSpeed(settings.speed);
     syncCrossfadeUI();
+    syncNormalizeUI();
     document.getElementById('crossfadeRange').value = settings.crossfadeSec;
     document.getElementById('crossfadeOut').textContent = settings.crossfadeSec + ' s';
     applyVolume(settings.volume);
@@ -2750,6 +2975,643 @@
     setSleepTimer(v);
     if(v===-1) toast('La música se detendrá al terminar esta canción.');
     else if(v>0) toast('La música se apagará en '+v+' min.');
+  });
+
+  // ---------- Pack 2: letras, editor, inteligentes, grupos, respaldo, volumen parejo ----------
+  var lrcInput = document.getElementById('lrcInput');
+  var backupInput = document.getElementById('backupInput');
+  var coverInput = document.getElementById('coverInput');
+  var lrcTargetId = null;
+  var selectedSmartId = 'best';
+  var groupSel = { artist:null, album:null };
+
+  function idbPatch(id, fields){
+    return openDB().then(function(db){
+      return new Promise(function(resolve){
+        try{
+          var tx = db.transaction(STORE,'readwrite');
+          var store = tx.objectStore(STORE);
+          var getReq = store.get(id);
+          getReq.onsuccess = function(){
+            var rec = getReq.result;
+            if(rec){ Object.keys(fields).forEach(function(k){ rec[k] = fields[k]; }); store.put(rec); }
+          };
+          tx.oncomplete = function(){ resolve(); };
+          tx.onerror = function(){ resolve(); };
+        }catch(e){ resolve(); }
+      });
+    }).catch(function(){});
+  }
+  function downloadFile(name, blob){
+    try{
+      var a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = name;
+      document.body.appendChild(a);
+      a.click();
+      setTimeout(function(){ try{ URL.revokeObjectURL(a.href); }catch(e){} if(a.parentNode) a.parentNode.removeChild(a); }, 800);
+    }catch(e){ toast('No se pudo generar el archivo.'); }
+  }
+  function readFileText(file){
+    return new Promise(function(resolve, reject){
+      var r = new FileReader();
+      r.onload = function(){ resolve(String(r.result||'')); };
+      r.onerror = function(){ reject(r.error); };
+      r.readAsText(file);
+    });
+  }
+
+  // ----- Volumen parejo (normalización) -----
+  function normGainOf(el){ return normGains[el === audioEl ? 'a' : 'b'] || null; }
+  function appliedGainDb(t){
+    if(!t) return 0;
+    var db = t.volAdj || 0;
+    if(settings.normalize && typeof t.normDb==='number') db += t.normDb;
+    return Math.max(-24, Math.min(24, db));
+  }
+  function applyNorm(el, t){
+    var g = normGainOf(el); if(!g) return;
+    var val = Math.pow(10, appliedGainDb(t)/20);
+    try{
+      if(audioCtx) g.gain.setTargetAtTime(val, audioCtx.currentTime, 0.05);
+      else g.gain.value = val;
+    }catch(e){}
+  }
+  function refreshNorm(){
+    applyNorm(audio, currentTrack());
+    applyNorm(otherDeck(), fading ? trackById(fadeTargetId) : null);
+  }
+  function decodeAudio(buf){
+    var OC = window.OfflineAudioContext || window.webkitOfflineAudioContext;
+    if(OC){
+      try{
+        var oc = new OC(1, 1, 44100);
+        var p = oc.decodeAudioData(buf);
+        if(p && p.then) return p;
+      }catch(e){}
+    }
+    ensureVisualizer();
+    if(audioCtx) return audioCtx.decodeAudioData(buf);
+    return Promise.reject(new Error('no-audio'));
+  }
+  function analyzeTrack(t){
+    if(!t || typeof t.normDb==='number') return Promise.resolve(false);
+    if(t._analyzing) return t._analyzing;
+    t._analyzing = fetch(t.url)
+      .then(function(r){ return r.arrayBuffer(); })
+      .then(function(buf){ return decodeAudio(buf); })
+      .then(function(ab){
+        var sum=0, n=0;
+        for(var ch=0; ch<ab.numberOfChannels; ch++){
+          var d = ab.getChannelData(ch);
+          var stride = Math.max(1, Math.floor(d.length/120000));
+          for(var i=0;i<d.length;i+=stride){ sum += d[i]*d[i]; n++; }
+        }
+        if(!n) return false;
+        var rms = Math.sqrt(sum/n);
+        if(rms<=0.0001) return false;
+        var db = 20*Math.log10(0.16/rms);
+        db = Math.max(-12, Math.min(12, Math.round(db*10)/10));
+        t.normDb = db;
+        idbPatch(t.id, { normDb: db });
+        return true;
+      })
+      .catch(function(){ return false; })
+      .then(function(res){ t._analyzing = null; return res; });
+    return t._analyzing;
+  }
+  var analyzingAll = false;
+  function analyzeAllNorm(){
+    if(analyzingAll) return;
+    var status = document.getElementById('normStatus');
+    var pending = tracks.filter(function(t){ return typeof t.normDb!=='number'; });
+    if(!tracks.length){ if(status) status.textContent = 'Añade canciones primero: el análisis mide el volumen real de cada archivo.'; return; }
+    if(!pending.length){ if(status) status.textContent = 'Todas las canciones ya están analizadas. Activa el interruptor para aplicar el volumen parejo.'; return; }
+    analyzingAll = true;
+    var done = 0;
+    var chain = Promise.resolve();
+    pending.forEach(function(t){
+      chain = chain.then(function(){
+        return analyzeTrack(t).then(function(){
+          done++;
+          if(status) status.textContent = 'Analizando volumen… ' + done + ' de ' + pending.length + ' canciones.';
+        });
+      });
+    });
+    chain.then(function(){
+      analyzingAll = false;
+      if(status) status.textContent = 'Análisis listo: ' + done + ' canciones medidas y corrección guardada por canción.';
+      refreshNorm();
+      toast('Volumen parejo: análisis terminado');
+    });
+  }
+  function syncNormalizeUI(){
+    var btn = document.getElementById('btnNormalize');
+    if(!btn) return;
+    btn.classList.toggle('on', settings.normalize);
+    btn.setAttribute('aria-pressed', settings.normalize ? 'true' : 'false');
+    document.getElementById('normalizeState').textContent = settings.normalize ? 'Activado' : 'Desactivado';
+  }
+  document.getElementById('btnNormalize').addEventListener('click', function(){
+    settings.normalize = !settings.normalize;
+    syncNormalizeUI(); saveState(); refreshNorm();
+    toast(settings.normalize ? 'Volumen parejo activado: todas las canciones sonarán a un nivel similar' : 'Volumen parejo desactivado');
+    if(settings.normalize){
+      var t = currentTrack();
+      if(t && typeof t.normDb!=='number') analyzeTrack(t).then(function(){ refreshNorm(); });
+    }
+  });
+  document.getElementById('btnAnalyzeNorm').addEventListener('click', analyzeAllNorm);
+
+  // ----- Letras sincronizadas (.lrc) -----
+  var parsedLyrics = [], lyricsKey = '', lastLyricIdx = -1;
+  function parseLRC(text){
+    var lines = [], offset = 0;
+    var om = /\[offset:\s*(-?\d+)\]/i.exec(text || '');
+    if(om) offset = parseInt(om[1], 10)/1000;
+    (text || '').split(/\r?\n/).forEach(function(raw){
+      var tags = raw.match(/\[(\d{1,2}):(\d{2})(?:[.:](\d{1,3}))?\]/g);
+      var txt = raw.replace(/\[[^\]]*\]/g, '').trim();
+      if(tags && tags.length){
+        tags.forEach(function(tag){
+          var m = /\[(\d{1,2}):(\d{2})(?:[.:](\d{1,3}))?\]/.exec(tag);
+          var tsec = parseInt(m[1],10)*60 + parseInt(m[2],10) + (m[3] ? parseInt(m[3],10)/Math.pow(10, m[3].length) : 0) + offset;
+          lines.push({ time: Math.max(0, tsec), text: txt });
+        });
+      } else if(txt){
+        lines.push({ time: null, text: txt });
+      }
+    });
+    var timed = lines.filter(function(l){ return l.time!=null; });
+    if(timed.length >= 2){
+      timed.sort(function(a,b){ return a.time - b.time; });
+      return timed;
+    }
+    return lines;
+  }
+  function renderLyrics(){
+    var scroll = document.getElementById('lyricsScroll');
+    if(!scroll) return;
+    var t = currentTrack();
+    var key = t ? (t.id + '|' + (t.lyrics ? t.lyrics.length : 0)) : 'none';
+    if(key === lyricsKey){ syncLyrics(); return; }
+    lyricsKey = key;
+    parsedLyrics = (t && t.lyrics) ? parseLRC(t.lyrics) : [];
+    lastLyricIdx = -1;
+    document.getElementById('btnRemoveLrc').style.display = (t && t.lyrics) ? '' : 'none';
+    scroll.innerHTML = '';
+    if(!parsedLyrics.length){
+      var p = document.createElement('p');
+      p.className = 'lyrics-empty';
+      p.textContent = t
+        ? 'Esta canción no tiene letra cargada. Añade un archivo .lrc y la letra avanzará sola mientras suena, con la línea actual resaltada.'
+        : 'Elige una canción para ver su letra.';
+      scroll.appendChild(p);
+      return;
+    }
+    parsedLyrics.forEach(function(l){
+      var d = document.createElement('div');
+      d.className = 'lyric-line';
+      d.textContent = l.text || '♪';
+      if(l.time!=null){
+        d.setAttribute('data-time', l.time);
+        d.title = 'Saltar a ' + fmtTime(l.time);
+        d.addEventListener('click', function(){
+          try{ audio.currentTime = l.time; }catch(e){}
+          if(!isPlaying) play();
+        });
+      }
+      scroll.appendChild(d);
+    });
+    syncLyrics();
+  }
+  function syncLyrics(){
+    if(!parsedLyrics.length) return;
+    var hasTimed = parsedLyrics.some(function(l){ return l.time!=null; });
+    if(!hasTimed) return;
+    var ct = audio.currentTime + 0.12, idx = -1;
+    for(var i=0;i<parsedLyrics.length;i++){
+      if(parsedLyrics[i].time!=null && parsedLyrics[i].time <= ct) idx = i;
+      else if(parsedLyrics[i].time!=null) break;
+    }
+    if(idx === lastLyricIdx) return;
+    lastLyricIdx = idx;
+    var scroll = document.getElementById('lyricsScroll');
+    if(!scroll) return;
+    var kids = scroll.children;
+    for(var j=0;j<kids.length;j++) kids[j].classList.toggle('active', j===idx);
+    var body = document.getElementById('lyricsBody');
+    if(idx>=0 && kids[idx] && body && body.style.display!=='none'){
+      scroll.scrollTo({ top: kids[idx].offsetTop - scroll.clientHeight/2 + 22, behavior: 'smooth' });
+    }
+  }
+  function attachLyricsTo(id, text){
+    var t = trackById(id);
+    if(!t) return;
+    t.lyrics = text;
+    idbPatch(id, { lyrics: text });
+    if(id === currentId){ lyricsKey = ''; renderLyrics(); }
+  }
+  function attachDroppedLrc(file){
+    readFileText(file).then(function(txt){
+      if(!txt.trim()){ toast('El archivo “'+file.name+'” está vacío.'); return; }
+      var stem = (file.name || '').replace(/\.[^.]+$/, '').toLowerCase();
+      var t = tracks.find(function(x){ return (x.name || '').replace(/\.[^.]+$/, '').toLowerCase() === stem; })
+           || tracks.find(function(x){ return cleanName(x.name || '').toLowerCase() === stem; });
+      if(!t){ toast('No encontré una canción llamada como la letra “'+file.name+'”. Cárgala desde el botón ⋯ de la canción.'); return; }
+      attachLyricsTo(t.id, txt);
+      toast('Letra adjuntada a “'+t.title+'”');
+    }).catch(function(){ toast('No se pudo leer el archivo de letra.'); });
+  }
+  lrcInput.addEventListener('change', function(){
+    var f = lrcInput.files && lrcInput.files[0];
+    var id = lrcTargetId || currentId;
+    lrcTargetId = null;
+    if(!f || !id) return;
+    readFileText(f).then(function(txt){
+      if(!txt.trim()){ toast('Ese archivo de letra está vacío.'); return; }
+      attachLyricsTo(id, txt);
+      var t = trackById(id);
+      toast('Letra añadida a “' + (t ? t.title : 'la canción') + '”');
+    }).catch(function(){ toast('No se pudo leer el archivo de letra.'); });
+  });
+  var btnLyricsPanel = document.getElementById('btnLyricsPanel');
+  btnLyricsPanel.addEventListener('click', function(){
+    var body = document.getElementById('lyricsBody');
+    var open = body.style.display!=='none';
+    body.style.display = open ? 'none' : '';
+    btnLyricsPanel.classList.toggle('open', !open);
+    btnLyricsPanel.setAttribute('aria-expanded', !open ? 'true' : 'false');
+    if(!open){ renderLyrics(); syncLyrics(); }
+  });
+  document.getElementById('btnLoadLrc').addEventListener('click', function(){
+    if(!currentId){ toast('Primero elige una canción.'); return; }
+    lrcTargetId = currentId;
+    lrcInput.value = ''; lrcInput.click();
+  });
+  document.getElementById('btnRemoveLrc').addEventListener('click', function(){
+    var t = currentTrack(); if(!t) return;
+    t.lyrics = null;
+    idbPatch(t.id, { lyrics: null });
+    lyricsKey = ''; renderLyrics();
+    toast('Letra quitada de “'+t.title+'”');
+  });
+
+  // ----- Editor de datos -----
+  var editModal = document.getElementById('editModal');
+  var editTargetId = null, editCoverBlob = undefined;
+  function openEditor(id){
+    var t = trackById(id); if(!t) return;
+    editTargetId = id; editCoverBlob = undefined;
+    document.getElementById('editTitle').value = t.title || '';
+    document.getElementById('editArtist').value = t.artist || '';
+    document.getElementById('editAlbum').value = t.album || '';
+    var prev = document.getElementById('editCoverPreview');
+    if(t.coverUrl){ prev.src = t.coverUrl; prev.style.display = ''; }
+    else prev.style.display = 'none';
+    document.getElementById('editVolAdj').value = t.volAdj || 0;
+    document.getElementById('editVolAdjOut').textContent = fmtDb(t.volAdj || 0);
+    editModal.classList.add('on'); editModal.setAttribute('aria-hidden', 'false');
+  }
+  function closeEditor(){ editModal.classList.remove('on'); editModal.setAttribute('aria-hidden', 'true'); }
+  function saveEditor(){
+    var t = trackById(editTargetId);
+    if(!t){ closeEditor(); return; }
+    var patch = {};
+    var newTitle = document.getElementById('editTitle').value.trim();
+    if(newTitle && newTitle !== t.title){ t.title = newTitle; patch.title = newTitle; }
+    var newArtist = document.getElementById('editArtist').value.trim();
+    if(newArtist !== (t.artist || '')){ t.artist = newArtist; patch.artist = newArtist; }
+    var newAlbum = document.getElementById('editAlbum').value.trim();
+    if(newAlbum !== (t.album || '')){ t.album = newAlbum; patch.album = newAlbum; }
+    if(editCoverBlob !== undefined){
+      patch.coverBlob = editCoverBlob;
+      if(t.coverUrl){ try{ URL.revokeObjectURL(t.coverUrl); }catch(e){} }
+      t.coverUrl = editCoverBlob ? URL.createObjectURL(editCoverBlob) : null;
+    }
+    var va = parseFloat(document.getElementById('editVolAdj').value) || 0;
+    if(va !== (t.volAdj || 0)){ t.volAdj = va; patch.volAdj = va; }
+    t.color = colorFor(t.title + t.name);
+    if(Object.keys(patch).length) idbPatch(t.id, patch);
+    refreshNorm();
+    render();
+    closeEditor();
+    toast('Datos guardados para “'+t.title+'”');
+  }
+  document.getElementById('btnEditCurrent').addEventListener('click', function(){
+    if(currentId) openEditor(currentId);
+  });
+  document.getElementById('editModalSave').addEventListener('click', saveEditor);
+  document.getElementById('editModalCancel').addEventListener('click', closeEditor);
+  editModal.addEventListener('click', function(ev){ if(ev.target === editModal) closeEditor(); });
+  document.addEventListener('keydown', function(ev){ if(ev.key === 'Escape') closeEditor(); });
+  document.getElementById('btnCoverChange').addEventListener('click', function(){ coverInput.value=''; coverInput.click(); });
+  document.getElementById('btnCoverRemove').addEventListener('click', function(){
+    editCoverBlob = null;
+    document.getElementById('editCoverPreview').style.display = 'none';
+  });
+  coverInput.addEventListener('change', function(){
+    var f = coverInput.files && coverInput.files[0];
+    if(!f) return;
+    editCoverBlob = f;
+    var prev = document.getElementById('editCoverPreview');
+    prev.src = URL.createObjectURL(f);
+    prev.style.display = '';
+  });
+  document.getElementById('editVolAdj').addEventListener('input', function(ev){
+    document.getElementById('editVolAdjOut').textContent = fmtDb(parseFloat(ev.target.value) || 0);
+  });
+
+  // ----- Playlists inteligentes -----
+  var SMART_LISTS = [
+    { id:'best',   name:'Mejor calificadas', desc:'Canciones con like (y con 3 estrellas donde esa calificación existe).', emptyText:'Todavía no tienes canciones con like. Marca “Me gusta” en las que quieras guardar aquí.' },
+    { id:'most',   name:'Más escuchadas',    desc:'Las que más veces han sonado en este dispositivo, primero las de más arriba.', emptyText:'Aún no hay reproducciones registradas. Cuando escuches canciones, las más repetidas aparecerán aquí.' },
+    { id:'never',  name:'Nunca escuchadas',  desc:'Canciones de tu biblioteca que todavía no han sonado ni una vez.', emptyText:'Ya escuchaste todo al menos una vez. Nada pendiente por descubrir aquí.' },
+    { id:'recent', name:'Recién agregadas',  desc:'Lo último que entró a tu biblioteca, lo más nuevo primero.', emptyText:'Tu biblioteca está vacía. Añade canciones y aparecerán aquí.' }
+  ];
+  function computeSmart(id){
+    if(id === 'best') return tracks.filter(function(t){ return t.rating === 'like' || (typeof t.stars === 'number' && t.stars >= 3); });
+    if(id === 'most') return tracks.filter(function(t){ return (playCounts[t.id] || 0) > 0; })
+      .sort(function(a,b){ return (playCounts[b.id] || 0) - (playCounts[a.id] || 0); }).slice(0, 50);
+    if(id === 'never') return tracks.filter(function(t){ return !(playCounts[t.id] > 0); });
+    return tracks.slice().sort(function(a,b){ return (b.addedAt || 0) - (a.addedAt || 0); }).slice(0, 50);
+  }
+  function renderSmart(){
+    var bar = document.getElementById('smartBar');
+    bar.innerHTML = '';
+    SMART_LISTS.forEach(function(s){
+      var chip = document.createElement('button');
+      chip.className = 'chip' + (s.id === selectedSmartId ? ' active' : '');
+      chip.type = 'button';
+      chip.textContent = s.name;
+      var cc = document.createElement('span'); cc.className = 'chip-count';
+      cc.textContent = '(' + computeSmart(s.id).length + ')';
+      chip.appendChild(cc);
+      chip.addEventListener('click', function(){ selectedSmartId = s.id; renderSmart(); });
+      bar.appendChild(chip);
+    });
+    var def = SMART_LISTS.find(function(s){ return s.id === selectedSmartId; }) || SMART_LISTS[0];
+    var list = computeSmart(def.id);
+    document.getElementById('smartHead').style.display = '';
+    document.getElementById('smartActions').style.display = list.length ? '' : 'none';
+    document.getElementById('smartName').textContent = def.name;
+    document.getElementById('smartInfo').textContent = def.desc + ' · ' + list.length + (list.length === 1 ? ' canción' : ' canciones') + ' · Se actualiza sola.';
+    var listEl = document.getElementById('smartTrackList');
+    listEl.innerHTML = '';
+    list.forEach(function(t){
+      listEl.appendChild(simpleRow(t, {
+        count: def.id === 'most' ? (playCounts[t.id] || 0) : 0,
+        onPlay: function(){
+          if(t.rating === 'dislike'){ toast('“'+t.title+'” tiene dislike y no se reproduce.'); return; }
+          playContext = { type:'smart', smartId: def.id }; saveState();
+          if(t.id === currentId) togglePlay(); else selectTrack(t.id, true);
+        }
+      }));
+    });
+    var emptyEl = document.getElementById('smartEmpty');
+    emptyEl.style.display = list.length ? 'none' : '';
+    emptyEl.textContent = def.emptyText;
+  }
+  function playSmart(shufflePlay){
+    var list = computeSmart(selectedSmartId).filter(isPlayable);
+    if(!list.length){ toast('Esta lista inteligente no tiene canciones reproducibles por ahora.'); return; }
+    playContext = { type:'smart', smartId: selectedSmartId };
+    if(shufflePlay && !shuffle){
+      shuffle = true;
+      var bs = document.getElementById('btnShuffle');
+      bs.classList.add('active'); bs.setAttribute('aria-pressed', 'true');
+    }
+    rebuildShuffle(); saveState();
+    var firstId = (shufflePlay && shuffleOrder.length) ? shuffleOrder[0] : list[0].id;
+    selectTrack(firstId, true);
+    var def = SMART_LISTS.find(function(s){ return s.id === selectedSmartId; });
+    toast((shufflePlay ? 'Reproduciendo en aleatorio: ' : 'Reproduciendo: ') + (def ? def.name : 'lista inteligente'));
+  }
+  document.getElementById('btnSmartPlay').addEventListener('click', function(){ playSmart(false); });
+  document.getElementById('btnSmartShuffle').addEventListener('click', function(){ playSmart(true); });
+  document.getElementById('btnSmartM3u').addEventListener('click', function(){
+    var def = SMART_LISTS.find(function(s){ return s.id === selectedSmartId; });
+    exportM3U(def ? def.name : 'Inteligente', computeSmart(selectedSmartId));
+  });
+
+  // ----- Vista por artista y álbum -----
+  function groupKeyOf(kind, t){
+    return kind === 'artist' ? (t.artist || '') : ((t.album || '') + '\u0001' + (t.artist || ''));
+  }
+  function groupDisplay(kind, key){
+    if(kind === 'artist') return key || 'Artista desconocido';
+    var parts = key.split('\u0001');
+    return parts[0] || 'Álbum desconocido';
+  }
+  function groupSub(kind, key){
+    if(kind === 'artist') return '';
+    var parts = key.split('\u0001');
+    return parts[1] || 'Artista desconocido';
+  }
+  function groupTracks(kind, key){
+    return tracks.filter(function(t){ return groupKeyOf(kind, t) === key; });
+  }
+  function renderGroups(kind){
+    var isArtist = kind === 'artist';
+    var grid = document.getElementById(isArtist ? 'artistGrid' : 'albumGrid');
+    var gridHead = document.getElementById(isArtist ? 'artistGridHead' : 'albumGridHead');
+    var detail = document.getElementById(isArtist ? 'artistDetail' : 'albumDetail');
+    var emptyEl = document.getElementById(isArtist ? 'artistsEmpty' : 'albumsEmpty');
+    var sel = groupSel[kind];
+    if(sel == null){
+      detail.style.display = 'none';
+      grid.style.display = '';
+      gridHead.style.display = '';
+      grid.innerHTML = '';
+      var map = {}, order = [];
+      tracks.forEach(function(t){
+        var k = groupKeyOf(kind, t);
+        if(!(k in map)){ map[k] = []; order.push(k); }
+        map[k].push(t);
+      });
+      order.sort(function(a, b){ return groupDisplay(kind, a).localeCompare(groupDisplay(kind, b), 'es'); });
+      order.forEach(function(k){
+        var g = map[k];
+        var card = document.createElement('button');
+        card.className = 'group-card'; card.type = 'button';
+        card.setAttribute('aria-label', 'Ver canciones de ' + groupDisplay(kind, k));
+        var cov = document.createElement('div');
+        cov.className = 'gc-cover';
+        cov.style.background = 'linear-gradient(145deg,' + g[0].color[0] + ',' + g[0].color[1] + ')';
+        var withCover = g.find(function(t){ return t.coverUrl; });
+        if(withCover){
+          var im = document.createElement('img'); im.src = withCover.coverUrl; im.alt = ''; cov.appendChild(im);
+        } else {
+          cov.textContent = (groupDisplay(kind, k) || '♪').trim().charAt(0).toUpperCase() || '♪';
+        }
+        var nm = document.createElement('div'); nm.className = 'gc-name'; nm.textContent = groupDisplay(kind, k);
+        var sb = document.createElement('div'); sb.className = 'gc-sub';
+        var dur = g.reduce(function(s, t){ return s + (t.duration || 0); }, 0);
+        sb.textContent = (isArtist ? '' : groupSub(kind, k) + ' · ') + g.length + (g.length === 1 ? ' canción' : ' canciones') + (dur ? ' · ' + fmtTime(dur) : '');
+        card.appendChild(cov); card.appendChild(nm); card.appendChild(sb);
+        card.addEventListener('click', function(){ groupSel[kind] = k; renderGroups(kind); });
+        grid.appendChild(card);
+      });
+      emptyEl.style.display = order.length ? 'none' : '';
+      return;
+    }
+    grid.style.display = 'none';
+    gridHead.style.display = 'none';
+    emptyEl.style.display = 'none';
+    detail.style.display = '';
+    document.getElementById(isArtist ? 'artistGroupName' : 'albumGroupName').textContent = groupDisplay(kind, sel);
+    var g2 = groupTracks(kind, sel);
+    var dur2 = g2.reduce(function(s, t){ return s + (t.duration || 0); }, 0);
+    document.getElementById(isArtist ? 'artistGroupInfo' : 'albumGroupInfo').textContent =
+      (isArtist ? '' : groupSub(kind, sel) + ' · ') + g2.length + (g2.length === 1 ? ' canción' : ' canciones') + (dur2 ? ' · ' + fmtTime(dur2) : '');
+    var listEl = document.getElementById(isArtist ? 'artistGroupList' : 'albumGroupList');
+    listEl.innerHTML = '';
+    g2.forEach(function(t){
+      listEl.appendChild(simpleRow(t, {
+        onPlay: function(){
+          if(t.rating === 'dislike'){ toast('“'+t.title+'” tiene dislike y no se reproduce.'); return; }
+          playContext = { type:'group', groupKind: kind, groupKey: sel }; saveState();
+          if(t.id === currentId) togglePlay(); else selectTrack(t.id, true);
+        }
+      }));
+    });
+  }
+  function playGroup(kind, shufflePlay){
+    var sel = groupSel[kind];
+    if(sel == null) return;
+    var list = groupTracks(kind, sel).filter(isPlayable);
+    if(!list.length){ toast('No hay canciones reproducibles aquí (está vacío o todo tiene dislike).'); return; }
+    playContext = { type:'group', groupKind: kind, groupKey: sel };
+    if(shufflePlay && !shuffle){
+      shuffle = true;
+      var bs = document.getElementById('btnShuffle');
+      bs.classList.add('active'); bs.setAttribute('aria-pressed', 'true');
+    }
+    rebuildShuffle(); saveState();
+    var firstId = (shufflePlay && shuffleOrder.length) ? shuffleOrder[0] : list[0].id;
+    selectTrack(firstId, true);
+    toast((shufflePlay ? 'Reproduciendo en aleatorio: ' : 'Reproduciendo: ') + groupDisplay(kind, sel));
+  }
+  [['artist', 'Artist'], ['album', 'Album']].forEach(function(pair){
+    var kind = pair[0], cap = pair[1];
+    document.getElementById('btn' + cap + 'Back').addEventListener('click', function(){ groupSel[kind] = null; renderGroups(kind); });
+    document.getElementById('btn' + cap + 'Play').addEventListener('click', function(){ playGroup(kind, false); });
+    document.getElementById('btn' + cap + 'Shuffle').addEventListener('click', function(){ playGroup(kind, true); });
+  });
+
+  // ----- Respaldo exportable y .m3u -----
+  function exportM3U(name, list){
+    if(!list || !list.length){ toast('No hay canciones para exportar en esta lista.'); return; }
+    var lines = ['#EXTM3U'];
+    list.forEach(function(t){
+      lines.push('#EXTINF:' + Math.round(t.duration || 0) + ',' + ((t.artist ? t.artist + ' - ' : '') + t.title));
+      lines.push(t.name);
+    });
+    var safe = (name || 'playlist').replace(/[^\wáéíóúñü -]+/gi, '').trim() || 'playlist';
+    downloadFile(safe + '.m3u', new Blob([lines.join('\n')], { type: 'audio/x-mpegurl' }));
+    toast('Lista exportada en formato .m3u para otros reproductores');
+  }
+  document.getElementById('btnPlM3u').addEventListener('click', function(){
+    var pl = selectedPlaylist(); if(!pl) return;
+    exportM3U(pl.name, pl.trackIds.map(function(id){ return trackById(id); }).filter(Boolean));
+  });
+  function exportBackup(){
+    var data = {
+      app: 'reproductor-de-musica',
+      kind: 'respaldo',
+      version: 2,
+      exportedAt: new Date().toISOString(),
+      playlists: playlists,
+      queue: queue,
+      history: playHistory,
+      counts: playCounts,
+      settings: {
+        eq: settings.eq, eqPreset: settings.eqPreset, speed: settings.speed,
+        crossfade: settings.crossfade, crossfadeSec: settings.crossfadeSec,
+        volume: settings.volume, normalize: settings.normalize
+      },
+      tracks: tracks.map(function(t){
+        return {
+          id: t.id, name: t.name, rating: t.rating,
+          title: t.title, artist: t.artist, album: t.album,
+          lyrics: t.lyrics || null,
+          stars: (typeof t.stars === 'number' ? t.stars : null),
+          normDb: (typeof t.normDb === 'number' ? t.normDb : null),
+          volAdj: t.volAdj || 0
+        };
+      })
+    };
+    downloadFile('respaldo-reproductor.json', new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' }));
+    toast('Respaldo exportado: playlists, likes, letras, historial y ajustes');
+  }
+  function importBackup(file){
+    readFileText(file).then(function(txt){
+      var data = null;
+      try{ data = JSON.parse(txt); }catch(e){}
+      if(!data || typeof data !== 'object' || (!Array.isArray(data.playlists) && !Array.isArray(data.tracks))){
+        toast('Ese archivo no es un respaldo válido de este reproductor.');
+        return;
+      }
+      var exists = function(id){ return tracks.some(function(t){ return t.id === id; }); };
+      (data.tracks || []).forEach(function(td){
+        if(!td) return;
+        var t = trackById(td.id) || tracks.find(function(x){ return x.name === td.name; });
+        if(!t) return;
+        var patch = {};
+        if(td.rating === 'like' || td.rating === 'dislike' || td.rating === null){ t.rating = td.rating; patch.rating = td.rating; }
+        ['title', 'artist', 'album'].forEach(function(k){
+          if(typeof td[k] === 'string' && td[k]){ t[k] = td[k]; patch[k] = td[k]; }
+        });
+        if(typeof td.lyrics === 'string' && td.lyrics){ t.lyrics = td.lyrics; patch.lyrics = td.lyrics; }
+        if(typeof td.stars === 'number' && isFinite(td.stars)){ t.stars = clampStars(td.stars); patch.stars = t.stars; }
+        if(typeof td.normDb === 'number' && isFinite(td.normDb)){ t.normDb = td.normDb; patch.normDb = td.normDb; }
+        if(typeof td.volAdj === 'number' && isFinite(td.volAdj)){ t.volAdj = td.volAdj; patch.volAdj = td.volAdj; }
+        t.color = colorFor(t.title + t.name);
+        if(Object.keys(patch).length) idbPatch(t.id, patch);
+      });
+      if(Array.isArray(data.playlists)){
+        playlists = data.playlists
+          .filter(function(p){ return p && p.id && typeof p.name === 'string' && Array.isArray(p.trackIds); })
+          .map(function(p){ return { id: p.id, name: p.name, trackIds: p.trackIds.filter(exists) }; });
+        if(selectedPlaylistId && !playlists.some(function(p){ return p.id === selectedPlaylistId; }))
+          selectedPlaylistId = playlists.length ? playlists[0].id : null;
+        if(playContext.type === 'playlist' && !playlists.some(function(p){ return p.id === playContext.playlistId; }))
+          playContext = { type: 'library', playlistId: null };
+      }
+      if(Array.isArray(data.queue)) queue = data.queue.filter(exists);
+      if(Array.isArray(data.history)) playHistory = data.history.filter(function(h){ return h && exists(h.id); }).slice(0, 100);
+      if(data.counts && typeof data.counts === 'object'){
+        var nc = {};
+        Object.keys(data.counts).forEach(function(id){
+          var v = parseInt(data.counts[id], 10);
+          if(exists(id) && isFinite(v) && v > 0) nc[id] = v;
+        });
+        playCounts = nc;
+      }
+      if(data.settings && typeof data.settings === 'object'){
+        var ds = data.settings;
+        if(Array.isArray(ds.eq) && ds.eq.length === 5) settings.eq = ds.eq.map(function(v){ v = parseFloat(v); return isFinite(v) ? Math.max(-12, Math.min(12, v)) : 0; });
+        if(typeof ds.eqPreset === 'string') settings.eqPreset = ds.eqPreset;
+        var dsp = parseFloat(ds.speed); if(isFinite(dsp)) settings.speed = Math.max(0.5, Math.min(2, dsp));
+        settings.crossfade = !!ds.crossfade;
+        var dcf = parseInt(ds.crossfadeSec, 10); if(isFinite(dcf)) settings.crossfadeSec = Math.max(2, Math.min(12, dcf));
+        var dvo = parseFloat(ds.volume); if(isFinite(dvo)) settings.volume = Math.max(0, Math.min(1, dvo));
+        settings.normalize = !!ds.normalize;
+      }
+      applySettingsToUI();
+      rebuildShuffle();
+      saveState();
+      lyricsKey = '';
+      render();
+      refreshNorm();
+      toast('Respaldo importado: playlists, likes, historial y ajustes restaurados');
+    }).catch(function(){ toast('No se pudo leer el archivo de respaldo.'); });
+  }
+  document.getElementById('btnExportBackup').addEventListener('click', exportBackup);
+  document.getElementById('btnImportBackup').addEventListener('click', function(){ backupInput.value = ''; backupInput.click(); });
+  backupInput.addEventListener('change', function(){
+    var f = backupInput.files && backupInput.files[0];
+    if(f) importBackup(f);
   });
 
   // ---------- Init ----------
