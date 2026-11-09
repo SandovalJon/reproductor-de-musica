@@ -624,7 +624,7 @@
               <svg id="iconVol" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5 6 9H3v6h3l5 4z" fill="currentColor" stroke="none"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/><path d="M18.4 5.6a9 9 0 0 1 0 12.8"/></svg>
               <svg id="iconMute" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:none"><path d="M11 5 6 9H3v6h3l5 4z" fill="currentColor" stroke="none"/><path d="m16 9 6 6M22 9l-6 6"/></svg>
             </button>
-            <input type="range" id="volume" class="volume-range" min="0" max="100" value="85" aria-label="Volumen" />
+            <input type="range" id="volume" class="volume-range" min="0" max="100" value="100" aria-label="Volumen" />
           </div>
           <label class="sr-only" for="speed">Velocidad</label>
           <select id="speed" class="speed-select" title="Velocidad de reproducción">
@@ -1258,7 +1258,7 @@
 
   // ---------- State ----------
   var tracks = []; // {id,name,title,artist,album,duration,size,type,addedAt,url,coverUrl,color,rating,stars}
-  var APP_VERSION = '1.4.0'; // al publicar cambios, subir este número y el CACHE de sw.js
+  var APP_VERSION = '1.4.1'; // al publicar cambios, subir este número y el CACHE de sw.js
   var currentId = null;
   var isPlaying = false;
   var shuffle = false;
@@ -1270,7 +1270,7 @@
   var genreFilter = '', yearFilter = '', tagFilter = ''; // Pack 4: filtros por género del archivo, año y etiquetas propias
   var multiMode = false, selectedIds = {}; // Pack 4: multiselección en la biblioteca
   var seeking = false;
-  var lastVolume = 0.85;
+  var lastVolume = 1;
   var toastTimer = null;
 
   // ---------- Pack completo: estado ----------
@@ -1289,7 +1289,7 @@
     speed: 1,
     crossfade: false,
     crossfadeSec: 6,
-    volume: 0.85,
+    volume: 1,
     normalize: false,
     skipSilence: false
   };
@@ -2959,7 +2959,7 @@
   }
   document.getElementById('btnMute').addEventListener('click', function(){
     if(settings.volume>0) applyVolume(0);
-    else applyVolume(lastVolume||0.85);
+    else applyVolume(lastVolume||1);
   });
   document.getElementById('speed').addEventListener('change', function(ev){
     setSpeed(parseFloat(ev.target.value)||1);
@@ -5268,7 +5268,7 @@
   }
   var btnUpdateEl = document.getElementById('btnUpdate');
   if(btnUpdateEl) btnUpdateEl.addEventListener('click', checkForUpdate);
-  audio.volume = 0.85;
+  audio.volume = 1;
   setVolumeUI(); updateVolIcon(); setSeekUI(0);
   buildEqRows();
   render();
