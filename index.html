@@ -578,16 +578,10 @@
   .summary-card .sum-empty{margin:14px 0 0; font-size:14px; line-height:1.55; opacity:.92}
   .summary-controls{display:flex; flex-wrap:wrap; gap:8px; align-items:center; padding:14px 18px 0}
   .summary-controls input[type=month], .summary-controls select{border:1px solid var(--line); background:var(--surface-2); color:var(--text); border-radius:999px; padding:8px 11px; font-size:13px; font-weight:600}
-  /* Pack 6: apariencia, voz y energía */
+  /* Pack 6: apariencia y energía */
   .accent-dots{display:flex; flex-wrap:wrap; gap:10px; margin-top:2px}
   .swatch{width:34px; height:34px; border-radius:50%; border:3px solid transparent; box-shadow:0 2px 8px rgba(0,0,0,.18); padding:0; flex:none}
   .swatch.on{border-color:var(--surface); outline:2px solid var(--text); outline-offset:1px}
-  .mic-btn.listening{background:var(--accent) !important; border-color:var(--accent) !important; color:#fff !important; animation:micPulse 1.1s ease-in-out infinite}
-  @keyframes micPulse{0%,100%{transform:scale(1)}50%{transform:scale(1.07)}}
-  .mic-btn.confirm{background:var(--accent) !important; border-color:var(--accent) !important; color:#fff !important; animation:micBlink .85s ease-in-out infinite}
-  @keyframes micBlink{0%,100%{opacity:1}50%{opacity:.5}}
-  @media (prefers-reduced-motion: reduce){ .mic-btn.listening, .mic-btn.confirm{animation:none} }
-  .voice-status{font-size:12.5px; font-weight:700; color:var(--accent); margin:8px 0 0; line-height:1.45}
   .bpm-tag{font-weight:800; color:var(--accent)}
 </style>
 </head>
@@ -653,12 +647,7 @@
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:15px;height:15px"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="m8.6 13.5 6.8 4M15.4 6.5l-6.8 4"/></svg>
             Compartir
           </button>
-          <button class="btn small mic-btn" id="btnVoice" type="button" title="Control por voz: di «siguiente», «pausa», «aleatorio» o «reproduce» y el nombre de una playlist">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:15px;height:15px"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><path d="M12 19v3"/></svg>
-            Voz
-          </button>
         </div>
-        <p class="voice-status" id="voiceStatus" role="status" style="display:none"></p>
         <div class="resume-bar" id="resumeBar" style="display:none" role="status">
           <span id="resumeText"></span>
           <button class="btn small primary" id="btnResumePlay" type="button">Reproducir</button>
@@ -872,13 +861,6 @@
               </div>
               <p class="sound-note" id="alarmStatus">A la hora elegida, con la app abierta, empezará a sonar la playlist y verás un aviso. Se repite cada día mientras esté activada.</p>
             </div>
-            <div class="sound-group">
-              <div class="sound-group-head"><h4>Control por voz</h4></div>
-              <div class="sound-inline">
-                <button class="toggle-pill" id="btnVoiceContinuous" type="button" aria-pressed="false"><span class="dot"></span><span>Escucha continua:&nbsp;</span><span id="voiceContinuousState">Desactivada</span></button>
-              </div>
-              <p class="sound-note">Con la escucha continua activada, tras ejecutar cada comando la app vuelve a escuchar sola (con la música bajada mientras tanto) para que des varios comandos seguidos sin tocar el botón. Se detiene si pulsas «Voz» de nuevo, si la desactivas aquí o si ocurre un error. Funciona bajo el mismo aviso y consentimiento de la voz: el reconocimiento lo procesa el servicio del fabricante del navegador, fuera del dispositivo. Además, «reproduce» seguido de un nombre busca primero una playlist y, si no coincide, la canción en tu biblioteca.</p>
-            </div>
           </div>
         </div>
 
@@ -1015,7 +997,7 @@
         <div class="update-row">
           <button class="btn small" id="btnCheckUpdate" type="button">Actualizar app</button>
           <button class="btn small danger" id="btnForceUpdate" type="button">Forzar actualización</button>
-          <span class="backup-note" id="updateStatus">Versión de esta app: v<span id="appVersionNote">1.7.0</span>. «Actualizar app» consulta la versión publicada y te dice si ya estás al día antes de recargar. «Forzar actualización» limpia el service worker y las cachés de la app si una actualización se quedó atascada; tu biblioteca, playlists y ajustes (IndexedDB) nunca se tocan.</span>
+          <span class="backup-note" id="updateStatus">Versión de esta app: v<span id="appVersionNote">1.7.1</span>. «Actualizar app» consulta la versión publicada y te dice si ya estás al día antes de recargar. «Forzar actualización» limpia el service worker y las cachés de la app si una actualización se quedó atascada; tu biblioteca, playlists y ajustes (IndexedDB) nunca se tocan.</span>
         </div>
       </div>
 
@@ -1474,10 +1456,6 @@
     </button>
   </div>
   <div class="car-rating">
-    <button class="car-rate mic-btn" id="btnCarMic" type="button">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><path d="M12 19v3"/></svg>
-      Voz
-    </button>
     <button class="car-rate" id="btnCarLike" type="button">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 10v12"/><path d="M15 5.88 14 10h5.83a2 2 0 0 1 1.92 2.56l-2.33 8A2 2 0 0 1 17.5 22H4a2 2 0 0 1-2-2v-8a2 2 0 0 1 2-2h2.76a2 2 0 0 0 1.79-1.11L12 2a3.13 3.13 0 0 1 3 3.88Z"/></svg>
       Me gusta
@@ -1542,7 +1520,7 @@
 
   // ---------- State ----------
   var tracks = []; // {id,name,title,artist,album,duration,size,type,addedAt,url,coverUrl,color,rating,stars}
-  var APP_VERSION = '1.7.0'; // al publicar cambios, subir este número y el CACHE de sw.js
+  var APP_VERSION = '1.7.1'; // al publicar cambios, subir este número y el CACHE de sw.js
   var currentId = null;
   var isPlaying = false;
   var shuffle = false;
@@ -1583,9 +1561,7 @@
     theme: 'auto', // Pack 6: 'auto' | 'light' | 'dark'
     accent: 'naranja', // Pack 6: id de color de acento
     vizStyle: 'bars', // Pack 6: 'bars' | 'wave' | 'circle'
-    alarm: { on: false, time: '08:00', playlistId: '' }, // Pack 6: alarma musical
-    voiceOk: false, // Pack 6: el usuario aceptó que el reconocimiento de voz del navegador procesa el audio fuera del dispositivo
-    voiceContinuous: false // Pack de mejoras: escucha continua de comandos de voz (desactivada por defecto)
+    alarm: { on: false, time: '08:00', playlistId: '' } // Pack 6: alarma musical
   };
   // Pack 5: valida y fusiona un objeto de ajustes (estado guardado o respaldo) sin perder lo existente
   function sanitizeFx(fx){
@@ -1623,8 +1599,6 @@
     if(typeof ds.accent === 'string') settings.accent = validAccent(ds.accent);
     if(typeof ds.vizStyle === 'string') settings.vizStyle = (ds.vizStyle === 'wave' || ds.vizStyle === 'circle') ? ds.vizStyle : 'bars';
     if(ds.alarm) settings.alarm = sanitizeAlarm(ds.alarm);
-    if(typeof ds.voiceOk === 'boolean') settings.voiceOk = ds.voiceOk;
-    if(typeof ds.voiceContinuous === 'boolean') settings.voiceContinuous = ds.voiceContinuous;
   }
   var sleepEndsAt = 0; // timestamp, 0 = sin temporizador por minutos
   var sleepAfterTrack = false;
@@ -4727,8 +4701,7 @@
         gapless: settings.gapless, fadePause: settings.fadePause,
         fx: { bassOn: settings.fx.bassOn, bassDb: settings.fx.bassDb, reverb: settings.fx.reverb, vocal: settings.fx.vocal },
         customPresets: settings.customPresets,
-        theme: settings.theme, accent: settings.accent, vizStyle: settings.vizStyle, voiceOk: settings.voiceOk,
-        voiceContinuous: settings.voiceContinuous,
+        theme: settings.theme, accent: settings.accent, vizStyle: settings.vizStyle,
         alarm: { on: settings.alarm.on, time: settings.alarm.time, playlistId: settings.alarm.playlistId }
       },
       tracks: tracks.map(function(t){
@@ -6250,7 +6223,7 @@
     if(view === 'summary') renderSummary();
   }
 
-  // ---------- Pack 6: compartir/ZIP, recortadora, temas, alarma, energía (BPM) y voz ----------
+  // ---------- Pack 6: compartir/ZIP, recortadora, temas, alarma y energía (BPM) ----------
   var ACCENTS = [
     { id:'naranja', name:'Naranja', value:'#E94E1B', darkOf:'#C93E12', dark:'#FF5C28', soft:'#FFE8DE', softDark:'#3A221B' },
     { id:'verde',   name:'Verde',   value:'#1F9D66', darkOf:'#157347', dark:'#2ECC85', soft:'#DDF3E7', softDark:'#17352A' },
@@ -6784,284 +6757,11 @@
   document.getElementById('btnIntensePlay').addEventListener('click', function(){ selectedSmartId = 'intense'; renderSmart(); playSmart(false); });
   document.getElementById('btnIntenseShuffle').addEventListener('click', function(){ selectedSmartId = 'intense'; renderSmart(); playSmart(true); });
 
-  // ----- Control por voz (SpeechRecognition, español) -----
-  var recog = null, recogActive = false;
-  function setVoiceStatus(msg){
-    var vs = document.getElementById('voiceStatus');
-    if(vs){ vs.textContent = msg || ''; vs.style.display = msg ? '' : 'none'; }
-  }
-  function syncVoiceBtns(){
-    ['btnVoice', 'btnCarMic'].forEach(function(id){
-      var b = document.getElementById(id);
-      if(!b) return;
-      b.classList.toggle('listening', recogActive);
-      b.classList.toggle('confirm', !recogActive && typeof voiceConfirmPending !== 'undefined' && !!voiceConfirmPending);
-    });
-  }
-  // Ducking: mientras se escucha un comando, el volumen de reproducción baja a
-  // ~20% para que la música no tape la voz. Solo toca el volumen de los decks:
-  // ni settings.volume (el volumen guardado) ni la normalización cambian, y al
-  // terminar la escucha se restaura el nivel exacto del usuario.
-  var voiceDucked = false;
-  function voiceDuck(){
-    if(voiceDucked || !isPlaying) return;
-    voiceDucked = true;
-    try{
-      audioEl.volume = settings.volume * 0.2;
-      audioB.volume = settings.volume * 0.2;
-    }catch(e){}
-  }
-  function voiceUnduck(){
-    if(!voiceDucked) return;
-    voiceDucked = false;
-    try{
-      audioEl.volume = settings.volume;
-      audioB.volume = settings.volume;
-    }catch(e){}
-  }
-  function normCmd(s){
-    return (s || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[¡!¿?.,;:"]/g, ' ').replace(/\s+/g, ' ').trim();
-  }
-  function runVoiceCommand(raw){
-    var cmd = normCmd(raw);
-    function act(msg){ setVoiceStatus('Escuché “' + raw + '” → ' + msg); }
-    if(!cmd){ setVoiceStatus('No te escuché bien. Toca el micrófono y prueba otra vez.'); return; }
-    function has(){
-      for(var i=0;i<arguments.length;i++){ if(cmd.indexOf(arguments[i]) >= 0) return true; }
-      return false;
-    }
-    // Orden de prioridades: «la que sigue» debe ser siguiente y no reproducir,
-    // por eso siguiente/anterior se revisan antes que reproducir («sigue»).
-    if(has('aleatorio', 'mezcla', 'al azar')){
-      if(!shuffle) document.getElementById('btnShuffle').click();
-      act('aleatorio activado');
-      return;
-    }
-    if(has('siguiente', 'adelante', 'la que sigue', 'que sigue', 'cambia', 'otra cancion') || cmd === 'pasa' || cmd === 'salta'){
-      // Audible siempre: tras cambiar por voz, la nueva canción suena aunque
-      // estuviera en pausa (antes cambiaba en silencio y parecía no pasar nada).
-      next(false); play();
-      var nt = currentTrack();
-      act('siguiente' + (nt ? ': “' + nt.title + '”' : ''));
-      return;
-    }
-    if(has('anterior', 'atras', 'regresa', 'vuelve', 'previa')){
-      prev(); play();
-      var pt = currentTrack();
-      act('anterior' + (pt ? ': “' + pt.title + '”' : ''));
-      return;
-    }
-    if(has('pausa', 'deten', 'alto') || cmd === 'para'){
-      if(isPlaying) pauseWithFade();
-      act('pausa');
-      return;
-    }
-    var m = /^(reproduce|pon|toca)\s+(.+)$/.exec(cmd);
-    if(m){
-      var want = m[2].replace(/^(la\s+playlist|playlist|la\s+lista|lista|mi\s+playlist)\s+/, '').trim();
-      if(want && want !== 'musica' && want !== 'algo' && want !== 'eso'){
-        var pl = null;
-        playlists.forEach(function(p){ if(normCmd(p.name) === want) pl = p; });
-        if(!pl) playlists.forEach(function(p){ var pn = normCmd(p.name); if(!pl && (pn.indexOf(want) >= 0 || want.indexOf(pn) >= 0)) pl = p; });
-        if(pl){
-          selectedPlaylistId = pl.id; saveState(); renderPack();
-          playPlaylist(false);
-          act('reproduciendo la playlist “' + pl.name + '”');
-          return;
-        }
-        // Pack de mejoras: si no es una playlist, busca la CANCIÓN en la
-        // biblioteca por título o artista (normalizado, coincidencia parcial).
-        var bestSong = null, bestScore = 0;
-        tracks.forEach(function(t){
-          if(t.rating === 'dislike') return;
-          var tt = normCmd(t.title), ta = normCmd(t.artist);
-          var sc = 0;
-          if(tt && (tt.indexOf(want) >= 0 || want.indexOf(tt) >= 0)) sc = 3;
-          else if(ta && (ta.indexOf(want) >= 0 || want.indexOf(ta) >= 0)) sc = 2;
-          else {
-            var words = want.split(' '), hits = 0;
-            words.forEach(function(w){ if(w.length > 2 && (tt.indexOf(w) >= 0 || ta.indexOf(w) >= 0)) hits++; });
-            if(words.length && hits === words.length) sc = 1;
-          }
-          if(sc > bestScore){ bestScore = sc; bestSong = t; }
-        });
-        if(bestSong){
-          playContext = { type:'library', playlistId:null }; saveState();
-          selectTrack(bestSong.id, true);
-          act('reproduciendo “' + bestSong.title + '”' + (bestSong.artist ? ' de ' + bestSong.artist : ''));
-          return;
-        }
-        act('no encontré la playlist ni la canción “' + m[2] + '”');
-        return;
-      }
-      if(!isPlaying) play();
-      act('reproduciendo');
-      return;
-    }
-    if(has('reproduce', 'reproducir', 'continua', 'reanuda', 'sigue', 'pon musica')){
-      if(!isPlaying) play();
-      act('reproduciendo');
-      return;
-    }
-    setVoiceStatus('Escuché “' + raw + '”, pero no es un comando que conozca. Prueba: «siguiente» (o «adelante», «la que sigue»), «anterior» (o «atrás», «regresa»), «pausa», «aleatorio» o «reproduce» y el nombre de una playlist o de una canción.');
-  }
-  var voiceConfirmPending = false;
-  var voiceRestartWanted = false; // Pack de mejoras: escucha continua — volver a escuchar tras ejecutar un comando
-  var voiceLangFallback = false; // true tras el reintento con lang «es» genérico (error language-not-supported)
-  var voiceStarting = false; // true mientras corre la prueba previa de micrófono
-
-  // Mensaje de micrófono bloqueado, con los pasos para permitirlo.
-  function voiceMicBlockedMsg(code){
-    return 'El micrófono está bloqueado para esta página. Para permitirlo: toca el candado o el icono junto a la dirección (o el menú ⋮ → Configuración → Configuración de sitios → Micrófono) y pon el micrófono en «Permitir» para esta página; luego toca «Voz» otra vez.' + (code ? ' (' + code + ')' : '');
-  }
-  // Mensaje de micrófono no disponible (sin micrófono u ocupado por otra app).
-  function voiceMicMissingMsg(code){
-    return 'No se encontró un micrófono disponible, o lo está usando otra app. Cierra la otra app y vuelve a intentarlo.' + (code ? ' (' + code + ')' : '');
-  }
-
-  // Arranque del reconocimiento con un reintento: si start() lanza porque ya
-  // había una sesión activa, se detiene la anterior y se reintenta una vez.
-  function tryStartRecog(r, prev, retried){
-    try{ r.start(); }
-    catch(e){
-      if(!retried){
-        try{ if(prev && prev !== r) prev.stop(); }catch(e1){}
-        try{ r.abort(); }catch(e2){}
-        try{ r.stop(); }catch(e3){}
-        setTimeout(function(){ tryStartRecog(r, prev, true); }, 300);
-        return;
-      }
-      if(recog === r){ recogActive = false; syncVoiceBtns(); }
-      voiceUnduck();
-      setVoiceStatus('No se pudo iniciar el reconocimiento de voz en este navegador.');
-    }
-  }
-
-  function beginRecog(){
-    var SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-    var prev = recog;
-    var r;
-    try{ r = new SR(); }
-    catch(e){
-      recogActive = false; syncVoiceBtns();
-      setVoiceStatus('No se pudo iniciar el reconocimiento de voz en este navegador.');
-      return;
-    }
-    recog = r;
-    r.lang = voiceLangFallback ? 'es' : 'es-MX';
-    r.interimResults = false;
-    r.maxAlternatives = 1;
-    r.onresult = function(ev){
-      // Escucha continua: si está activada, al terminar esta sesión se vuelve a
-      // escuchar sola y el ducking se mantiene (la música sigue baja).
-      if(settings.voiceContinuous && settings.voiceOk) voiceRestartWanted = true;
-      else voiceUnduck();
-      var txt = '';
-      try{ txt = ev.results[0][0].transcript || ''; }catch(e){}
-      if(txt) runVoiceCommand(txt);
-      else setVoiceStatus('No te escuché bien. Toca el micrófono y prueba otra vez.');
-    };
-    r.onerror = function(ev){
-      voiceRestartWanted = false; // los errores detienen la escucha continua
-      voiceUnduck();
-      if(recog === r){ recogActive = false; syncVoiceBtns(); }
-      var code = (ev && ev.error) || '';
-      if(code === 'not-allowed') setVoiceStatus('El micrófono está bloqueado para esta página. Permítelo en los ajustes del navegador para usar la voz.');
-      else if(code === 'no-speech') setVoiceStatus('No escuché nada. Toca el micrófono y di un comando.');
-      else if(code === 'aborted') setVoiceStatus('');
-      else if(code === 'network') setVoiceStatus('El reconocimiento de voz necesita internet, porque lo procesa el servicio del navegador (Google), no tu teléfono. Revisa tu conexión y, si estás en la app instalada, prueba también desde la pestaña de Chrome. (network)');
-      else if(code === 'service-not-allowed') setVoiceStatus('El servicio de voz está bloqueado en este contexto. Prueba desde la pestaña de Chrome (no desde la app instalada) y revisa que la app de Google esté activada y actualizada. (service-not-allowed)');
-      else if(code === 'audio-capture') setVoiceStatus(voiceMicMissingMsg('audio-capture'));
-      else if(code === 'language-not-supported'){
-        if(!voiceLangFallback){
-          voiceLangFallback = true;
-          setVoiceStatus('Este contexto no acepta el idioma es-MX; reintentando con español genérico (es)…');
-          setTimeout(function(){ if(!recogActive) beginRecog(); }, 400);
-        } else {
-          setVoiceStatus('El reconocimiento de voz no acepta el español en este contexto. Prueba desde la pestaña de Chrome. (language-not-supported)');
-        }
-      }
-      else setVoiceStatus('No se pudo usar el micrófono ahora mismo. Inténtalo de nuevo.' + (code ? ' (' + code + ')' : ''));
-    };
-    r.onend = function(){
-      if(recog !== r) return;
-      if(voiceRestartWanted && settings.voiceContinuous && settings.voiceOk){
-        voiceRestartWanted = false;
-        // Se sigue escuchando: el botón queda en estado «escuchando» y el
-        // ducking no se restaura entre comandos.
-        setTimeout(function(){ if(settings.voiceContinuous && settings.voiceOk && !voiceStarting) beginRecog(); }, 300);
-        return;
-      }
-      voiceUnduck();
-      recogActive = false; syncVoiceBtns();
-    };
-    recogActive = true; syncVoiceBtns();
-    voiceDuck();
-    setVoiceStatus('Escuchando… di «siguiente», «pausa», «aleatorio» o «reproduce» y el nombre de una playlist o de una canción.');
-    toast('Escuchando… di un comando.');
-    tryStartRecog(r, prev, false);
-  }
-
-  function startVoice(){
-    var SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-    if(!SR){
-      setVoiceStatus('Este navegador no tiene reconocimiento de voz, así que el control por voz no está disponible aquí. Todo lo demás sigue funcionando igual.');
-      toast('Este navegador no soporta el reconocimiento de voz.');
-      return;
-    }
-    // Aviso y consentimiento: el reconocimiento de voz del navegador NO se procesa en el
-    // dispositivo — el audio del micrófono viaja al servicio de reconocimiento del
-    // fabricante del navegador (Google, en Chrome y Android) para transcribirlo.
-    // El micrófono nunca se enciende antes de que el usuario lo acepte expresamente.
-    if(!settings.voiceOk){
-      if(!voiceConfirmPending){
-        voiceConfirmPending = true;
-        syncVoiceBtns();
-        setVoiceStatus('Antes de usar la voz: el reconocimiento lo hace el servicio del fabricante del navegador (Google, en Chrome y Android), así que el audio del micrófono saldría de tu dispositivo para transcribirlo. Nada se envía hasta que aceptes. Toca «Voz» otra vez para aceptar y empezar a escuchar.');
-        toast('Toca «Voz» otra vez para aceptar y hablar.');
-        return;
-      }
-      voiceConfirmPending = false;
-      syncVoiceBtns();
-      settings.voiceOk = true;
-      saveState();
-    }
-    if(recogActive && recog){ voiceRestartWanted = false; try{ recog.stop(); }catch(e){} return; }
-    if(voiceStarting) return;
-    voiceLangFallback = false;
-    // Prueba previa de micrófono: solo comprueba permiso y disponibilidad;
-    // las pistas se detienen de inmediato y después arranca el reconocimiento.
-    if(navigator.mediaDevices && navigator.mediaDevices.getUserMedia){
-      voiceStarting = true;
-      setVoiceStatus('Comprobando el micrófono…');
-      navigator.mediaDevices.getUserMedia({ audio: true }).then(function(stream){
-        voiceStarting = false;
-        try{ stream.getTracks().forEach(function(t){ t.stop(); }); }catch(e){}
-        beginRecog();
-      }).catch(function(err){
-        voiceStarting = false;
-        var name = (err && err.name) || '';
-        if(name === 'NotAllowedError' || name === 'SecurityError'){
-          setVoiceStatus(voiceMicBlockedMsg(name));
-        } else if(name === 'NotFoundError' || name === 'NotReadableError' || name === 'OverconstrainedError' || name === 'AbortError'){
-          setVoiceStatus(voiceMicMissingMsg(name === 'NotFoundError' || name === 'OverconstrainedError' ? 'audio-capture' : name));
-        } else {
-          // Otra falla de la prueba no bloquea: el reconocimiento reportará la suya.
-          beginRecog();
-        }
-      });
-      return;
-    }
-    beginRecog();
-  }
-  document.getElementById('btnVoice').addEventListener('click', startVoice);
-  document.getElementById('btnCarMic').addEventListener('click', startVoice);
 
   function renderPack6(){
     applyTheme();
     syncThemeUI();
     syncAlarmUI();
-    syncVoiceContinuousUI();
     updateSleepSongsUI();
     updateEnergyCounts();
     checkAlarm();
@@ -7078,7 +6778,7 @@
   // ---------- Pack de mejoras: actualización, reanudar, deshacer, sincronizar, tap tempo ----------
 
   // ----- 1. Actualización sin atascos -----
-  var APP_VERSION = '1.7.0';
+  var APP_VERSION = '1.7.1';
   document.getElementById('appVersionNote').textContent = APP_VERSION;
   function cmpVersion(a, b){
     var pa = a.split('.').map(function(x){ return parseInt(x, 10) || 0; });
@@ -7319,23 +7019,6 @@
     document.getElementById('undoBar').classList.remove('show');
   });
 
-  // ----- 2b. Escucha continua (interruptor) -----
-  function syncVoiceContinuousUI(){
-    var b = document.getElementById('btnVoiceContinuous');
-    if(!b) return;
-    b.classList.toggle('on', !!settings.voiceContinuous);
-    b.setAttribute('aria-pressed', settings.voiceContinuous ? 'true' : 'false');
-    var st = document.getElementById('voiceContinuousState');
-    if(st) st.textContent = settings.voiceContinuous ? 'Activada' : 'Desactivada';
-  }
-  document.getElementById('btnVoiceContinuous').addEventListener('click', function(){
-    settings.voiceContinuous = !settings.voiceContinuous;
-    if(!settings.voiceContinuous) voiceRestartWanted = false;
-    saveState(); syncVoiceContinuousUI();
-    toast(settings.voiceContinuous
-      ? 'Escucha continua activada: tras cada comando volverá a escuchar sola.'
-      : 'Escucha continua desactivada.');
-  });
 
   // ----- 5b. Tocar el ritmo (tap tempo) -----
   var tapEditTimes = [], tapCurTimes = [];
