@@ -56,6 +56,19 @@
       --shadow-sm:0 6px 18px rgba(0,0,0,.35);
     }
   }
+  /* Pack 6: tema elegido por el usuario (gana al ajuste del sistema) */
+  html[data-theme="dark"]{
+    --bg:#0E0E0F; --bg-2:#141415; --surface:#1B1B1D; --surface-2:#222224; --surface-3:#2A2A2D;
+    --text:#F5F1EB; --muted:#A8A09A; --muted-2:#7A756F; --line:#2E2E30;
+    --shadow:0 16px 40px rgba(0,0,0,.45), 0 2px 10px rgba(0,0,0,.3);
+    --shadow-sm:0 6px 18px rgba(0,0,0,.35);
+  }
+  html[data-theme="light"]{
+    --bg:#F4F1EC; --bg-2:#EDE8DF; --surface:#FFFFFF; --surface-2:#F7F3EE; --surface-3:#EFE9E0;
+    --text:#191613; --muted:#726B63; --muted-2:#9A9186; --line:#E3DCD1;
+    --shadow:0 12px 32px rgba(28,20,10,.10), 0 2px 8px rgba(28,20,10,.06);
+    --shadow-sm:0 4px 14px rgba(28,20,10,.08);
+  }
   *{box-sizing:border-box}
   html,body{margin:0;padding:0}
   body{
@@ -540,6 +553,15 @@
   .summary-card .sum-empty{margin:14px 0 0; font-size:14px; line-height:1.55; opacity:.92}
   .summary-controls{display:flex; flex-wrap:wrap; gap:8px; align-items:center; padding:14px 18px 0}
   .summary-controls input[type=month], .summary-controls select{border:1px solid var(--line); background:var(--surface-2); color:var(--text); border-radius:999px; padding:8px 11px; font-size:13px; font-weight:600}
+  /* Pack 6: apariencia, voz y energía */
+  .accent-dots{display:flex; flex-wrap:wrap; gap:10px; margin-top:2px}
+  .swatch{width:34px; height:34px; border-radius:50%; border:3px solid transparent; box-shadow:0 2px 8px rgba(0,0,0,.18); padding:0; flex:none}
+  .swatch.on{border-color:var(--surface); outline:2px solid var(--text); outline-offset:1px}
+  .mic-btn.listening{background:var(--accent) !important; border-color:var(--accent) !important; color:#fff !important; animation:micPulse 1.1s ease-in-out infinite}
+  @keyframes micPulse{0%,100%{transform:scale(1)}50%{transform:scale(1.07)}}
+  @media (prefers-reduced-motion: reduce){ .mic-btn.listening{animation:none} }
+  .voice-status{font-size:12.5px; font-weight:700; color:var(--accent); margin:8px 0 0; line-height:1.45}
+  .bpm-tag{font-weight:800; color:var(--accent)}
 </style>
 </head>
 <body>
@@ -600,7 +622,16 @@
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:15px;height:15px"><path d="M19 17h2c.6 0 1-.4 1-1v-3c0-.9-.7-1.7-1.5-1.9C18.7 10.6 16 10 16 10s-1.3-1.4-2.2-2.3c-.5-.4-1.1-.7-1.8-.7H5c-.6 0-1.1.4-1.4.9l-1.4 2.9A3.7 3.7 0 0 0 2 12v4c0 .6.4 1 1 1h2"/><circle cx="7" cy="17" r="2"/><path d="M9 17h6"/><circle cx="17" cy="17" r="2"/></svg>
             Modo coche
           </button>
+          <button class="btn small" id="btnShareCurrent" type="button" disabled>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:15px;height:15px"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="m8.6 13.5 6.8 4M15.4 6.5l-6.8 4"/></svg>
+            Compartir
+          </button>
+          <button class="btn small mic-btn" id="btnVoice" type="button" title="Control por voz: di «siguiente», «pausa», «aleatorio» o «reproduce» y el nombre de una playlist">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:15px;height:15px"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><path d="M12 19v3"/></svg>
+            Voz
+          </button>
         </div>
+        <p class="voice-status" id="voiceStatus" role="status" style="display:none"></p>
 
         <div class="now-rating" aria-label="Calificar canción actual">
           <button class="rate-pill" id="btnLike" type="button" disabled aria-pressed="false" title="Me gusta — se queda en la playlist">
@@ -735,6 +766,26 @@
               <p class="sound-note">Realce de graves con nivel ajustable, un toque de reverb de sala y «voz clara» para destacar las frecuencias de la voz. Se aplican en vivo y se guardan en este dispositivo.</p>
             </div>
             <div class="sound-group">
+              <div class="sound-group-head"><h4>Apariencia</h4></div>
+              <p class="sound-note" style="margin-top:0">Color de acento: recolorea botones y elementos activos al instante.</p>
+              <div class="accent-dots" id="accentDots" role="group" aria-label="Color de acento"></div>
+              <div class="sound-inline" style="margin-top:12px">
+                <label style="font-size:13px; font-weight:700" for="themeSelect">Tema</label>
+                <select id="themeSelect" class="speed-select">
+                  <option value="auto">Automático (sistema)</option>
+                  <option value="light">Claro</option>
+                  <option value="dark">Oscuro</option>
+                </select>
+                <label style="font-size:13px; font-weight:700" for="vizStyleSelect">Visualizador</label>
+                <select id="vizStyleSelect" class="speed-select">
+                  <option value="bars">Barras</option>
+                  <option value="wave">Onda</option>
+                  <option value="circle">Círculo</option>
+                </select>
+              </div>
+              <p class="sound-note">Se guarda en este dispositivo y también viaja dentro del respaldo.</p>
+            </div>
+            <div class="sound-group">
               <div class="sound-group-head"><h4>Volumen parejo</h4></div>
               <div class="sound-inline">
                 <button class="toggle-pill" id="btnNormalize" type="button" aria-pressed="false"><span class="dot"></span><span id="normalizeState">Desactivado</span></button>
@@ -774,6 +825,20 @@
                 </select>
                 <span class="sleep-status" id="sleepStatus" role="status"></span>
               </div>
+              <div class="sound-inline" style="margin-top:10px">
+                <label style="font-size:13px; font-weight:700" for="sleepSongsInput">Dormir tras</label>
+                <input type="number" id="sleepSongsInput" min="1" max="99" step="1" placeholder="Nº" aria-label="Número de canciones para dormir" style="width:72px; padding:8px 10px; border:1px solid var(--line); border-radius:999px; background:var(--surface-2); color:var(--text); font-size:13px" />
+                <span style="font-size:13px; color:var(--muted)">canciones</span>
+                <button class="btn small" id="btnSleepSongs" type="button">Activar</button>
+                <span class="sleep-status" id="sleepSongsStatus" role="status"></span>
+              </div>
+              <div class="sound-group-head" style="margin-top:16px"><h4>Alarma musical</h4></div>
+              <div class="sound-inline">
+                <button class="toggle-pill" id="btnAlarmOn" type="button" aria-pressed="false"><span class="dot"></span><span id="alarmState">Desactivada</span></button>
+                <input type="time" id="alarmTime" value="08:00" aria-label="Hora de la alarma" style="padding:8px 10px; border:1px solid var(--line); border-radius:999px; background:var(--surface-2); color:var(--text); font-size:13px" />
+                <select id="alarmPlaylist" class="speed-select" aria-label="Playlist de la alarma"></select>
+              </div>
+              <p class="sound-note" id="alarmStatus">A la hora elegida, con la app abierta, empezará a sonar la playlist y verás un aviso. Se repite cada día mientras esté activada.</p>
             </div>
           </div>
         </div>
@@ -821,6 +886,11 @@
               <button class="btn small" id="btnAddBookmark" type="button">Añadir marcador aquí</button>
             </div>
             <div id="bookmarkList" style="margin-top:10px"></div>
+            <div class="sound-inline" style="margin-top:12px">
+              <button class="btn small" id="btnTrimExport" type="button">Exportar fragmento (WAV)</button>
+              <span class="sleep-status" id="trimStatus" role="status"></span>
+            </div>
+            <p class="sound-note">«Exportar fragmento» guarda el tramo del loop A-B —o, sin loop, desde el primer marcador hasta el siguiente o el final— como un archivo WAV aparte, generado en tu dispositivo. Ideal para tonos o clips.</p>
             <p class="sound-note">El loop y los marcadores se guardan por canción en este dispositivo.</p>
           </div>
         </div>
@@ -941,7 +1011,9 @@
           <button class="btn small" id="btnPlShuffle" type="button">Aleatoria</button>
           <button class="btn small" id="btnPlRename" type="button">Renombrar</button>
           <button class="btn small" id="btnPlM3u" type="button">Exportar .m3u</button>
+          <button class="btn small" id="btnPlZip" type="button">Exportar ZIP</button>
           <button class="btn small danger" id="btnPlDelete" type="button">Borrar playlist</button>
+          <span class="sleep-status" id="zipStatus" role="status"></span>
         </div>
         <ul class="track-list" id="plTrackList"></ul>
         <div class="no-results" id="plEmpty">Todavía no tienes playlists. Crea una y añade canciones con el botón ⋯ de cada canción en la biblioteca.</div>
@@ -998,6 +1070,32 @@
             <button class="btn small" id="btnDiscoverShuffle" type="button">Aleatoria</button>
           </div>
         </div>
+        <div class="smart-discover" id="calmEntry">
+          <div>
+            <h3>Energía tranquila</h3>
+            <p>Mezcla automática con tus canciones de ritmo bajo (menos de 100 BPM detectados). <span id="calmCount"></span></p>
+          </div>
+          <div class="smart-discover-actions">
+            <button class="btn small primary" id="btnCalmPlay" type="button">Reproducir</button>
+            <button class="btn small" id="btnCalmShuffle" type="button">Aleatoria</button>
+          </div>
+        </div>
+        <div class="smart-discover" id="intenseEntry">
+          <div>
+            <h3>Energía intensa</h3>
+            <p>Mezcla automática con tus canciones de ritmo alto (120 BPM o más detectados). <span id="intenseCount"></span></p>
+          </div>
+          <div class="smart-discover-actions">
+            <button class="btn small primary" id="btnIntensePlay" type="button">Reproducir</button>
+            <button class="btn small" id="btnIntenseShuffle" type="button">Aleatoria</button>
+          </div>
+        </div>
+        <div class="subview-actions" style="padding-top:4px">
+          <button class="btn small" id="btnAnalyzeBpmAll" type="button">Analizar ritmo (BPM) de la biblioteca</button>
+          <button class="btn small" id="btnAnalyzeBpmCurrent" type="button">Analizar la canción actual</button>
+          <span class="sleep-status" id="bpmStatus" role="status"></span>
+        </div>
+        <p class="sound-note" style="margin:0 4px 12px">El ritmo se detecta analizando el audio en tu dispositivo (valor aproximado), se guarda por canción y se ve junto a cada canción de la biblioteca. Las canciones sin BPM no entran en las mezclas por energía hasta analizarlas.</p>
         <div class="subview-head" id="smartHead" style="display:none">
           <div>
             <h3 id="smartName"></h3>
@@ -1302,6 +1400,10 @@
     </button>
   </div>
   <div class="car-rating">
+    <button class="car-rate mic-btn" id="btnCarMic" type="button">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><path d="M12 19v3"/></svg>
+      Voz
+    </button>
     <button class="car-rate" id="btnCarLike" type="button">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 10v12"/><path d="M15 5.88 14 10h5.83a2 2 0 0 1 1.92 2.56l-2.33 8A2 2 0 0 1 17.5 22H4a2 2 0 0 1-2-2v-8a2 2 0 0 1 2-2h2.76a2 2 0 0 0 1.79-1.11L12 2a3.13 3.13 0 0 1 3 3.88Z"/></svg>
       Me gusta
@@ -1361,7 +1463,7 @@
 
   // ---------- State ----------
   var tracks = []; // {id,name,title,artist,album,duration,size,type,addedAt,url,coverUrl,color,rating,stars}
-  var APP_VERSION = '1.5.0'; // al publicar cambios, subir este número y el CACHE de sw.js
+  var APP_VERSION = '1.6.0'; // al publicar cambios, subir este número y el CACHE de sw.js
   var currentId = null;
   var isPlaying = false;
   var shuffle = false;
@@ -1398,7 +1500,12 @@
     gapless: true,
     fadePause: true,
     fx: { bassOn: false, bassDb: 6, reverb: false, vocal: false },
-    customPresets: []
+    customPresets: [],
+    theme: 'auto', // Pack 6: 'auto' | 'light' | 'dark'
+    accent: 'naranja', // Pack 6: id de color de acento
+    vizStyle: 'bars', // Pack 6: 'bars' | 'wave' | 'circle'
+    alarm: { on: false, time: '08:00', playlistId: '' }, // Pack 6: alarma musical
+    voiceOk: false // Pack 6: el usuario aceptó que el reconocimiento de voz del navegador procesa el audio fuera del dispositivo
   };
   // Pack 5: valida y fusiona un objeto de ajustes (estado guardado o respaldo) sin perder lo existente
   function sanitizeFx(fx){
@@ -1431,6 +1538,12 @@
     if(typeof ds.fadePause === 'boolean') settings.fadePause = ds.fadePause;
     if(ds.fx) settings.fx = sanitizeFx(ds.fx);
     if(Array.isArray(ds.customPresets)) settings.customPresets = sanitizeCustomPresets(ds.customPresets);
+    // Pack 6: apariencia y alarma, con valores por defecto sensatos
+    if(typeof ds.theme === 'string') settings.theme = (ds.theme === 'light' || ds.theme === 'dark') ? ds.theme : 'auto';
+    if(typeof ds.accent === 'string') settings.accent = validAccent(ds.accent);
+    if(typeof ds.vizStyle === 'string') settings.vizStyle = (ds.vizStyle === 'wave' || ds.vizStyle === 'circle') ? ds.vizStyle : 'bars';
+    if(ds.alarm) settings.alarm = sanitizeAlarm(ds.alarm);
+    if(typeof ds.voiceOk === 'boolean') settings.voiceOk = ds.voiceOk;
   }
   var sleepEndsAt = 0; // timestamp, 0 = sin temporizador por minutos
   var sleepAfterTrack = false;
@@ -1837,7 +1950,7 @@
             url:url, coverUrl:coverUrl, color:colorFor(title+file.name), rating:null, stars:0,
             lyrics:null, plainLyrics:'', normDb:null, volAdj:0,
             genre:meta.genre||'', year:meta.year||'', tags:[], memSpeed:null, memEq:null, lyricShift:0,
-            folder:folderPath, abLoop:null, bookmarks:[], silence:null
+            folder:folderPath, abLoop:null, bookmarks:[], silence:null, bpm:null
           };
           tracks.unshift(track);
           // Persist (blob + metadata + cover blob)
@@ -1846,7 +1959,7 @@
             title:title, artist:artist, album:meta.album||'', duration:dur,
             addedAt:track.addedAt, coverBlob:meta.coverBlob||null, rating:null, stars:0, lyrics:null, plainLyrics:'', normDb:null, volAdj:0,
             genre:meta.genre||'', year:meta.year||'', tags:[], memSpeed:null, memEq:null, lyricShift:0,
-            folder:folderPath, abLoop:null, bookmarks:[], silence:null
+            folder:folderPath, abLoop:null, bookmarks:[], silence:null, bpm:null
           }).then(function(){ return track; });
         });
       });
@@ -1879,7 +1992,8 @@
           folder: (typeof r.folder==='string') ? r.folder : '',
           abLoop: (r.abLoop && typeof r.abLoop.a==='number' && typeof r.abLoop.b==='number' && r.abLoop.b>r.abLoop.a) ? {a:r.abLoop.a, b:r.abLoop.b} : null,
           bookmarks: Array.isArray(r.bookmarks) ? r.bookmarks.filter(function(b){ return b && typeof b.time==='number' && isFinite(b.time); }).map(function(b){ return { name:(typeof b.name==='string' && b.name) ? b.name : 'Marcador', time:b.time }; }) : [],
-          silence: (r.silence && typeof r.silence.start==='number' && typeof r.silence.end==='number' && r.silence.end>r.silence.start) ? {start:r.silence.start, end:r.silence.end} : null
+          silence: (r.silence && typeof r.silence.start==='number' && typeof r.silence.end==='number' && r.silence.end>r.silence.start) ? {start:r.silence.start, end:r.silence.end} : null,
+          bpm: (typeof r.bpm==='number' && isFinite(r.bpm) && r.bpm>0) ? Math.round(r.bpm) : null
         });
       });
       // Fill missing durations in background
@@ -2000,6 +2114,7 @@
       sub.textContent = [t.artist, t.album, t.year].filter(Boolean).join(' · ') || t.name;
       if(t.genre) sub.textContent += ' · ' + t.genre;
       if(t.tags && t.tags.length) sub.textContent += ' · ' + t.tags.map(function(x){ return '#'+x; }).join(' ');
+      if(typeof t.bpm==='number' && t.bpm) sub.textContent += ' · ' + t.bpm + ' BPM';
       var cnt0 = playCounts[t.id] || 0;
       if(cnt0>0) sub.textContent += ' · ' + cnt0 + (cnt0===1 ? ' escucha' : ' escuchas');
       if(t.rating==='dislike') sub.textContent += ' — No se reproducirá';
@@ -2137,6 +2252,7 @@
       document.title='Reproductor de Música';
       updateRatingUI(null);
       var bec0=document.getElementById('btnEditCurrent'); if(bec0) bec0.disabled=true;
+      var bsc0=document.getElementById('btnShareCurrent'); if(bsc0) bsc0.disabled=true;
       renderLyrics();
       return;
     }
@@ -2146,6 +2262,7 @@
     nowAlbum.textContent = t.album || '';
     updateRatingUI(t);
     var bec1=document.getElementById('btnEditCurrent'); if(bec1) bec1.disabled=false;
+    var bsc1=document.getElementById('btnShareCurrent'); if(bsc1) bsc1.disabled=false;
     renderLyrics();
     if(t.coverUrl){
       coverImg.src = t.coverUrl; coverImg.style.display='block'; coverFallback.style.display='none';
@@ -2253,6 +2370,7 @@
     if(t.rating==='dislike'){ var bd=document.createElement('span'); bd.className='badge-dislike'; bd.textContent='Dislike'; tt.appendChild(bd); }
     var sub = document.createElement('div'); sub.className='track-sub';
     sub.textContent = [t.artist, t.album].filter(Boolean).join(' · ') || t.name;
+    if(typeof t.bpm==='number' && t.bpm) sub.textContent += ' · ' + t.bpm + ' BPM';
     main.appendChild(tt); main.appendChild(sub);
     var meta = document.createElement('div'); meta.className='track-meta';
     if(opts.when){ var w=document.createElement('span'); w.className='hist-when'; w.textContent=opts.when; meta.appendChild(w); }
@@ -2294,6 +2412,7 @@
     renderPack3();
     renderPack4();
     if(typeof renderPack5 === 'function') renderPack5();
+    if(typeof renderPack6 === 'function') renderPack6();
     if(typeof updateDiscoverCount === 'function') updateDiscoverCount();
     if(view==='smart') renderSmart();
     if(view==='artists') renderGroups('artist');
@@ -2553,6 +2672,8 @@
     item('Añadir a la cola', SVG_QUEUE, function(){ queueAdd(id); });
     var SVG_EDIT = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.8 2.8 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></svg>';
     var SVG_LYR = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h16M4 12h10M4 18h13"/></svg>';
+    var SVG_SHARE = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="m8.6 13.5 6.8 4M15.4 6.5l-6.8 4"/></svg>';
+    item('Compartir', SVG_SHARE, function(){ shareTrack(t); });
     item('Editar datos', SVG_EDIT, function(){ openEditor(id); });
     item(t.lyrics ? 'Cambiar letra (.lrc)' : 'Cargar letra (.lrc)', SVG_LYR, function(){
       lrcTargetId = id;
@@ -2773,17 +2894,48 @@
     var w = viz.width, h = viz.height;
     vizCtx.clearRect(0,0,w,h);
     if(analyser && isPlaying){
-      var data = new Uint8Array(analyser.frequencyBinCount);
-      analyser.getByteFrequencyData(data);
-      var bars = 36, bw = w/bars;
-      vizCtx.fillStyle = 'rgba(255,255,255,0.85)';
-      for(var i=0;i<bars;i++){
-        var val = data[Math.floor(i*data.length/bars*0.72)]/255;
-        var bh = Math.max(3, val*h*0.92);
-        var x = i*bw + bw*0.22, y = h-bh;
+      var style = settings.vizStyle || 'bars';
+      var i, x, y;
+      if(style === 'wave'){
+        var td = new Uint8Array(analyser.fftSize);
+        analyser.getByteTimeDomainData(td);
+        vizCtx.strokeStyle = 'rgba(255,255,255,0.9)';
+        vizCtx.lineWidth = 3;
         vizCtx.beginPath();
-        if(vizCtx.roundRect) vizCtx.roundRect(x,y,bw*0.56,bh,4); else vizCtx.rect(x,y,bw*0.56,bh);
-        vizCtx.fill();
+        for(i=0;i<td.length;i++){
+          x = (i/(td.length-1))*w;
+          y = (td[i]/255)*h;
+          if(i===0) vizCtx.moveTo(x,y); else vizCtx.lineTo(x,y);
+        }
+        vizCtx.stroke();
+      } else if(style === 'circle'){
+        var fd = new Uint8Array(analyser.frequencyBinCount);
+        analyser.getByteFrequencyData(fd);
+        var cx = w/2, cy = h/2 + 4, base = Math.min(w,h)*0.15, rays = 48;
+        vizCtx.strokeStyle = 'rgba(255,255,255,0.9)';
+        vizCtx.lineWidth = 4; vizCtx.lineCap = 'round';
+        for(i=0;i<rays;i++){
+          var vv = fd[Math.floor(i*fd.length/rays*0.72)]/255;
+          var ang = (i/rays)*Math.PI*2 - Math.PI/2;
+          var r2 = base + 3 + vv*Math.min(w,h)*0.32;
+          vizCtx.beginPath();
+          vizCtx.moveTo(cx + Math.cos(ang)*base, cy + Math.sin(ang)*base);
+          vizCtx.lineTo(cx + Math.cos(ang)*r2, cy + Math.sin(ang)*r2);
+          vizCtx.stroke();
+        }
+      } else {
+        var data = new Uint8Array(analyser.frequencyBinCount);
+        analyser.getByteFrequencyData(data);
+        var bars = 36, bw = w/bars;
+        vizCtx.fillStyle = 'rgba(255,255,255,0.85)';
+        for(i=0;i<bars;i++){
+          var val = data[Math.floor(i*data.length/bars*0.72)]/255;
+          var bh = Math.max(3, val*h*0.92);
+          x = i*bw + bw*0.22; y = h-bh;
+          vizCtx.beginPath();
+          if(vizCtx.roundRect) vizCtx.roundRect(x,y,bw*0.56,bh,4); else vizCtx.rect(x,y,bw*0.56,bh);
+          vizCtx.fill();
+        }
       }
     } else {
       // idle baseline
@@ -2981,6 +3133,7 @@
     if(!contextPlayableIds().length && !queue.length){ pause(); return; }
     var cur = currentTrack();
     if(auto && cur && cur.rating==='dislike'){ step(1); play(); return; }
+    if(auto && typeof noteSongCompleted === 'function' && noteSongCompleted()) return;
     if(auto && sleepAfterTrack){
       sleepAfterTrack = false;
       updateSleepUI();
@@ -3043,6 +3196,7 @@
       lastCountedId = targetId;
       applyMemForTrack(trackById(targetId));
       recordPlay(targetId);
+      if(typeof noteSongCompleted === 'function') noteSongCompleted();
       setSeekUI(0); timeCurrent.textContent='0:00';
       render();
     }, durSec*1000 + 60);
@@ -3050,7 +3204,7 @@
   }
   function maybeCrossfade(){
     if(!settings.crossfade || fading || !isPlaying || !audioCtx) return;
-    if(repeatMode===2 || sleepAfterTrack) return;
+    if(repeatMode===2 || sleepAfterTrack || (typeof sleepSongsLeft !== 'undefined' && sleepSongsLeft===1)) return;
     var dur = audio.duration;
     if(!dur || !isFinite(dur)) return;
     var remain = dur - audio.currentTime;
@@ -3076,7 +3230,7 @@
   // ---------- Pack 5: reproducción sin huecos (gapless) ----------
   var gaplessTargetId = null;
   function gaplessNextTarget(){
-    if(repeatMode===2 || sleepAfterTrack) return null;
+    if(repeatMode===2 || sleepAfterTrack || (typeof sleepSongsLeft !== 'undefined' && sleepSongsLeft===1)) return null;
     var q = peekQueueNext();
     if(q) return { id:q, fromQueue:true };
     if(repeatMode===0 && !shuffle){
@@ -3112,6 +3266,7 @@
     var t = trackById(tgt.id);
     var inDeck = otherDeck();
     if(!t || !inDeck.src) return false;
+    if(typeof noteSongCompleted === 'function' && noteSongCompleted()) return true;
     if(tgt.fromQueue){
       var qi = queue.indexOf(tgt.id);
       if(qi>=0) queue.splice(qi,1);
@@ -4193,7 +4348,9 @@
     { id:'most',   name:'Más escuchadas',    desc:'Las que más veces han sonado en este dispositivo, primero las de más arriba.', emptyText:'Aún no hay reproducciones registradas. Cuando escuches canciones, las más repetidas aparecerán aquí.' },
     { id:'never',  name:'Nunca escuchadas',  desc:'Canciones de tu biblioteca que todavía no han sonado ni una vez.', emptyText:'Ya escuchaste todo al menos una vez. Nada pendiente por descubrir aquí.' },
     { id:'recent', name:'Recién agregadas',  desc:'Lo último que entró a tu biblioteca, lo más nuevo primero.', emptyText:'Tu biblioteca está vacía. Añade canciones y aparecerán aquí.' },
-    { id:'discover', name:'Descubrir', desc:'Mezcla automática: primero las que nunca o casi nunca has escuchado, revueltas con tus mejor calificadas.', emptyText:'Tu biblioteca está vacía. Añade canciones y esta mezcla se armará sola.' }
+    { id:'discover', name:'Descubrir', desc:'Mezcla automática: primero las que nunca o casi nunca has escuchado, revueltas con tus mejor calificadas.', emptyText:'Tu biblioteca está vacía. Añade canciones y esta mezcla se armará sola.' },
+    { id:'calm',   name:'Energía tranquila', desc:'Canciones con ritmo bajo detectado (menos de 100 BPM), de la más calmada a la menos.', emptyText:'Todavía no hay canciones tranquilas detectadas. Analiza el ritmo (BPM) de tu biblioteca con el botón «Analizar ritmo (BPM) de la biblioteca».' },
+    { id:'intense', name:'Energía intensa',  desc:'Canciones con ritmo alto detectado (120 BPM o más), de la más intensa a la menos.', emptyText:'Todavía no hay canciones intensas detectadas. Analiza el ritmo (BPM) de tu biblioteca con el botón «Analizar ritmo (BPM) de la biblioteca».' }
   ];
   function computeSmart(id){
     if(id === 'discover'){
@@ -4211,6 +4368,8 @@
       while(bi < bestP.length) outD.push(bestP[bi++]);
       return outD.slice(0, 60);
     }
+    if(id === 'calm') return tracks.filter(function(t){ return typeof t.bpm === 'number' && t.bpm > 0 && t.bpm < 100; }).sort(function(a, b){ return a.bpm - b.bpm; });
+    if(id === 'intense') return tracks.filter(function(t){ return typeof t.bpm === 'number' && t.bpm >= 120; }).sort(function(a, b){ return b.bpm - a.bpm; });
     if(id === 'best') return tracks.filter(function(t){ return t.rating === 'like' || (typeof t.stars === 'number' && t.stars >= 3); });
     if(id === 'most') return tracks.filter(function(t){ return (playCounts[t.id] || 0) > 0; })
       .sort(function(a,b){ return (playCounts[b.id] || 0) - (playCounts[a.id] || 0); }).slice(0, 50);
@@ -4414,7 +4573,7 @@
     var data = {
       app: 'reproductor-de-musica',
       kind: 'respaldo',
-      version: 5,
+      version: 6,
       exportedAt: new Date().toISOString(),
       playlists: playlists,
       queue: queue,
@@ -4427,7 +4586,9 @@
         volume: settings.volume, normalize: settings.normalize, skipSilence: settings.skipSilence,
         gapless: settings.gapless, fadePause: settings.fadePause,
         fx: { bassOn: settings.fx.bassOn, bassDb: settings.fx.bassDb, reverb: settings.fx.reverb, vocal: settings.fx.vocal },
-        customPresets: settings.customPresets
+        customPresets: settings.customPresets,
+        theme: settings.theme, accent: settings.accent, vizStyle: settings.vizStyle, voiceOk: settings.voiceOk,
+        alarm: { on: settings.alarm.on, time: settings.alarm.time, playlistId: settings.alarm.playlistId }
       },
       tracks: tracks.map(function(t){
         return {
@@ -4446,7 +4607,8 @@
           tags: t.tags || [],
           memSpeed: (typeof t.memSpeed === 'number' ? t.memSpeed : null),
           memEq: (Array.isArray(t.memEq) ? t.memEq : null),
-          lyricShift: (typeof t.lyricShift === 'number' ? t.lyricShift : 0)
+          lyricShift: (typeof t.lyricShift === 'number' ? t.lyricShift : 0),
+          bpm: (typeof t.bpm === 'number' ? t.bpm : null)
         };
       })
     };
@@ -4485,6 +4647,7 @@
         if(typeof td.memSpeed === 'number' && isFinite(td.memSpeed) && td.memSpeed >= 0.5 && td.memSpeed <= 2){ t.memSpeed = td.memSpeed; patch.memSpeed = td.memSpeed; }
         if(Array.isArray(td.memEq) && td.memEq.length === 5 && td.memEq.every(function(v){ return typeof v === 'number' && isFinite(v); })){ t.memEq = td.memEq.map(function(v){ return Math.max(-12, Math.min(12, v)); }); patch.memEq = t.memEq; }
         if(typeof td.lyricShift === 'number' && isFinite(td.lyricShift)){ t.lyricShift = Math.max(-10, Math.min(10, td.lyricShift)); patch.lyricShift = t.lyricShift; }
+        if(typeof td.bpm === 'number' && isFinite(td.bpm) && td.bpm > 0){ t.bpm = Math.round(td.bpm); patch.bpm = t.bpm; }
         t.color = colorFor(t.title + t.name);
         if(Object.keys(patch).length) idbPatch(t.id, patch);
       });
@@ -5943,6 +6106,667 @@
   function renderPack5(){
     if(view === 'summary') renderSummary();
   }
+
+  // ---------- Pack 6: compartir/ZIP, recortadora, temas, alarma, energía (BPM) y voz ----------
+  var ACCENTS = [
+    { id:'naranja', name:'Naranja', value:'#E94E1B', darkOf:'#C93E12', dark:'#FF5C28', soft:'#FFE8DE', softDark:'#3A221B' },
+    { id:'verde',   name:'Verde',   value:'#1F9D66', darkOf:'#157347', dark:'#2ECC85', soft:'#DDF3E7', softDark:'#17352A' },
+    { id:'azul',    name:'Azul',    value:'#2F6BFF', darkOf:'#1F4FD1', dark:'#6B96FF', soft:'#E1EBFF', softDark:'#1B2A4A' },
+    { id:'rosa',    name:'Rosa',    value:'#C4499B', darkOf:'#A83A84', dark:'#E87BC0', soft:'#FBE4F2', softDark:'#3F2136' },
+    { id:'turquesa', name:'Turquesa', value:'#0E9594', darkOf:'#0B7372', dark:'#2EC4C3', soft:'#D9F4F3', softDark:'#173A3C' },
+    { id:'dorado',  name:'Dorado',  value:'#BC8607', darkOf:'#9A6D05', dark:'#E8B93B', soft:'#FBF0D3', softDark:'#3D3013' },
+    { id:'violeta', name:'Violeta', value:'#7B5CFF', darkOf:'#6243DB', dark:'#9D85FF', soft:'#E9E4FF', softDark:'#2A2147' },
+    { id:'rojo',    name:'Rojo',    value:'#D63A2F', darkOf:'#B02A21', dark:'#FF6B5E', soft:'#FDE3E0', softDark:'#40201C' }
+  ];
+  function validAccent(id){
+    for(var i=0;i<ACCENTS.length;i++){ if(ACCENTS[i].id===id) return id; }
+    return 'naranja';
+  }
+  function accentDef(){
+    for(var i=0;i<ACCENTS.length;i++){ if(ACCENTS[i].id===settings.accent) return ACCENTS[i]; }
+    return ACCENTS[0];
+  }
+  function sanitizeAlarm(al){
+    var out = { on:false, time:'08:00', playlistId:'' };
+    if(al && typeof al === 'object'){
+      out.on = !!al.on;
+      if(typeof al.time === 'string' && /^([01]\d|2[0-3]):[0-5]\d$/.test(al.time)) out.time = al.time;
+      if(typeof al.playlistId === 'string') out.playlistId = al.playlistId;
+    }
+    return out;
+  }
+  function effectiveDark(){
+    if(settings.theme === 'dark') return true;
+    if(settings.theme === 'light') return false;
+    try{ return !!(window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches); }catch(e){ return false; }
+  }
+  function applyTheme(){
+    var root = document.documentElement;
+    if(settings.theme === 'dark') root.setAttribute('data-theme', 'dark');
+    else if(settings.theme === 'light') root.setAttribute('data-theme', 'light');
+    else root.removeAttribute('data-theme');
+    var a = accentDef(), dark = effectiveDark();
+    root.style.setProperty('--accent', dark ? a.dark : a.value);
+    root.style.setProperty('--accent-dark', dark ? a.dark : a.darkOf);
+    root.style.setProperty('--accent-soft', dark ? a.softDark : a.soft);
+  }
+  try{
+    var themeMq = window.matchMedia('(prefers-color-scheme: dark)');
+    if(themeMq && themeMq.addEventListener) themeMq.addEventListener('change', function(){ if(settings.theme === 'auto') applyTheme(); });
+  }catch(e){}
+  function renderAccentDots(){
+    var wrap = document.getElementById('accentDots');
+    if(!wrap || wrap.children.length) return;
+    ACCENTS.forEach(function(a){
+      var b = document.createElement('button');
+      b.type = 'button'; b.className = 'swatch'; b.style.background = a.value;
+      b.title = a.name; b.setAttribute('aria-label', 'Color de acento ' + a.name);
+      b.setAttribute('data-accent', a.id);
+      b.addEventListener('click', function(){
+        settings.accent = a.id;
+        applyTheme(); syncThemeUI(); saveState();
+        toast('Color de acento: ' + a.name);
+      });
+      wrap.appendChild(b);
+    });
+  }
+  function syncThemeUI(){
+    renderAccentDots();
+    var wrap = document.getElementById('accentDots');
+    if(wrap){
+      Array.prototype.forEach.call(wrap.children, function(b){
+        b.classList.toggle('on', b.getAttribute('data-accent') === settings.accent);
+      });
+    }
+    var ts = document.getElementById('themeSelect'); if(ts) ts.value = settings.theme;
+    var vs = document.getElementById('vizStyleSelect'); if(vs) vs.value = settings.vizStyle;
+  }
+  document.getElementById('themeSelect').addEventListener('change', function(ev){
+    settings.theme = (ev.target.value === 'light' || ev.target.value === 'dark') ? ev.target.value : 'auto';
+    applyTheme(); saveState();
+    toast(settings.theme === 'auto' ? 'Tema automático (sigue al sistema)' : (settings.theme === 'dark' ? 'Tema oscuro' : 'Tema claro'));
+  });
+  document.getElementById('vizStyleSelect').addEventListener('change', function(ev){
+    settings.vizStyle = (ev.target.value === 'wave' || ev.target.value === 'circle') ? ev.target.value : 'bars';
+    saveState();
+    toast('Visualizador: ' + (settings.vizStyle === 'wave' ? 'onda' : settings.vizStyle === 'circle' ? 'círculo' : 'barras'));
+  });
+
+  // ----- Compartir de verdad (Web Share con archivos; si no, descargar) -----
+  function getTrackBlob(t){
+    return openDB().then(function(db){
+      return new Promise(function(resolve){
+        try{
+          var tx = db.transaction(STORE, 'readonly');
+          var req = tx.objectStore(STORE).get(t.id);
+          req.onsuccess = function(){ resolve(req.result && req.result.blob ? req.result.blob : null); };
+          req.onerror = function(){ resolve(null); };
+        }catch(e){ resolve(null); }
+      });
+    }).catch(function(){ return null; });
+  }
+  function shareTrack(t){
+    if(!t) return;
+    getTrackBlob(t).then(function(blob){
+      if(!blob){ toast('No se encontró el archivo de “' + t.title + '” en este dispositivo.'); return; }
+      var file = null;
+      try{ file = new File([blob], t.name, { type: blob.type || t.type || 'audio/mpeg' }); }catch(e){}
+      if(file && navigator.canShare && navigator.share){
+        var can = false;
+        try{ can = navigator.canShare({ files: [file] }); }catch(e){}
+        if(can){
+          navigator.share({ files: [file], title: t.title }).then(function(){
+            toast('Compartido: “' + t.title + '”');
+          }).catch(function(err){
+            if(err && err.name === 'AbortError') return;
+            downloadFile(t.name, blob);
+            toast('No se pudo abrir el panel de compartir: se descargó el archivo.');
+          });
+          return;
+        }
+      }
+      downloadFile(t.name, blob);
+      toast('Este navegador no permite compartir archivos: se descargó “' + t.title + '” para que lo envíes tú.');
+    });
+  }
+  document.getElementById('btnShareCurrent').addEventListener('click', function(){
+    var t = currentTrack();
+    if(t) shareTrack(t);
+  });
+
+  // ----- Exportar playlist como ZIP (escritor ZIP local, método store, sin librerías) -----
+  var CRC_TABLE = null;
+  function crc32(bytes){
+    if(!CRC_TABLE){
+      CRC_TABLE = [];
+      for(var n=0;n<256;n++){ var c=n; for(var k=0;k<8;k++) c = (c & 1) ? (0xEDB88320 ^ (c >>> 1)) : (c >>> 1); CRC_TABLE[n] = c >>> 0; }
+    }
+    var crc = 0xFFFFFFFF;
+    for(var i=0;i<bytes.length;i++) crc = CRC_TABLE[(crc ^ bytes[i]) & 0xFF] ^ (crc >>> 8);
+    return (crc ^ 0xFFFFFFFF) >>> 0;
+  }
+  function buildZipBlob(entries){
+    var chain = Promise.resolve([]);
+    entries.forEach(function(en){
+      chain = chain.then(function(acc){
+        return en.blob.arrayBuffer().then(function(ab){
+          acc.push({ name: en.name, data: new Uint8Array(ab) });
+          return acc;
+        });
+      });
+    });
+    return chain.then(function(files){
+      var enc = new TextEncoder();
+      var chunks = [], central = [], offset = 0;
+      function u16(v){ return [v & 0xFF, (v >>> 8) & 0xFF]; }
+      function u32(v){ return [v & 0xFF, (v >>> 8) & 0xFF, (v >>> 16) & 0xFF, (v >>> 24) & 0xFF]; }
+      function pushBytes(u){ chunks.push(u); offset += u.length; }
+      files.forEach(function(f){
+        var nameBytes = enc.encode(f.name);
+        var crc = crc32(f.data), size = f.data.length, localOffset = offset;
+        pushBytes(new Uint8Array([].concat(u32(0x04034b50), u16(20), u16(0x0800), u16(0), u16(0), u16(0), u32(crc), u32(size), u32(size), u16(nameBytes.length), u16(0))));
+        pushBytes(nameBytes);
+        pushBytes(f.data);
+        central.push({ nameBytes: nameBytes, crc: crc, size: size, offset: localOffset });
+      });
+      var centralStart = offset;
+      central.forEach(function(c){
+        pushBytes(new Uint8Array([].concat(u32(0x02014b50), u16(20), u16(20), u16(0x0800), u16(0), u16(0), u16(0), u32(c.crc), u32(c.size), u32(c.size), u16(c.nameBytes.length), u16(0), u16(0), u16(0), u16(0), u32(0), u32(c.offset))));
+        pushBytes(c.nameBytes);
+      });
+      var centralSize = offset - centralStart;
+      pushBytes(new Uint8Array([].concat(u32(0x06054b50), u16(0), u16(0), u16(central.length), u16(central.length), u32(centralSize), u32(centralStart), u16(0))));
+      return new Blob(chunks, { type: 'application/zip' });
+    });
+  }
+  function exportPlaylistZip(){
+    var pl = selectedPlaylist(); if(!pl) return;
+    var list = pl.trackIds.map(function(id){ return trackById(id); }).filter(Boolean);
+    if(!list.length){ toast('Esta playlist está vacía.'); return; }
+    var st = document.getElementById('zipStatus');
+    if(st) st.textContent = 'Generando el ZIP…';
+    var usedNames = {};
+    function uniqueName(name){
+      var base = name, out = name, i = 2;
+      while(usedNames[out]){
+        var dot = base.lastIndexOf('.');
+        out = dot > 0 ? base.slice(0, dot) + ' (' + i + ')' + base.slice(dot) : base + ' (' + i + ')';
+        i++;
+      }
+      usedNames[out] = 1;
+      return out;
+    }
+    var audioEntries = [];
+    var chain = Promise.resolve();
+    list.forEach(function(t){
+      chain = chain.then(function(){
+        return getTrackBlob(t).then(function(blob){
+          if(blob) audioEntries.push({ name: uniqueName(t.name), blob: blob, track: t });
+        });
+      });
+    });
+    chain.then(function(){
+      if(!audioEntries.length){ if(st) st.textContent = ''; toast('No se encontraron los archivos de audio de esta playlist en este dispositivo.'); return; }
+      var lines = ['#EXTM3U'];
+      audioEntries.forEach(function(en){
+        var t = en.track;
+        lines.push('#EXTINF:' + Math.round(t.duration || 0) + ',' + ((t.artist ? t.artist + ' - ' : '') + t.title));
+        lines.push(en.name);
+      });
+      var entries = audioEntries.map(function(en){ return { name: en.name, blob: en.blob }; });
+      entries.push({ name: 'playlist.m3u', blob: new Blob([lines.join('\n')], { type: 'audio/x-mpegurl' }) });
+      return buildZipBlob(entries).then(function(zip){
+        var safe = (pl.name || 'playlist').replace(/[^\wáéíóúñü -]+/gi, '').trim() || 'playlist';
+        downloadFile(safe + '.zip', zip);
+        if(st) st.textContent = '';
+        toast('ZIP exportado: ' + audioEntries.length + (audioEntries.length === 1 ? ' canción' : ' canciones') + ' + la lista .m3u de “' + pl.name + '”');
+      });
+    }).catch(function(){ if(st) st.textContent = ''; toast('No se pudo generar el ZIP.'); });
+  }
+  document.getElementById('btnPlZip').addEventListener('click', exportPlaylistZip);
+
+  // ----- Recortadora: exportar el fragmento A-B o de un marcador como WAV -----
+  var trimBusy = false;
+  function makeAudioBuffer(nCh, len, rate){
+    try{
+      var OC = window.OfflineAudioContext || window.webkitOfflineAudioContext;
+      if(OC){ var oc = new OC(1, 1, rate); return oc.createBuffer(nCh, len, rate); }
+    }catch(e){}
+    try{ if(audioCtx) return audioCtx.createBuffer(nCh, len, rate); }catch(e){}
+    return null;
+  }
+  function bufferToWav(ab){
+    var nCh = Math.min(2, ab.numberOfChannels), rate = ab.sampleRate, len = ab.length;
+    var blockAlign = nCh * 2, dataSize = len * blockAlign;
+    var buf = new ArrayBuffer(44 + dataSize);
+    var v = new DataView(buf);
+    function ws(off, s){ for(var i=0;i<s.length;i++) v.setUint8(off + i, s.charCodeAt(i)); }
+    ws(0, 'RIFF'); v.setUint32(4, 36 + dataSize, true); ws(8, 'WAVE'); ws(12, 'fmt ');
+    v.setUint32(16, 16, true); v.setUint16(20, 1, true); v.setUint16(22, nCh, true);
+    v.setUint32(24, rate, true); v.setUint32(28, rate * blockAlign, true); v.setUint16(32, blockAlign, true); v.setUint16(34, 16, true);
+    ws(36, 'data'); v.setUint32(40, dataSize, true);
+    var chans = [];
+    for(var c=0;c<nCh;c++) chans.push(ab.getChannelData(c));
+    var off = 44;
+    for(var i=0;i<len;i++){
+      for(var c2=0;c2<nCh;c2++){
+        var s = Math.max(-1, Math.min(1, chans[c2][i]));
+        v.setInt16(off, s < 0 ? s * 0x8000 : s * 0x7FFF, true);
+        off += 2;
+      }
+    }
+    return new Blob([buf], { type: 'audio/wav' });
+  }
+  function exportTrim(){
+    var t = currentTrack();
+    var st = document.getElementById('trimStatus');
+    if(!t){ toast('Elige una canción primero.'); return; }
+    var a = null, b = null, label = '';
+    if(t.abLoop){ a = t.abLoop.a; b = t.abLoop.b; label = 'loop A-B'; }
+    else if(t.bookmarks && t.bookmarks.length){
+      var sorted = t.bookmarks.slice().sort(function(x, y){ return x.time - y.time; });
+      a = sorted[0].time;
+      b = sorted.length > 1 ? sorted[1].time : (t.duration || audio.duration || 0);
+      label = 'marcador “' + sorted[0].name + '”';
+    }
+    if(a == null || !(b > a + 0.2)){
+      if(st) st.textContent = 'Primero marca el fragmento: fija el loop A-B o añade un marcador.';
+      toast('Primero marca el fragmento: fija el loop A-B o añade un marcador en esta canción.');
+      return;
+    }
+    if(trimBusy) return;
+    trimBusy = true;
+    if(st) st.textContent = 'Generando el fragmento…';
+    fetch(t.url).then(function(r){ return r.arrayBuffer(); })
+      .then(function(buf){ return decodeAudio(buf); })
+      .then(function(ab){
+        var rate = ab.sampleRate;
+        var start = Math.max(0, Math.floor(a * rate));
+        var end = Math.min(ab.length, Math.ceil(b * rate));
+        if(end - start < Math.floor(rate * 0.2)) throw new Error('short');
+        var seg = makeAudioBuffer(ab.numberOfChannels, end - start, rate);
+        if(!seg) throw new Error('no-buffer');
+        for(var c=0;c<ab.numberOfChannels;c++) seg.getChannelData(c).set(ab.getChannelData(c).subarray(start, end));
+        var wav = bufferToWav(seg);
+        var safe = (t.title || 'fragmento').replace(/[^\wáéíóúñü -]+/gi, '').trim() || 'fragmento';
+        downloadFile(safe + ' - fragmento ' + fmtTime(a).replace(/:/g, 'm') + ' a ' + fmtTime(b).replace(/:/g, 'm') + '.wav', wav);
+        if(st) st.textContent = '';
+        toast('Fragmento exportado (' + label + '): ' + fmtTime(a) + ' → ' + fmtTime(b));
+      })
+      .catch(function(){ if(st) st.textContent = ''; toast('No se pudo generar el fragmento de esta canción.'); })
+      .then(function(){ trimBusy = false; });
+  }
+  document.getElementById('btnTrimExport').addEventListener('click', exportTrim);
+
+  // ----- Dormir tras X canciones -----
+  var sleepSongsLeft = 0;
+  function updateSleepSongsUI(){
+    var st = document.getElementById('sleepSongsStatus');
+    if(st) st.textContent = sleepSongsLeft > 0 ? 'Quedan ' + sleepSongsLeft + (sleepSongsLeft === 1 ? ' canción' : ' canciones') : '';
+  }
+  function noteSongCompleted(){
+    if(sleepSongsLeft > 0){
+      sleepSongsLeft--;
+      if(sleepSongsLeft <= 0){
+        sleepSongsLeft = 0;
+        updateSleepSongsUI();
+        fadeOutAndPause();
+        toast('Temporizador: la música se detuvo tras las canciones elegidas.');
+        return true;
+      }
+      updateSleepSongsUI();
+    }
+    return false;
+  }
+  document.getElementById('btnSleepSongs').addEventListener('click', function(){
+    var inp = document.getElementById('sleepSongsInput');
+    var n = parseInt(inp.value, 10);
+    if(!isFinite(n) || n < 1){
+      if(sleepSongsLeft > 0){ sleepSongsLeft = 0; updateSleepSongsUI(); toast('Dormir por canciones desactivado.'); return; }
+      toast('Escribe cuántas canciones quieres que suenen antes de parar (1 o más).');
+      inp.focus();
+      return;
+    }
+    sleepSongsLeft = Math.min(99, n);
+    updateSleepSongsUI();
+    toast('La música se detendrá tras ' + sleepSongsLeft + (sleepSongsLeft === 1 ? ' canción.' : ' canciones.'));
+  });
+
+  // ----- Alarma musical -----
+  var alarmUiSig = null, alarmFiredKey = '';
+  function syncAlarmUI(){
+    var btn = document.getElementById('btnAlarmOn');
+    if(!btn) return;
+    var al = settings.alarm;
+    btn.classList.toggle('on', al.on);
+    btn.setAttribute('aria-pressed', al.on ? 'true' : 'false');
+    document.getElementById('alarmState').textContent = al.on ? 'Activada' : 'Desactivada';
+    var timeEl = document.getElementById('alarmTime');
+    if(document.activeElement !== timeEl) timeEl.value = al.time || '08:00';
+    var sel = document.getElementById('alarmPlaylist');
+    var sig = playlists.map(function(p){ return p.id + ':' + p.name; }).join('|') + '#' + (al.playlistId || '');
+    if(alarmUiSig !== sig){
+      alarmUiSig = sig;
+      sel.innerHTML = '';
+      var o0 = document.createElement('option'); o0.value = ''; o0.textContent = playlists.length ? 'Elige playlist…' : 'Sin playlists todavía'; sel.appendChild(o0);
+      playlists.forEach(function(p){
+        var o = document.createElement('option'); o.value = p.id; o.textContent = p.name; sel.appendChild(o);
+      });
+      sel.value = al.playlistId || '';
+    }
+    var st = document.getElementById('alarmStatus');
+    if(st){
+      if(al.on){
+        var pl = playlists.find(function(p){ return p.id === al.playlistId; });
+        st.textContent = 'Alarma activada: a las ' + (al.time || '08:00') + ' sonará ' + (pl ? '“' + pl.name + '”' : 'la playlist elegida') + ' con la app abierta. Se repite cada día; desactívala aquí cuando quieras.';
+      } else {
+        st.textContent = 'A la hora elegida, con la app abierta, empezará a sonar la playlist y verás un aviso. Se repite cada día mientras esté activada.';
+      }
+    }
+  }
+  function fireAlarm(){
+    var al = settings.alarm;
+    var pl = playlists.find(function(p){ return p.id === al.playlistId; });
+    if(pl && pl.trackIds.some(function(id){ var t = trackById(id); return t && isPlayable(t); })){
+      selectedPlaylistId = pl.id;
+      saveState(); renderPack();
+      playPlaylist(false);
+      toast('⏰ ¡Alarma! Sonando “' + pl.name + '”.');
+      return;
+    }
+    var fp = firstPlayableId();
+    if(fp){ selectTrack(fp, true); toast('⏰ ¡Alarma! A sonar.'); }
+    else toast('⏰ Es la hora de tu alarma, pero no hay canciones reproducibles.');
+  }
+  function checkAlarm(){
+    var al = settings.alarm;
+    if(!al || !al.on || !al.time) return;
+    var now = new Date();
+    var cur = String(now.getHours()).padStart(2, '0') + ':' + String(now.getMinutes()).padStart(2, '0');
+    var key = now.toDateString() + ' ' + al.time;
+    if(cur === al.time && alarmFiredKey !== key){
+      alarmFiredKey = key;
+      fireAlarm();
+    }
+  }
+  setInterval(checkAlarm, 20000);
+  document.getElementById('btnAlarmOn').addEventListener('click', function(){
+    if(!settings.alarm.on){
+      var sel = document.getElementById('alarmPlaylist');
+      var timeEl = document.getElementById('alarmTime');
+      var pid = sel.value || settings.alarm.playlistId;
+      if(!playlists.length){ toast('Primero crea una playlist: será la que suene con la alarma.'); return; }
+      if(!pid){ toast('Elige primero la playlist que quieres que suene con la alarma.'); sel.focus(); return; }
+      settings.alarm.playlistId = pid;
+      if(/^([01]\d|2[0-3]):[0-5]\d$/.test(timeEl.value)) settings.alarm.time = timeEl.value;
+      settings.alarm.on = true;
+      alarmFiredKey = '';
+      saveState(); syncAlarmUI();
+      var pl = playlists.find(function(p){ return p.id === pid; });
+      toast('Alarma activada: a las ' + settings.alarm.time + ' sonará “' + (pl ? pl.name : 'tu playlist') + '” (con la app abierta).');
+    } else {
+      settings.alarm.on = false;
+      saveState(); syncAlarmUI();
+      toast('Alarma desactivada.');
+    }
+  });
+  document.getElementById('alarmTime').addEventListener('change', function(ev){
+    if(/^([01]\d|2[0-3]):[0-5]\d$/.test(ev.target.value)){
+      settings.alarm.time = ev.target.value;
+      alarmFiredKey = '';
+      saveState(); syncAlarmUI();
+    }
+  });
+  document.getElementById('alarmPlaylist').addEventListener('change', function(ev){
+    settings.alarm.playlistId = ev.target.value;
+    saveState(); syncAlarmUI();
+  });
+
+  // ----- Mezcla por energía: detección aproximada de BPM -----
+  function estimateBpm(ab){
+    try{
+      var rate = ab.sampleRate;
+      var len = Math.min(ab.length, Math.floor(rate * 240));
+      var hop = 512, win = 1024;
+      var nWin = Math.floor((len - win) / hop);
+      if(nWin < 200) return null;
+      var chans = [];
+      for(var c=0;c<ab.numberOfChannels;c++) chans.push(ab.getChannelData(c));
+      var env = new Float32Array(nWin);
+      for(var w=0;w<nWin;w++){
+        var off = w * hop, sum = 0;
+        for(var j=0;j<win;j+=4){
+          var s = 0;
+          for(var c2=0;c2<chans.length;c2++) s += chans[c2][off + j];
+          s /= chans.length;
+          sum += s * s;
+        }
+        env[w] = Math.sqrt(sum / (win / 4));
+      }
+      var flux = new Float32Array(nWin);
+      for(var k=1;k<nWin;k++){ var d = env[k] - env[k-1]; flux[k] = d > 0 ? d : 0; }
+      var mean = 0;
+      for(var m=0;m<nWin;m++) mean += flux[m];
+      mean /= nWin;
+      var any = false;
+      for(var m2=0;m2<nWin;m2++){ flux[m2] -= mean; if(flux[m2] > 0.01) any = true; }
+      if(!any) return null;
+      var secPerWin = hop / rate;
+      var minLag = Math.max(2, Math.floor((60 / 200) / secPerWin));
+      var maxLag = Math.min(nWin - 1, Math.ceil((60 / 40) / secPerWin));
+      var bestLag = 0, bestVal = -Infinity;
+      for(var lag=minLag; lag<=maxLag; lag++){
+        var acc = 0;
+        for(var i=0;i + lag < nWin; i++) acc += flux[i] * flux[i + lag];
+        if(acc > bestVal){ bestVal = acc; bestLag = lag; }
+      }
+      if(!bestLag) return null;
+      var bpm = 60 / (bestLag * secPerWin);
+      while(bpm < 50) bpm *= 2;
+      while(bpm > 180) bpm /= 2;
+      return Math.round(bpm);
+    }catch(e){ return null; }
+  }
+  function analyzeBpm(t){
+    if(!t || typeof t.bpm === 'number') return Promise.resolve(false);
+    if(t._bpming) return t._bpming;
+    t._bpming = fetch(t.url).then(function(r){ return r.arrayBuffer(); })
+      .then(function(buf){ return decodeAudio(buf); })
+      .then(function(ab){
+        var bpm = estimateBpm(ab);
+        if(bpm){ t.bpm = bpm; idbPatch(t.id, { bpm: bpm }); return true; }
+        return false;
+      })
+      .catch(function(){ return false; })
+      .then(function(res){ t._bpming = null; return res; });
+    return t._bpming;
+  }
+  var analyzingBpmAll = false;
+  function analyzeAllBpm(){
+    if(analyzingBpmAll) return;
+    var st = document.getElementById('bpmStatus');
+    var pending = tracks.filter(function(t){ return typeof t.bpm !== 'number'; });
+    if(!tracks.length){ if(st) st.textContent = 'Añade canciones primero.'; return; }
+    if(!pending.length){ if(st) st.textContent = 'Todas las canciones ya tienen su BPM detectado.'; return; }
+    analyzingBpmAll = true;
+    var done = 0;
+    var chain = Promise.resolve();
+    pending.forEach(function(t){
+      chain = chain.then(function(){
+        return analyzeBpm(t).then(function(){
+          done++;
+          if(st) st.textContent = 'Analizando ritmo… ' + done + ' de ' + pending.length + ' canciones.';
+        });
+      });
+    });
+    chain.then(function(){
+      analyzingBpmAll = false;
+      if(st) st.textContent = 'Ritmo analizado en ' + pending.length + ' canciones. Las mezclas por energía ya están al día.';
+      renderList(); renderPack();
+    });
+  }
+  document.getElementById('btnAnalyzeBpmAll').addEventListener('click', analyzeAllBpm);
+  document.getElementById('btnAnalyzeBpmCurrent').addEventListener('click', function(){
+    var t = currentTrack();
+    var st = document.getElementById('bpmStatus');
+    if(!t){ toast('Elige primero la canción que quieres analizar.'); return; }
+    if(typeof t.bpm === 'number'){ toast('“' + t.title + '” ya tiene su ritmo: ' + t.bpm + ' BPM.'); return; }
+    if(st) st.textContent = 'Analizando “' + t.title + '”…';
+    analyzeBpm(t).then(function(ok){
+      if(st) st.textContent = '';
+      if(ok){ renderList(); renderPack(); toast('Ritmo de “' + t.title + '”: ' + t.bpm + ' BPM (aprox.).'); }
+      else toast('No se pudo detectar el ritmo de “' + t.title + '”.');
+    });
+  });
+  function updateEnergyCounts(){
+    var cc = document.getElementById('calmCount');
+    if(cc){ var n = computeSmart('calm').length; cc.textContent = n + (n === 1 ? ' canción' : ' canciones') + ' · Se actualiza sola.'; }
+    var ic = document.getElementById('intenseCount');
+    if(ic){ var n2 = computeSmart('intense').length; ic.textContent = n2 + (n2 === 1 ? ' canción' : ' canciones') + ' · Se actualiza sola.'; }
+  }
+  document.getElementById('btnCalmPlay').addEventListener('click', function(){ selectedSmartId = 'calm'; renderSmart(); playSmart(false); });
+  document.getElementById('btnCalmShuffle').addEventListener('click', function(){ selectedSmartId = 'calm'; renderSmart(); playSmart(true); });
+  document.getElementById('btnIntensePlay').addEventListener('click', function(){ selectedSmartId = 'intense'; renderSmart(); playSmart(false); });
+  document.getElementById('btnIntenseShuffle').addEventListener('click', function(){ selectedSmartId = 'intense'; renderSmart(); playSmart(true); });
+
+  // ----- Control por voz (SpeechRecognition, español) -----
+  var recog = null, recogActive = false;
+  function setVoiceStatus(msg){
+    var vs = document.getElementById('voiceStatus');
+    if(vs){ vs.textContent = msg || ''; vs.style.display = msg ? '' : 'none'; }
+  }
+  function syncVoiceBtns(){
+    ['btnVoice', 'btnCarMic'].forEach(function(id){
+      var b = document.getElementById(id);
+      if(b) b.classList.toggle('listening', recogActive);
+    });
+  }
+  function normCmd(s){
+    return (s || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[¡!¿?.,;:"]/g, ' ').replace(/\s+/g, ' ').trim();
+  }
+  function runVoiceCommand(raw){
+    var cmd = normCmd(raw);
+    function act(msg){ setVoiceStatus('Escuché “' + raw + '” → ' + msg); }
+    if(!cmd){ setVoiceStatus('No te escuché bien. Toca el micrófono y prueba otra vez.'); return; }
+    if(cmd.indexOf('aleatorio') >= 0 || cmd.indexOf('mezcla') >= 0){
+      if(!shuffle) document.getElementById('btnShuffle').click();
+      act('aleatorio activado');
+      return;
+    }
+    if(cmd.indexOf('siguiente') >= 0 || cmd === 'pasa' || cmd === 'salta'){
+      next(false); if(isPlaying) play();
+      var nt = currentTrack();
+      act('siguiente' + (nt ? ': “' + nt.title + '”' : ''));
+      return;
+    }
+    if(cmd.indexOf('anterior') >= 0 || cmd.indexOf('atras') >= 0 || cmd.indexOf('previa') >= 0){
+      prev(); if(isPlaying) play();
+      var pt = currentTrack();
+      act('anterior' + (pt ? ': “' + pt.title + '”' : ''));
+      return;
+    }
+    if(cmd.indexOf('pausa') >= 0 || cmd.indexOf('deten') >= 0 || cmd === 'para'){
+      if(isPlaying) pauseWithFade();
+      act('pausa');
+      return;
+    }
+    var m = /^(reproduce|pon|toca)\s+(.+)$/.exec(cmd);
+    if(m){
+      var want = m[2].replace(/^(la\s+playlist|playlist|la\s+lista|lista|mi\s+playlist)\s+/, '').trim();
+      if(want && want !== 'musica' && want !== 'algo' && want !== 'eso'){
+        var pl = null;
+        playlists.forEach(function(p){ if(normCmd(p.name) === want) pl = p; });
+        if(!pl) playlists.forEach(function(p){ var pn = normCmd(p.name); if(!pl && (pn.indexOf(want) >= 0 || want.indexOf(pn) >= 0)) pl = p; });
+        if(pl){
+          selectedPlaylistId = pl.id; saveState(); renderPack();
+          playPlaylist(false);
+          act('reproduciendo la playlist “' + pl.name + '”');
+          return;
+        }
+        act('no encontré la playlist “' + m[2] + '”');
+        return;
+      }
+      if(!isPlaying) play();
+      act('reproduciendo');
+      return;
+    }
+    if(cmd.indexOf('reproduce') >= 0 || cmd.indexOf('continua') >= 0 || cmd.indexOf('sigue') >= 0){
+      if(!isPlaying) play();
+      act('reproduciendo');
+      return;
+    }
+    setVoiceStatus('Escuché “' + raw + '”, pero no es un comando que conozca. Prueba: «siguiente», «anterior», «pausa», «aleatorio» o «reproduce» y el nombre de una playlist.');
+  }
+  var voiceConfirmPending = false;
+  function startVoice(){
+    var SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if(!SR){
+      setVoiceStatus('Este navegador no tiene reconocimiento de voz, así que el control por voz no está disponible aquí. Todo lo demás sigue funcionando igual.');
+      toast('Este navegador no soporta el reconocimiento de voz.');
+      return;
+    }
+    // Aviso y consentimiento: el reconocimiento de voz del navegador NO se procesa en el
+    // dispositivo — el audio del micrófono viaja al servicio de reconocimiento del
+    // fabricante del navegador (Google, en Chrome y Android) para transcribirlo.
+    // El micrófono nunca se enciende antes de que el usuario lo acepte expresamente.
+    if(!settings.voiceOk){
+      if(!voiceConfirmPending){
+        voiceConfirmPending = true;
+        setVoiceStatus('Antes de usar la voz: el reconocimiento lo hace el servicio del fabricante del navegador (Google, en Chrome y Android), así que el audio del micrófono saldría de tu dispositivo para transcribirlo. Nada se envía hasta que aceptes. Toca «Voz» otra vez para aceptar y empezar a escuchar.');
+        toast('El control por voz usa el servicio de reconocimiento del navegador: lee el aviso junto a los controles.');
+        return;
+      }
+      voiceConfirmPending = false;
+      settings.voiceOk = true;
+      saveState();
+    }
+    if(recogActive && recog){ try{ recog.stop(); }catch(e){} return; }
+    try{
+      recog = new SR();
+      recog.lang = 'es-ES';
+      recog.interimResults = false;
+      recog.maxAlternatives = 1;
+      recog.onresult = function(ev){
+        var txt = '';
+        try{ txt = ev.results[0][0].transcript || ''; }catch(e){}
+        if(txt) runVoiceCommand(txt);
+        else setVoiceStatus('No te escuché bien. Toca el micrófono y prueba otra vez.');
+      };
+      recog.onerror = function(ev){
+        recogActive = false; syncVoiceBtns();
+        if(ev.error === 'not-allowed') setVoiceStatus('El micrófono está bloqueado para esta página. Permítelo en los ajustes del navegador para usar la voz.');
+        else if(ev.error === 'no-speech') setVoiceStatus('No escuché nada. Toca el micrófono y di un comando.');
+        else if(ev.error === 'aborted') setVoiceStatus('');
+        else setVoiceStatus('No se pudo usar el micrófono ahora mismo. Inténtalo de nuevo.');
+      };
+      recog.onend = function(){ recogActive = false; syncVoiceBtns(); };
+      recogActive = true; syncVoiceBtns();
+      setVoiceStatus('Escuchando… di «siguiente», «pausa», «aleatorio» o «reproduce» y el nombre de una playlist.');
+      recog.start();
+    }catch(e){
+      recogActive = false; syncVoiceBtns();
+      setVoiceStatus('No se pudo iniciar el reconocimiento de voz en este navegador.');
+    }
+  }
+  document.getElementById('btnVoice').addEventListener('click', startVoice);
+  document.getElementById('btnCarMic').addEventListener('click', startVoice);
+
+  function renderPack6(){
+    applyTheme();
+    syncThemeUI();
+    syncAlarmUI();
+    updateSleepSongsUI();
+    updateEnergyCounts();
+    checkAlarm();
+    var ts = document.getElementById('trimStatus');
+    if(ts && !trimBusy){
+      var t = currentTrack();
+      ts.textContent = (t && !t.abLoop && !(t.bookmarks && t.bookmarks.length)) ? 'Primero marca el fragmento: fija el loop A-B o añade un marcador.' : '';
+    }
+  }
+  applyTheme();
+  syncThemeUI();
+  syncAlarmUI();
 
   // ---------- Init ----------
   var appVersionEl = document.getElementById('appVersion');
