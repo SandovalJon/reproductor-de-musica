@@ -559,7 +559,9 @@
   .swatch.on{border-color:var(--surface); outline:2px solid var(--text); outline-offset:1px}
   .mic-btn.listening{background:var(--accent) !important; border-color:var(--accent) !important; color:#fff !important; animation:micPulse 1.1s ease-in-out infinite}
   @keyframes micPulse{0%,100%{transform:scale(1)}50%{transform:scale(1.07)}}
-  @media (prefers-reduced-motion: reduce){ .mic-btn.listening{animation:none} }
+  .mic-btn.confirm{background:var(--accent) !important; border-color:var(--accent) !important; color:#fff !important; animation:micBlink .85s ease-in-out infinite}
+  @keyframes micBlink{0%,100%{opacity:1}50%{opacity:.5}}
+  @media (prefers-reduced-motion: reduce){ .mic-btn.listening, .mic-btn.confirm{animation:none} }
   .voice-status{font-size:12.5px; font-weight:700; color:var(--accent); margin:8px 0 0; line-height:1.45}
   .bpm-tag{font-weight:800; color:var(--accent)}
 </style>
@@ -1463,7 +1465,7 @@
 
   // ---------- State ----------
   var tracks = []; // {id,name,title,artist,album,duration,size,type,addedAt,url,coverUrl,color,rating,stars}
-  var APP_VERSION = '1.6.1'; // al publicar cambios, subir este número y el CACHE de sw.js
+  var APP_VERSION = '1.6.2'; // al publicar cambios, subir este número y el CACHE de sw.js
   var currentId = null;
   var isPlaying = false;
   var shuffle = false;
@@ -6638,8 +6640,31 @@
   function syncVoiceBtns(){
     ['btnVoice', 'btnCarMic'].forEach(function(id){
       var b = document.getElementById(id);
-      if(b) b.classList.toggle('listening', recogActive);
+      if(!b) return;
+      b.classList.toggle('listening', recogActive);
+      b.classList.toggle('confirm', !recogActive && typeof voiceConfirmPending !== 'undefined' && !!voiceConfirmPending);
     });
+  }
+  // Ducking: mientras se escucha un comando, el volumen de reproducción baja a
+  // ~20% para que la música no tape la voz. Solo toca el volumen de los decks:
+  // ni settings.volume (el volumen guardado) ni la normalización cambian, y al
+  // terminar la escucha se restaura el nivel exacto del usuario.
+  var voiceDucked = false;
+  function voiceDuck(){
+    if(voiceDucked || !isPlaying) return;
+    voiceDucked = true;
+    try{
+      audioEl.volume = settings.volume * 0.2;
+      audioB.volume = settings.volume * 0.2;
+    }catch(e){}
+  }
+  function voiceUnduck(){
+    if(!voiceDucked) return;
+    voiceDucked = false;
+    try{
+      audioEl.volume = settings.volume;
+      audioB.volume = settings.volume;
+    }catch(e){}
   }
   function normCmd(s){
     return (s || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[¡!¿?.,;:"]/g, ' ').replace(/\s+/g, ' ').trim();
@@ -6648,24 +6673,32 @@
     var cmd = normCmd(raw);
     function act(msg){ setVoiceStatus('Escuché “' + raw + '” → ' + msg); }
     if(!cmd){ setVoiceStatus('No te escuché bien. Toca el micrófono y prueba otra vez.'); return; }
-    if(cmd.indexOf('aleatorio') >= 0 || cmd.indexOf('mezcla') >= 0){
+    function has(){
+      for(var i=0;i<arguments.length;i++){ if(cmd.indexOf(arguments[i]) >= 0) return true; }
+      return false;
+    }
+    // Orden de prioridades: «la que sigue» debe ser siguiente y no reproducir,
+    // por eso siguiente/anterior se revisan antes que reproducir («sigue»).
+    if(has('aleatorio', 'mezcla', 'al azar')){
       if(!shuffle) document.getElementById('btnShuffle').click();
       act('aleatorio activado');
       return;
     }
-    if(cmd.indexOf('siguiente') >= 0 || cmd === 'pasa' || cmd === 'salta'){
-      next(false); if(isPlaying) play();
+    if(has('siguiente', 'adelante', 'la que sigue', 'que sigue', 'cambia', 'otra cancion') || cmd === 'pasa' || cmd === 'salta'){
+      // Audible siempre: tras cambiar por voz, la nueva canción suena aunque
+      // estuviera en pausa (antes cambiaba en silencio y parecía no pasar nada).
+      next(false); play();
       var nt = currentTrack();
       act('siguiente' + (nt ? ': “' + nt.title + '”' : ''));
       return;
     }
-    if(cmd.indexOf('anterior') >= 0 || cmd.indexOf('atras') >= 0 || cmd.indexOf('previa') >= 0){
-      prev(); if(isPlaying) play();
+    if(has('anterior', 'atras', 'regresa', 'vuelve', 'previa')){
+      prev(); play();
       var pt = currentTrack();
       act('anterior' + (pt ? ': “' + pt.title + '”' : ''));
       return;
     }
-    if(cmd.indexOf('pausa') >= 0 || cmd.indexOf('deten') >= 0 || cmd === 'para'){
+    if(has('pausa', 'deten', 'alto') || cmd === 'para'){
       if(isPlaying) pauseWithFade();
       act('pausa');
       return;
@@ -6690,12 +6723,12 @@
       act('reproduciendo');
       return;
     }
-    if(cmd.indexOf('reproduce') >= 0 || cmd.indexOf('continua') >= 0 || cmd.indexOf('sigue') >= 0){
+    if(has('reproduce', 'reproducir', 'continua', 'reanuda', 'sigue', 'pon musica')){
       if(!isPlaying) play();
       act('reproduciendo');
       return;
     }
-    setVoiceStatus('Escuché “' + raw + '”, pero no es un comando que conozca. Prueba: «siguiente», «anterior», «pausa», «aleatorio» o «reproduce» y el nombre de una playlist.');
+    setVoiceStatus('Escuché “' + raw + '”, pero no es un comando que conozca. Prueba: «siguiente» (o «adelante», «la que sigue»), «anterior» (o «atrás», «regresa»), «pausa», «aleatorio» o «reproduce» y el nombre de una playlist.');
   }
   var voiceConfirmPending = false;
   var voiceLangFallback = false; // true tras el reintento con lang «es» genérico (error language-not-supported)
@@ -6723,6 +6756,7 @@
         return;
       }
       if(recog === r){ recogActive = false; syncVoiceBtns(); }
+      voiceUnduck();
       setVoiceStatus('No se pudo iniciar el reconocimiento de voz en este navegador.');
     }
   }
@@ -6742,12 +6776,14 @@
     r.interimResults = false;
     r.maxAlternatives = 1;
     r.onresult = function(ev){
+      voiceUnduck();
       var txt = '';
       try{ txt = ev.results[0][0].transcript || ''; }catch(e){}
       if(txt) runVoiceCommand(txt);
       else setVoiceStatus('No te escuché bien. Toca el micrófono y prueba otra vez.');
     };
     r.onerror = function(ev){
+      voiceUnduck();
       if(recog === r){ recogActive = false; syncVoiceBtns(); }
       var code = (ev && ev.error) || '';
       if(code === 'not-allowed') setVoiceStatus('El micrófono está bloqueado para esta página. Permítelo en los ajustes del navegador para usar la voz.');
@@ -6767,9 +6803,11 @@
       }
       else setVoiceStatus('No se pudo usar el micrófono ahora mismo. Inténtalo de nuevo.' + (code ? ' (' + code + ')' : ''));
     };
-    r.onend = function(){ if(recog === r){ recogActive = false; syncVoiceBtns(); } };
+    r.onend = function(){ voiceUnduck(); if(recog === r){ recogActive = false; syncVoiceBtns(); } };
     recogActive = true; syncVoiceBtns();
+    voiceDuck();
     setVoiceStatus('Escuchando… di «siguiente», «pausa», «aleatorio» o «reproduce» y el nombre de una playlist.');
+    toast('Escuchando… di un comando.');
     tryStartRecog(r, prev, false);
   }
 
@@ -6787,11 +6825,13 @@
     if(!settings.voiceOk){
       if(!voiceConfirmPending){
         voiceConfirmPending = true;
+        syncVoiceBtns();
         setVoiceStatus('Antes de usar la voz: el reconocimiento lo hace el servicio del fabricante del navegador (Google, en Chrome y Android), así que el audio del micrófono saldría de tu dispositivo para transcribirlo. Nada se envía hasta que aceptes. Toca «Voz» otra vez para aceptar y empezar a escuchar.');
-        toast('El control por voz usa el servicio de reconocimiento del navegador: lee el aviso junto a los controles.');
+        toast('Toca «Voz» otra vez para aceptar y hablar.');
         return;
       }
       voiceConfirmPending = false;
+      syncVoiceBtns();
       settings.voiceOk = true;
       saveState();
     }
