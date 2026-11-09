@@ -586,9 +586,36 @@
   .swatch{width:34px; height:34px; border-radius:50%; border:3px solid transparent; box-shadow:0 2px 8px rgba(0,0,0,.18); padding:0; flex:none}
   .swatch.on{border-color:var(--surface); outline:2px solid var(--text); outline-offset:1px}
   .bpm-tag{font-weight:800; color:var(--accent)}
+  /* ===== Pack 7: inteligentes propias, DJ, logros, recuerdos, letra, fondo ===== */
+  #bgPhoto{position:fixed; inset:0; z-index:0; pointer-events:none; display:none}
+  #bgPhoto img{width:100%; height:100%; object-fit:cover; display:block}
+  #bgPhoto .bg-veil{position:absolute; inset:0; background:var(--bg)}
+  .app{position:relative; z-index:1}
+  .badge-grid{display:grid; grid-template-columns:repeat(auto-fill,minmax(128px,1fr)); gap:10px}
+  .badge{border:1px solid var(--line); background:var(--surface-2); border-radius:14px; padding:13px 10px; text-align:center}
+  .badge .b-icon{font-size:26px; line-height:1}
+  .badge .b-name{font-weight:800; font-size:13px; margin-top:6px; line-height:1.3}
+  .badge .b-prog{font-size:12px; color:var(--muted); font-weight:700; margin-top:4px; font-variant-numeric:tabular-nums}
+  .badge .b-bar{height:6px; background:var(--surface-3); border-radius:999px; margin-top:8px; overflow:hidden}
+  .badge .b-bar i{display:block; height:100%; background:var(--accent); border-radius:999px}
+  .badge.locked{opacity:.62}
+  .badge.locked .b-icon{filter:grayscale(.8)}
+  .badge.unlocked{border-color:var(--accent)}
+  .memory-block{border:1px solid var(--line); border-radius:14px; padding:13px 15px; margin-bottom:10px; background:var(--surface-2)}
+  .memory-block h5{margin:0; font-size:14.5px; font-weight:800}
+  .memory-block p{margin:5px 0 0; color:var(--muted); font-size:13px; line-height:1.55}
+  .memory-block ul{margin:8px 0 0; padding-left:18px; font-size:13.5px; line-height:1.6; font-weight:600}
+  .rule-row{display:flex; flex-wrap:wrap; gap:6px; align-items:center; margin-bottom:8px}
+  .rule-row select, .rule-row input[type="text"], .rule-row input[type="number"]{padding:8px 10px; border:1px solid var(--line); border-radius:10px; background:var(--surface-2); color:var(--text); font-size:13px; max-width:100%}
+  .rule-row input[type="number"]{width:92px}
+  .rule-row input[type="text"]{flex:1 1 110px; min-width:90px}
+  .lyric-line.selected{background:var(--accent-soft); color:var(--accent-dark); font-weight:700; outline:1px dashed var(--accent)}
+  #lyricCardBox{margin-top:12px; display:none}
+  #lyricCardBox img{width:100%; max-width:340px; border-radius:16px; border:1px solid var(--line); display:block}
 </style>
 </head>
 <body>
+<div id="bgPhoto" aria-hidden="true"><img id="bgImg" alt="" /><div class="bg-veil" id="bgVeil"></div></div>
 <div class="app">
   <header class="topbar">
     <div class="title-block">
@@ -633,6 +660,7 @@
         <h2 class="now-title" id="nowTitle">Ninguna canción seleccionada</h2>
         <p class="now-artist" id="nowArtist">Añade archivos de audio para empezar</p>
         <p class="now-album" id="nowAlbum"></p>
+        <p id="djIndicator" style="display:none; margin:8px 0 0; font-size:12.5px; font-weight:800; color:var(--accent)"></p>
         <div style="margin-top:10px; display:flex; flex-wrap:wrap; gap:8px">
           <button class="btn small" id="btnEditCurrent" type="button" disabled>
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:15px;height:15px"><path d="M17 3a2.8 2.8 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></svg>
@@ -808,6 +836,17 @@
                 </select>
               </div>
               <p class="sound-note">Se guarda en este dispositivo y también viaja dentro del respaldo.</p>
+              <div class="sound-group-head" style="margin-top:16px"><h4>Fondo personalizado</h4></div>
+              <div class="sound-inline">
+                <button class="btn small" id="btnBgPhoto" type="button">Elegir foto de fondo</button>
+                <button class="btn small danger" id="btnBgRemove" type="button" style="display:none">Quitar fondo</button>
+              </div>
+              <div class="sound-inline" style="margin-top:10px">
+                <label style="font-size:13px; font-weight:700" for="bgOpacity">Opacidad del fondo</label>
+                <input type="range" id="bgOpacity" min="10" max="90" step="5" value="35" aria-label="Opacidad del fondo personalizado" />
+                <output id="bgOpacityOut" for="bgOpacity">35%</output>
+              </div>
+              <p class="sound-note">Tu foto se aplica como fondo de toda la app, detrás del contenido y con una capa de tu tema para que todo se siga leyendo bien. Se guarda <strong>solo en este dispositivo</strong> (en el almacén local de la app): por su peso <strong>no</strong> viaja en el respaldo JSON. Si existe, se aplica sola al abrir la app.</p>
             </div>
             <div class="sound-group">
               <div class="sound-group-head"><h4>Volumen parejo</h4></div>
@@ -880,7 +919,16 @@
               <button class="btn small" id="btnLoadLrc" type="button">Cargar archivo .lrc</button>
               <button class="btn small" id="btnEditPlainLyrics" type="button">Letra en texto plano…</button>
               <button class="btn small" id="btnSyncMode" type="button">Sincronizar letra</button>
+              <button class="btn small primary" id="btnShareLyric" type="button">Compartir letra</button>
               <button class="btn small danger" id="btnRemoveLrc" type="button" style="display:none">Quitar letra</button>
+            </div>
+            <div id="lyricCardBox">
+              <img id="lyricCardImg" alt="Tarjeta con la letra de la canción" />
+              <div class="lyrics-actions">
+                <button class="btn small primary" id="btnLyricDownload" type="button">Descargar PNG</button>
+                <button class="btn small" id="btnLyricShare" type="button">Compartir imagen</button>
+              </div>
+              <p class="sound-note">Tarjeta lista con la portada, el título y la letra elegida. En letra sincronizada se usa la línea que está sonando; en texto plano, toca las líneas que quieras incluir antes de pulsar «Compartir letra».</p>
             </div>
             <div class="sync-box" id="syncBox" style="display:none">
               <p class="sound-note" style="margin-top:0">Sincronizador: la canción suena desde el inicio y tú marcas el momento en que empieza cada línea. Al terminar se genera el .lrc sincronizado, se guarda como la letra de la canción (se verá en el karaoke normal) y podrás descargarlo.</p>
@@ -1001,7 +1049,7 @@
         <div class="update-row">
           <button class="btn small" id="btnCheckUpdate" type="button">Actualizar app</button>
           <button class="btn small danger" id="btnForceUpdate" type="button">Forzar actualización</button>
-          <span class="backup-note" id="updateStatus">Versión de esta app: v<span id="appVersionNote">1.8.0</span>. «Actualizar app» consulta la versión publicada y te dice si ya estás al día antes de recargar. «Forzar actualización» limpia el service worker y las cachés de la app si una actualización se quedó atascada; tu biblioteca, playlists y ajustes (IndexedDB) nunca se tocan.</span>
+          <span class="backup-note" id="updateStatus">Versión de esta app: v<span id="appVersionNote">1.9.0</span>. «Actualizar app» consulta la versión publicada y te dice si ya estás al día antes de recargar. «Forzar actualización» limpia el service worker y las cachés de la app si una actualización se quedó atascada; tu biblioteca, playlists y ajustes (IndexedDB) nunca se tocan.</span>
         </div>
       </div>
 
@@ -1078,6 +1126,12 @@
             <p>Lo que sonará a continuación, en este orden. Arrastra cada fila desde el asa ⠿ para reordenarla (también con el dedo) y el nuevo orden se guarda. Toca una canción de la cola para saltar directo a ella.</p>
           </div>
         </div>
+        <div class="smart-discover" id="djNextBox" style="display:none; margin:12px 18px 0">
+          <div>
+            <h3>Modo DJ activo</h3>
+            <p id="djNextText"></p>
+          </div>
+        </div>
         <div class="subview-actions" id="queueActions" style="display:none">
           <button class="btn small primary" id="btnQueueSavePl" type="button">Guardar cola como playlist</button>
           <button class="btn small danger" id="btnQueueClear" type="button">Vaciar cola</button>
@@ -1110,6 +1164,12 @@
 
       <!-- LISTAS INTELIGENTES -->
       <div class="subview" id="viewSmart" style="display:none">
+        <div class="subview-actions" style="padding-top:16px">
+          <button class="btn small primary" id="btnCreateCustomSmart" type="button">Crear inteligente con reglas</button>
+          <button class="toggle-pill" id="btnDjToggle" type="button" aria-pressed="false"><span class="dot"></span><span>Modo DJ:&nbsp;</span><span id="djState">Apagado</span></button>
+          <span class="sleep-status" id="djStatus" role="status"></span>
+        </div>
+        <p class="sound-note" style="margin:8px 18px 0">Tus inteligentes con reglas se evalúan en vivo: si agregas o calificas canciones que cumplan las condiciones, entran solas. Con el <strong>Modo DJ</strong> activado, al terminar cada canción (y al pulsar siguiente) la app elige la próxima por cercanía de ritmo (BPM), favoreciendo tus likes y buenas estrellas y sin repetir en la sesión; la transición usa tu crossfade o un fundido corto propio del DJ.</p>
         <div class="pl-bar" id="smartBar"></div>
         <div class="smart-discover" id="discoverEntry">
           <div>
@@ -1158,6 +1218,8 @@
           <button class="btn small primary" id="btnSmartPlay" type="button">Reproducir</button>
           <button class="btn small" id="btnSmartShuffle" type="button">Aleatoria</button>
           <button class="btn small" id="btnSmartM3u" type="button">Exportar .m3u</button>
+          <button class="btn small" id="btnSmartEdit" type="button" style="display:none">Editar reglas</button>
+          <button class="btn small danger" id="btnSmartDelete" type="button" style="display:none">Borrar inteligente</button>
         </div>
         <ul class="track-list" id="smartTrackList"></ul>
         <div class="no-results" id="smartEmpty" style="display:none"></div>
@@ -1250,6 +1312,13 @@
           </div>
         </div>
         <div class="stats-wrap" id="statsContent"></div>
+        <div class="stats-wrap">
+          <h4>Logros</h4>
+          <div class="badge-grid" id="badgeGrid"></div>
+          <p class="sound-note" id="streakNote"></p>
+          <h4>Un día como hoy</h4>
+          <div id="memoryBox"></div>
+        </div>
       </div>
 
       <!-- TU RESUMEN -->
@@ -1458,6 +1527,34 @@
   </div>
 </div>
 
+<div class="modal-overlay" id="csModal" aria-hidden="true">
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="csModalTitle">
+    <h3 id="csModalTitle">Crear inteligente con reglas</h3>
+    <p>Arma tus condiciones y la lista se actualizará sola cada vez que tu biblioteca cambie: las canciones que cumplan las reglas entran sin que hagas nada.</p>
+    <div class="field">
+      <label for="csName">Nombre</label>
+      <input type="text" id="csName" maxlength="60" placeholder="Ej.: Rock noventero con like" autocomplete="off" />
+    </div>
+    <div class="field">
+      <label for="csCombine">Combinar condiciones</label>
+      <select id="csCombine" class="speed-select" style="width:100%">
+        <option value="all">Todas (Y) — la canción debe cumplir cada condición</option>
+        <option value="any">Cualquiera (O) — basta con que cumpla una</option>
+      </select>
+    </div>
+    <div class="field">
+      <label>Condiciones</label>
+      <div id="csRules"></div>
+      <button class="btn small" id="btnCsAddRule" type="button">+ Añadir condición</button>
+    </div>
+    <p class="sound-note" id="csSummary" role="status"></p>
+    <div class="modal-actions">
+      <button class="btn small" id="csModalCancel" type="button">Cancelar</button>
+      <button class="btn small primary" id="csModalSave" type="button">Guardar inteligente</button>
+    </div>
+  </div>
+</div>
+
 <div class="party" id="partyOverlay" aria-hidden="true">
   <button class="party-close" id="btnPartyClose" type="button" aria-label="Salir del modo fiesta">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
@@ -1531,6 +1628,7 @@
 <input type="file" id="coverInput" class="hidden-input" accept="image/*" />
 <input type="file" id="backupInput" class="hidden-input" accept=".json,application/json" />
 <input type="file" id="m3uInput" class="hidden-input" accept=".m3u,.m3u8,audio/x-mpegurl" />
+<input type="file" id="bgInput" class="hidden-input" accept="image/*" />
 <audio id="audio" preload="metadata"></audio>
 
 <script>
@@ -1571,7 +1669,7 @@
 
   // ---------- State ----------
   var tracks = []; // {id,name,title,artist,album,duration,size,type,addedAt,url,coverUrl,color,rating,stars}
-  var APP_VERSION = '1.8.0'; // al publicar cambios, subir este número y el CACHE de sw.js
+  var APP_VERSION = '1.9.0'; // al publicar cambios, subir este número y el CACHE de sw.js
   var currentId = null;
   var isPlaying = false;
   var shuffle = false;
@@ -1753,6 +1851,10 @@
         history: playHistory.slice(0,100),
         counts: playCounts,
         statsLog: statsLog.slice(-1500),
+        customSmart: customSmart,
+        djMode: djMode,
+        celebrated: celebratedBadges,
+        bgOpacity: bgOpacityVal,
         settings: settings,
         selectedPlaylistId: selectedPlaylistId,
         playContext: playContext
@@ -1768,6 +1870,10 @@
         if(s.counts && typeof s.counts==='object') playCounts = s.counts;
         if(Array.isArray(s.statsLog)) statsLog = s.statsLog.filter(function(e){ return e && typeof e.sec==='number' && isFinite(e.sec); }).slice(-1500);
         if(s.settings) applySettingsObject(s.settings);
+        if(Array.isArray(s.customSmart)) customSmart = sanitizeCustomSmart(s.customSmart);
+        djMode = !!s.djMode;
+        if(Array.isArray(s.celebrated)) celebratedBadges = s.celebrated.filter(function(x){ return typeof x === 'string'; }).slice(0, 60);
+        var bov = parseFloat(s.bgOpacity); if(isFinite(bov)) bgOpacityVal = Math.max(10, Math.min(90, bov));
         if(s.selectedPlaylistId) selectedPlaylistId = s.selectedPlaylistId;
         if(s.playContext && s.playContext.type==='playlist' && playlists.some(function(p){ return p.id===s.playContext.playlistId; })) playContext = s.playContext;
       }
@@ -1785,8 +1891,9 @@
       // Pack de mejoras: resolver borrados que quedaron pendientes al cerrar la
       // app (se restauran, nunca se pierde nada) y reanudar donde ibas.
       restorePendingFromDisk();
+      baselineBadges();
       idbMetaGet('resumeState').then(function(rs){ restoreResume(rs); resumeArmed = true; handleGoParam(rs); });
-    }).catch(function(){ stateReady = true; resumeArmed = true; handleGoParam(null); });
+    }).catch(function(){ stateReady = true; resumeArmed = true; baselineBadges(); handleGoParam(null); });
   }
   function idbAll(){
     return openDB().then(function(db){
@@ -2629,6 +2736,7 @@
     renderPack4();
     if(typeof renderPack5 === 'function') renderPack5();
     if(typeof renderPack6 === 'function') renderPack6();
+    if(typeof renderPack7 === 'function') renderPack7();
     if(typeof updateDiscoverCount === 'function') updateDiscoverCount();
     if(view==='smart') renderSmart();
     if(view==='artists') renderGroups('artist');
@@ -3287,6 +3395,9 @@
   // Contexto de reproducción: biblioteca completa o una playlist personalizada.
   // Solo entran canciones reproducibles (sin dislike), igual que siempre.
   function contextPlayableIds(){
+    if(playContext.type==='memory'){
+      return memoryMixIds.filter(function(id){ var t=trackById(id); return t && isPlayable(t); });
+    }
     if(playContext.type==='smart'){
       return computeSmart(playContext.smartId).filter(isPlayable).map(function(t){ return t.id; });
     }
@@ -3371,6 +3482,20 @@
       return;
     }
     if(auto && repeatMode===2 && cur && isPlayable(cur)){ audio.currentTime=0; lastCountedId=null; play(); return; }
+    // Pack 7: Modo DJ — la siguiente la elige el DJ por cercanía de BPM
+    if(djMode && !queue.length && !(auto && repeatMode===2)){
+      var djId = djPickNext();
+      if(djId){
+        djSession[currentId] = 1; djSession[djId] = 1;
+        lastCountedId = null;
+        if(auto && isPlaying && !settings.crossfade && startCrossfade(djId, 2)){ updateDjUI(); return; }
+        var wp = isPlaying;
+        selectTrack(djId, wp);
+        if(!wp) renderNow();
+        updateDjUI();
+        return;
+      }
+    }
     if(auto && repeatMode===0 && !shuffle && !queue.length){
       var list = contextPlayableIds();
       if(list.length && list[list.length-1]===currentId){ pause(); audio.currentTime=0; return; }
@@ -3441,6 +3566,7 @@
     // ¿Hay siguiente? (cola primero, luego contexto; sin wrap si repeat está apagado)
     var targetId = peekQueueNext();
     var fromQueue = !!targetId;
+    if(!targetId && djMode) targetId = djPickNext();
     if(!targetId){
       if(repeatMode===0 && !shuffle){
         var list = contextPlayableIds();
@@ -3454,6 +3580,7 @@
       if(qi>=0) queue.splice(qi,1);
       saveState(); renderPack();
     }
+    if(djMode) djSession[targetId] = 1;
     startCrossfade(targetId, Math.min(settings.crossfadeSec, Math.max(1, remain - 0.1)));
   }
   // ---------- Pack 5: reproducción sin huecos (gapless) ----------
@@ -3462,6 +3589,7 @@
     if(repeatMode===2 || sleepAfterTrack || (typeof sleepSongsLeft !== 'undefined' && sleepSongsLeft===1)) return null;
     var q = peekQueueNext();
     if(q) return { id:q, fromQueue:true };
+    if(djMode){ var dd = djPickNext(); if(dd && dd !== currentId) return { id:dd, fromQueue:false }; }
     if(repeatMode===0 && !shuffle){
       var list = contextPlayableIds();
       if(list.length && list[list.length-1]===currentId) return null;
@@ -4458,6 +4586,10 @@
           try{ audio.currentTime = l.time; }catch(e){}
           if(!isPlaying) play();
         });
+      } else {
+        // Pack 7: en texto plano, tocar una línea la elige para la tarjeta de letra
+        d.title = 'Toca para incluir esta línea en la tarjeta de letra';
+        d.addEventListener('click', function(){ d.classList.toggle('selected'); });
       }
       scroll.appendChild(d);
     });
@@ -4672,6 +4804,11 @@
     { id:'intense', name:'Energía intensa',  desc:'Canciones con ritmo alto detectado (120 BPM o más), de la más intensa a la menos.', emptyText:'Todavía no hay canciones intensas detectadas. Analiza el ritmo (BPM) de tu biblioteca con el botón «Analizar ritmo (BPM) de la biblioteca».' }
   ];
   function computeSmart(id){
+    if(typeof id === 'string' && id.indexOf('cs:') === 0){
+      var csd = null;
+      for(var ci = 0; ci < customSmart.length; ci++){ if(customSmart[ci].id === id) csd = customSmart[ci]; }
+      return csd ? computeCustomSmart(csd) : [];
+    }
     if(id === 'discover'){
       var fresh = tracks.filter(function(t){ return !(playCounts[t.id] > 0); });
       var rare = tracks.filter(function(t){ var c = playCounts[t.id] || 0; return c >= 1 && c <= 2; })
@@ -4709,12 +4846,27 @@
       chip.addEventListener('click', function(){ selectedSmartId = s.id; renderSmart(); });
       bar.appendChild(chip);
     });
-    var def = SMART_LISTS.find(function(s){ return s.id === selectedSmartId; }) || SMART_LISTS[0];
+    customSmart.forEach(function(cs){
+      var chip = document.createElement('button');
+      chip.className = 'chip' + (cs.id === selectedSmartId ? ' active' : '');
+      chip.type = 'button';
+      chip.textContent = '✦ ' + cs.name;
+      var cc = document.createElement('span'); cc.className = 'chip-count';
+      cc.textContent = '(' + computeSmart(cs.id).length + ')';
+      chip.appendChild(cc);
+      chip.addEventListener('click', function(){ selectedSmartId = cs.id; renderSmart(); });
+      bar.appendChild(chip);
+    });
+    var def = smartDefById(selectedSmartId);
+    if(!def){ selectedSmartId = 'best'; def = smartDefById('best'); }
     var list = computeSmart(def.id);
     document.getElementById('smartHead').style.display = '';
     document.getElementById('smartActions').style.display = list.length ? '' : 'none';
     document.getElementById('smartName').textContent = def.name;
     document.getElementById('smartInfo').textContent = def.desc + ' · ' + list.length + (list.length === 1 ? ' canción' : ' canciones') + ' · Se actualiza sola.';
+    var isCustomSel = typeof def.id === 'string' && def.id.indexOf('cs:') === 0;
+    document.getElementById('btnSmartEdit').style.display = isCustomSel ? '' : 'none';
+    document.getElementById('btnSmartDelete').style.display = isCustomSel ? '' : 'none';
     var listEl = document.getElementById('smartTrackList');
     listEl.innerHTML = '';
     list.forEach(function(t){
@@ -4744,7 +4896,7 @@
     rebuildShuffle(); saveState();
     var firstId = (shufflePlay && shuffleOrder.length) ? shuffleOrder[0] : list[0].id;
     selectTrack(firstId, true);
-    var def = SMART_LISTS.find(function(s){ return s.id === selectedSmartId; });
+    var def = smartDefById(selectedSmartId);
     toast((shufflePlay ? 'Reproduciendo en aleatorio: ' : 'Reproduciendo: ') + (def ? def.name : 'lista inteligente'));
   }
   document.getElementById('btnSmartPlay').addEventListener('click', function(){ playSmart(false); });
@@ -4763,7 +4915,7 @@
     selectedSmartId = 'discover'; renderSmart(); playSmart(true);
   });
   document.getElementById('btnSmartM3u').addEventListener('click', function(){
-    var def = SMART_LISTS.find(function(s){ return s.id === selectedSmartId; });
+    var def = smartDefById(selectedSmartId);
     exportM3U(def ? def.name : 'Inteligente', computeSmart(selectedSmartId));
   });
 
@@ -4892,9 +5044,10 @@
     var data = {
       app: 'reproductor-de-musica',
       kind: 'respaldo',
-      version: 8,
+      version: 9,
       exportedAt: new Date().toISOString(),
       playlists: playlists,
+      customSmart: customSmart,
       queue: queue,
       history: playHistory,
       counts: playCounts,
@@ -4984,6 +5137,7 @@
         if(playContext.type === 'playlist' && !playlists.some(function(p){ return p.id === playContext.playlistId; }))
           playContext = { type: 'library', playlistId: null };
       }
+      if(Array.isArray(data.customSmart)) customSmart = sanitizeCustomSmart(data.customSmart);
       if(Array.isArray(data.queue)) queue = data.queue.filter(exists);
       if(Array.isArray(data.history)) playHistory = data.history.filter(function(h){ return h && exists(h.id); }).slice(0, 100);
       if(data.counts && typeof data.counts === 'object'){
@@ -7203,7 +7357,7 @@
   // ---------- Pack de mejoras: actualización, reanudar, deshacer, sincronizar, tap tempo ----------
 
   // ----- 1. Actualización sin atascos -----
-  var APP_VERSION = '1.8.0';
+  var APP_VERSION = '1.9.0';
   document.getElementById('appVersionNote').textContent = APP_VERSION;
   function cmpVersion(a, b){
     var pa = a.split('.').map(function(x){ return parseInt(x, 10) || 0; });
@@ -7625,6 +7779,681 @@
     ev.stopPropagation();
     syncMark();
   }, true);
+
+  // ---------- Pack 7: inteligentes propias, modo DJ, logros, recuerdos, tarjeta de letra, fondo ----------
+
+  // ----- Estado del Pack 7 (viaja en el estado local; la foto NO: vive en el meta de IndexedDB) -----
+  var customSmart = [];       // {id:'cs:…', name, combine:'all'|'any', rules:[{field, op, value, value2}]}
+  var djMode = false;
+  var djSession = {};         // ids ya elegidos por el DJ en esta sesión
+  var djCacheFor = '__none__', djCacheId = null;
+  var celebratedBadges = [];  // ids de insignias ya celebradas con aviso
+  var badgesBaselined = false;
+  var bgOpacityVal = 35;
+  var memoryMixIds = [];
+
+  // ----- 1. Playlists inteligentes con reglas propias -----
+  var CS_FIELDS = [
+    { id:'title',    label:'Título',          type:'text',   get:function(t){ return t.title || ''; } },
+    { id:'artist',   label:'Artista',         type:'text',   get:function(t){ return t.artist || ''; } },
+    { id:'album',    label:'Álbum',           type:'text',   get:function(t){ return t.album || ''; } },
+    { id:'genre',    label:'Género',          type:'text',   get:function(t){ return t.genre || ''; } },
+    { id:'year',     label:'Año',             type:'number', get:function(t){ var y = parseInt(t.year, 10); return isFinite(y) ? y : null; } },
+    { id:'bpm',      label:'BPM',             type:'number', get:function(t){ return (typeof t.bpm === 'number' && t.bpm > 0) ? t.bpm : null; } },
+    { id:'stars',    label:'Estrellas',       type:'number', get:function(t){ return (typeof t.stars === 'number') ? t.stars : 0; } },
+    { id:'rating',   label:'Like / dislike',  type:'rating', get:function(t){ return t.rating || 'none'; } },
+    { id:'plays',    label:'Veces escuchada', type:'number', get:function(t){ return playCounts[t.id] || 0; } },
+    { id:'duration', label:'Duración (min)',  type:'number', get:function(t){ return (t.duration || 0) / 60; } }
+  ];
+  function csField(id){ for(var i = 0; i < CS_FIELDS.length; i++){ if(CS_FIELDS[i].id === id) return CS_FIELDS[i]; } return null; }
+  function csOps(f){
+    if(!f) return [];
+    if(f.type === 'text') return [['contains','contiene'],['is','es'],['isnot','no es']];
+    if(f.type === 'rating') return [['is','es']];
+    return [['is','es'],['gt','mayor que'],['lt','menor que'],['between','entre']];
+  }
+  function sanitizeRule(r){
+    if(!r || typeof r !== 'object') return null;
+    var f = csField(r.field); if(!f) return null;
+    var ops = csOps(f).map(function(o){ return o[0]; });
+    var op = ops.indexOf(r.op) >= 0 ? r.op : ops[0];
+    var value = (typeof r.value === 'string' || typeof r.value === 'number') ? String(r.value).slice(0, 60) : '';
+    var value2 = (typeof r.value2 === 'string' || typeof r.value2 === 'number') ? String(r.value2).slice(0, 60) : '';
+    if(f.type === 'rating' && ['like','dislike','none'].indexOf(value) < 0) value = 'like';
+    return { field: f.id, op: op, value: value, value2: value2 };
+  }
+  function sanitizeCustomSmart(list){
+    if(!Array.isArray(list)) return [];
+    var out = [];
+    list.slice(0, 30).forEach(function(d, ix){
+      if(!d || typeof d !== 'object' || typeof d.name !== 'string' || !d.name.trim() || !Array.isArray(d.rules)) return;
+      var rules = d.rules.map(sanitizeRule).filter(Boolean).slice(0, 12);
+      if(!rules.length) return;
+      out.push({
+        id: (typeof d.id === 'string' && d.id.indexOf('cs:') === 0) ? d.id : ('cs:x' + ix + Date.now().toString(36)),
+        name: d.name.trim().slice(0, 60),
+        combine: d.combine === 'any' ? 'any' : 'all',
+        rules: rules
+      });
+    });
+    return out;
+  }
+  function evalRule(t, r){
+    var f = csField(r.field); if(!f) return false;
+    var v = f.get(t);
+    if(f.type === 'text'){
+      var a = normStr(v), b = normStr(r.value);
+      if(!b) return false;
+      if(r.op === 'contains') return a.indexOf(b) >= 0;
+      if(r.op === 'isnot') return a !== b;
+      return a === b;
+    }
+    if(f.type === 'rating') return (v || 'none') === r.value;
+    var n = parseFloat(r.value);
+    if(v == null || !isFinite(n)) return false;
+    if(r.op === 'gt') return v > n;
+    if(r.op === 'lt') return v < n;
+    if(r.op === 'between'){ var n2 = parseFloat(r.value2); if(!isFinite(n2)) return false; return v >= Math.min(n, n2) && v <= Math.max(n, n2); }
+    return v === n;
+  }
+  function computeCustomSmart(def){
+    if(!def || !def.rules || !def.rules.length) return [];
+    return tracks.filter(function(t){
+      if(def.combine === 'any') return def.rules.some(function(r){ return evalRule(t, r); });
+      return def.rules.every(function(r){ return evalRule(t, r); });
+    });
+  }
+  function describeRule(r){
+    var f = csField(r.field); if(!f) return '';
+    var opLabel = ''; csOps(f).forEach(function(o){ if(o[0] === r.op) opLabel = o[1]; });
+    var val;
+    if(f.type === 'rating') val = r.value === 'like' ? 'con like' : (r.value === 'dislike' ? 'con dislike' : 'sin calificar');
+    else if(r.op === 'between') val = '«' + r.value + '» y «' + r.value2 + '»';
+    else val = '«' + r.value + '»';
+    return f.label + ' ' + opLabel + ' ' + val;
+  }
+  function describeCustomSmart(def){
+    var parts = def.rules.map(describeRule).filter(Boolean);
+    return 'Reglas propias · ' + (def.combine === 'any' ? 'Cumple cualquiera: ' : 'Cumple todas: ') + parts.join(' · ');
+  }
+  function smartDefById(id){
+    var found = null;
+    SMART_LISTS.forEach(function(s){ if(s.id === id) found = s; });
+    if(found) return found;
+    for(var i = 0; i < customSmart.length; i++){
+      if(customSmart[i].id === id){
+        var d = customSmart[i];
+        return { id: d.id, name: d.name, desc: describeCustomSmart(d), emptyText: 'Ninguna canción cumple estas reglas todavía. Agrega canciones o ajusta las condiciones y aparecerán aquí solas.' };
+      }
+    }
+    return null;
+  }
+
+  // ----- Creador / editor de inteligentes con reglas -----
+  var csModal = document.getElementById('csModal');
+  var csEditingId = null;
+  function fillRuleControls(row, preset){
+    var f = csField(row.querySelector('.cs-field').value) || CS_FIELDS[0];
+    var os = row.querySelector('.cs-op');
+    os.innerHTML = '';
+    csOps(f).forEach(function(o){ var op = document.createElement('option'); op.value = o[0]; op.textContent = o[1]; os.appendChild(op); });
+    if(preset && preset.op && csOps(f).some(function(o){ return o[0] === preset.op; })) os.value = preset.op;
+    var vals = row.querySelector('.cs-vals');
+    vals.innerHTML = '';
+    if(f.type === 'rating'){
+      var sel = document.createElement('select'); sel.className = 'cs-v1'; sel.setAttribute('aria-label', 'Valor');
+      [['like','con like'],['dislike','con dislike'],['none','sin calificar']].forEach(function(p){ var o = document.createElement('option'); o.value = p[0]; o.textContent = p[1]; sel.appendChild(o); });
+      if(preset && preset.value) sel.value = preset.value;
+      vals.appendChild(sel);
+    } else if(f.type === 'number'){
+      var n1 = document.createElement('input'); n1.type = 'number'; n1.className = 'cs-v1'; n1.placeholder = 'Valor'; n1.setAttribute('aria-label', 'Valor');
+      if(preset && preset.value) n1.value = preset.value;
+      var n2 = document.createElement('input'); n2.type = 'number'; n2.className = 'cs-v2'; n2.placeholder = 'y…'; n2.setAttribute('aria-label', 'Segundo valor (entre)');
+      if(preset && preset.value2) n2.value = preset.value2;
+      vals.appendChild(n1); vals.appendChild(n2);
+    } else {
+      var ti = document.createElement('input'); ti.type = 'text'; ti.className = 'cs-v1'; ti.placeholder = 'Texto…'; ti.maxLength = 60; ti.setAttribute('aria-label', 'Valor');
+      if(preset && preset.value) ti.value = preset.value;
+      vals.appendChild(ti);
+    }
+    function syncBetween(){ var v2 = row.querySelector('.cs-v2'); if(v2) v2.style.display = os.value === 'between' ? '' : 'none'; }
+    os.onchange = function(){ syncBetween(); updateCsSummary(); };
+    syncBetween();
+  }
+  function buildRuleRow(rule){
+    var row = document.createElement('div'); row.className = 'rule-row';
+    var fs = document.createElement('select'); fs.className = 'cs-field'; fs.setAttribute('aria-label', 'Campo de la condición');
+    CS_FIELDS.forEach(function(f){ var o = document.createElement('option'); o.value = f.id; o.textContent = f.label; fs.appendChild(o); });
+    if(rule && csField(rule.field)) fs.value = rule.field;
+    var os = document.createElement('select'); os.className = 'cs-op'; os.setAttribute('aria-label', 'Operador de la condición');
+    var vals = document.createElement('span'); vals.className = 'cs-vals';
+    var del = document.createElement('button'); del.className = 'remove-btn'; del.type = 'button'; del.title = 'Quitar condición'; del.setAttribute('aria-label', 'Quitar condición');
+    del.innerHTML = SVG_X;
+    del.addEventListener('click', function(){ if(row.parentNode) row.parentNode.removeChild(row); updateCsSummary(); });
+    row.appendChild(fs); row.appendChild(os); row.appendChild(vals); row.appendChild(del);
+    fs.addEventListener('change', function(){ fillRuleControls(row, null); updateCsSummary(); });
+    fillRuleControls(row, rule || null);
+    return row;
+  }
+  function collectCsRules(){
+    var rules = [];
+    document.querySelectorAll('#csRules .rule-row').forEach(function(row){
+      var f = csField(row.querySelector('.cs-field').value); if(!f) return;
+      var v1 = row.querySelector('.cs-v1'), v2 = row.querySelector('.cs-v2');
+      rules.push({ field: f.id, op: row.querySelector('.cs-op').value, value: v1 ? String(v1.value).trim() : '', value2: v2 ? String(v2.value).trim() : '' });
+    });
+    return rules;
+  }
+  function csRuleValid(r){
+    var f = csField(r.field); if(!f) return false;
+    if(f.type === 'rating') return true;
+    if(f.type === 'text') return r.value !== '';
+    if(!isFinite(parseFloat(r.value))) return false;
+    if(r.op === 'between') return isFinite(parseFloat(r.value2));
+    return true;
+  }
+  function updateCsSummary(){
+    var el = document.getElementById('csSummary'); if(!el) return;
+    var rules = collectCsRules().map(sanitizeRule).filter(Boolean);
+    if(!rules.length){ el.textContent = ''; return; }
+    var n = computeCustomSmart({ combine: document.getElementById('csCombine').value, rules: rules }).length;
+    el.textContent = 'Con estas reglas coinciden ahora mismo ' + n + (n === 1 ? ' canción.' : ' canciones.');
+  }
+  function openCsModal(def){
+    csEditingId = def ? def.id : null;
+    document.getElementById('csModalTitle').textContent = def ? 'Editar inteligente con reglas' : 'Crear inteligente con reglas';
+    document.getElementById('csName').value = def ? def.name : '';
+    document.getElementById('csCombine').value = def ? def.combine : 'all';
+    var box = document.getElementById('csRules');
+    box.innerHTML = '';
+    var rules = def ? def.rules : [{ field:'artist', op:'contains', value:'', value2:'' }];
+    rules.forEach(function(r){ box.appendChild(buildRuleRow(r)); });
+    updateCsSummary();
+    csModal.classList.add('on'); csModal.setAttribute('aria-hidden', 'false');
+  }
+  function closeCsModal(){ csModal.classList.remove('on'); csModal.setAttribute('aria-hidden', 'true'); }
+  document.getElementById('btnCreateCustomSmart').addEventListener('click', function(){ openCsModal(null); });
+  document.getElementById('btnCsAddRule').addEventListener('click', function(){
+    document.getElementById('csRules').appendChild(buildRuleRow(null));
+    updateCsSummary();
+  });
+  document.getElementById('csCombine').addEventListener('change', updateCsSummary);
+  document.getElementById('csRules').addEventListener('input', updateCsSummary);
+  document.getElementById('csModalCancel').addEventListener('click', closeCsModal);
+  csModal.addEventListener('click', function(ev){ if(ev.target === csModal) closeCsModal(); });
+  document.getElementById('csModalSave').addEventListener('click', function(){
+    var name = document.getElementById('csName').value.trim();
+    if(!name){ toast('Ponle un nombre a tu inteligente.'); return; }
+    var raw = collectCsRules();
+    if(!raw.length){ toast('Añade al menos una condición.'); return; }
+    for(var i = 0; i < raw.length; i++){
+      if(!csRuleValid(raw[i])){ toast('Revisa la condición ' + (i + 1) + ': le falta un valor válido.'); return; }
+    }
+    var rules = raw.map(sanitizeRule).filter(Boolean);
+    var combine = document.getElementById('csCombine').value === 'any' ? 'any' : 'all';
+    if(csEditingId){
+      for(var j = 0; j < customSmart.length; j++){
+        if(customSmart[j].id === csEditingId){ customSmart[j] = { id: csEditingId, name: name, combine: combine, rules: rules }; }
+      }
+      selectedSmartId = csEditingId;
+      toast('Inteligente «' + name + '» actualizada');
+    } else {
+      var nd = { id: 'cs:' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6), name: name, combine: combine, rules: rules };
+      customSmart.push(nd);
+      selectedSmartId = nd.id;
+      toast('Inteligente «' + name + '» creada: se actualizará sola con tu biblioteca');
+    }
+    saveState(); closeCsModal(); renderSmart();
+  });
+  document.getElementById('btnSmartEdit').addEventListener('click', function(){
+    var def = null;
+    customSmart.forEach(function(d){ if(d.id === selectedSmartId) def = d; });
+    if(def) openCsModal(def);
+  });
+  var csDeleteArmed = false;
+  document.getElementById('btnSmartDelete').addEventListener('click', function(){
+    var def = null;
+    customSmart.forEach(function(d){ if(d.id === selectedSmartId) def = d; });
+    if(!def) return;
+    if(!csDeleteArmed){
+      csDeleteArmed = true;
+      toast('Toca «Borrar inteligente» otra vez para confirmar el borrado de «' + def.name + '». Las canciones no se tocan.');
+      setTimeout(function(){ csDeleteArmed = false; }, 4000);
+      return;
+    }
+    csDeleteArmed = false;
+    customSmart = customSmart.filter(function(d){ return d.id !== def.id; });
+    if(selectedSmartId === def.id) selectedSmartId = 'best';
+    if(playContext.type === 'smart' && playContext.smartId === def.id) playContext = { type:'library', playlistId:null };
+    saveState(); renderSmart();
+    toast('Inteligente «' + def.name + '» borrada');
+  });
+
+  // ----- 2. Modo DJ automático -----
+  function djPickNext(){
+    if(currentId && djCacheFor === currentId) return djCacheId;
+    var pool = contextPlayableIds();
+    if(!pool.length) pool = playableTracks().map(function(t){ return t.id; });
+    pool = pool.filter(function(id){ return id !== currentId; });
+    var cur = currentTrack();
+    var curBpm = (cur && typeof cur.bpm === 'number' && cur.bpm > 0) ? cur.bpm : null;
+    var best = null, bestScore = -Infinity;
+    pool.forEach(function(id){
+      var t = trackById(id); if(!t) return;
+      var score = 0;
+      if(curBpm && typeof t.bpm === 'number' && t.bpm > 0){
+        var rel = Math.abs(t.bpm - curBpm) / curBpm;
+        score += rel <= 0.15 ? (30 - rel * 120) : Math.max(0, 10 - rel * 30);
+      } else {
+        score += 10; // sin BPM: candidata neutra
+      }
+      if(t.rating === 'like') score += 8;
+      if(typeof t.stars === 'number') score += t.stars * 2;
+      if(djSession[id]) score -= 30;
+      score += Math.random() * 4;
+      if(score > bestScore){ bestScore = score; best = id; }
+    });
+    djCacheFor = currentId; djCacheId = best;
+    return best;
+  }
+  function updateDjUI(){
+    var btn = document.getElementById('btnDjToggle');
+    if(!btn) return;
+    btn.classList.toggle('on', djMode);
+    btn.setAttribute('aria-pressed', djMode ? 'true' : 'false');
+    document.getElementById('djState').textContent = djMode ? 'Activado' : 'Apagado';
+    var nid = djMode ? djPickNext() : null;
+    var nt = nid ? trackById(nid) : null;
+    document.getElementById('djStatus').textContent = djMode ? ('Siguiente según DJ: ' + (nt ? nt.title : '—')) : '';
+    var ind = document.getElementById('djIndicator');
+    ind.style.display = djMode ? '' : 'none';
+    if(djMode) ind.textContent = '🎧 Modo DJ activo' + (nt ? ' · Siguiente: ' + nt.title : '');
+    var box = document.getElementById('djNextBox');
+    box.style.display = djMode ? '' : 'none';
+    if(djMode){
+      document.getElementById('djNextText').textContent = nt
+        ? ('La próxima será «' + nt.title + '»' + (nt.artist ? ' de ' + nt.artist : '') + (typeof nt.bpm === 'number' && nt.bpm ? ' · ' + nt.bpm + ' BPM' : '') + ', elegida por cercanía de ritmo con la que suena y por tus gustos.')
+        : 'Al terminar la canción actual, el DJ elegirá la siguiente desde este contexto.';
+    }
+  }
+  document.getElementById('btnDjToggle').addEventListener('click', function(){
+    djMode = !djMode;
+    if(djMode){
+      djSession = {}; if(currentId) djSession[currentId] = 1;
+      djCacheFor = '__none__'; djCacheId = null;
+    }
+    saveState(); updateDjUI();
+    toast(djMode ? 'Modo DJ activado: cada siguiente canción se elegirá por cercanía de BPM.' : 'Modo DJ desactivado: vuelve el orden normal de la lista, sin interrumpir lo que suena.');
+  });
+
+  // ----- 3. Logros y racha -----
+  var BADGE_DEFS = [
+    { id:'h10',   icon:'⏱️', name:'10 horas escuchadas',      metric:'hours',  target:10,   unit:' h' },
+    { id:'h100',  icon:'⏱️', name:'100 horas escuchadas',     metric:'hours',  target:100,  unit:' h' },
+    { id:'h500',  icon:'⏱️', name:'500 horas escuchadas',     metric:'hours',  target:500,  unit:' h' },
+    { id:'h1000', icon:'⏱️', name:'1,000 horas escuchadas',   metric:'hours',  target:1000, unit:' h' },
+    { id:'s100',  icon:'🎵', name:'100 canciones distintas',  metric:'songs',  target:100,  unit:'' },
+    { id:'s500',  icon:'🎵', name:'500 canciones distintas',  metric:'songs',  target:500,  unit:'' },
+    { id:'s1000', icon:'🎵', name:'1,000 canciones distintas', metric:'songs', target:1000, unit:'' },
+    { id:'p100',  icon:'▶️', name:'100 reproducciones',       metric:'plays',  target:100,  unit:'' },
+    { id:'p1000', icon:'▶️', name:'1,000 reproducciones',     metric:'plays',  target:1000, unit:'' },
+    { id:'p5000', icon:'▶️', name:'5,000 reproducciones',     metric:'plays',  target:5000, unit:'' },
+    { id:'r3',    icon:'🔥', name:'Racha de 3 días',          metric:'streak', target:3,    unit:' días' },
+    { id:'r7',    icon:'🔥', name:'Racha de 7 días',          metric:'streak', target:7,    unit:' días' },
+    { id:'r30',   icon:'🔥', name:'Racha de 30 días',         metric:'streak', target:30,   unit:' días' }
+  ];
+  function listeningStats(){
+    var totalSec = statsLog.reduce(function(s, e){ return s + (e.sec || 0); }, 0);
+    var distinct = {};
+    statsLog.forEach(function(e){ if(e.id) distinct[e.id] = 1; });
+    Object.keys(playCounts).forEach(function(id){ distinct[id] = 1; });
+    var plays = 0;
+    Object.keys(playCounts).forEach(function(id){ plays += playCounts[id] || 0; });
+    if(!plays) plays = statsLog.length;
+    var daysSet = {};
+    statsLog.forEach(function(e){ daysSet[dayStart(e.at)] = 1; });
+    playHistory.forEach(function(h){ if(h && h.at) daysSet[dayStart(h.at)] = 1; });
+    var streak = 0, d = dayStart(Date.now());
+    if(!daysSet[d]) d -= 86400000;
+    while(daysSet[d]){ streak++; d -= 86400000; }
+    return { hours: totalSec / 3600, songs: Object.keys(distinct).length, plays: plays, streak: streak };
+  }
+  function computeBadges(){
+    var st = listeningStats();
+    return BADGE_DEFS.map(function(b){
+      var v = st[b.metric];
+      return { id: b.id, icon: b.icon, name: b.name, target: b.target, unit: b.unit, metric: b.metric, value: v, unlocked: v >= b.target };
+    });
+  }
+  function baselineBadges(){
+    if(badgesBaselined) return;
+    computeBadges().forEach(function(b){ if(b.unlocked && celebratedBadges.indexOf(b.id) < 0) celebratedBadges.push(b.id); });
+    badgesBaselined = true;
+  }
+  function checkAchievements(){
+    if(!badgesBaselined) return;
+    var news = [];
+    computeBadges().forEach(function(b){
+      if(b.unlocked && celebratedBadges.indexOf(b.id) < 0){ celebratedBadges.push(b.id); news.push(b.name); }
+    });
+    if(news.length){
+      saveState();
+      toast(news.length === 1 ? '🏆 Logro desbloqueado: ' + news[0] : '🏆 Logros desbloqueados: ' + news.join(' · '));
+    }
+  }
+  function renderAchievements(){
+    var grid = document.getElementById('badgeGrid');
+    if(!grid) return;
+    grid.innerHTML = '';
+    computeBadges().forEach(function(b){
+      var card = document.createElement('div');
+      card.className = 'badge ' + (b.unlocked ? 'unlocked' : 'locked');
+      var ic = document.createElement('div'); ic.className = 'b-icon'; ic.textContent = b.icon;
+      var nm = document.createElement('div'); nm.className = 'b-name'; nm.textContent = b.name;
+      var pg = document.createElement('div'); pg.className = 'b-prog';
+      pg.textContent = b.unlocked ? 'Desbloqueado ✓' : (Math.floor(b.value) + '/' + b.target + b.unit);
+      card.appendChild(ic); card.appendChild(nm); card.appendChild(pg);
+      if(!b.unlocked){
+        var bar = document.createElement('div'); bar.className = 'b-bar';
+        var f = document.createElement('i'); f.style.width = Math.min(100, Math.max(1, Math.round(b.value / b.target * 100))) + '%';
+        bar.appendChild(f); card.appendChild(bar);
+      }
+      grid.appendChild(card);
+    });
+    var st = listeningStats();
+    var sn = document.getElementById('streakNote');
+    if(sn) sn.textContent = st.streak > 0
+      ? ('🔥 Racha actual: ' + st.streak + (st.streak === 1 ? ' día' : ' días') + ' seguidos escuchando música.')
+      : 'Tu racha empieza hoy: escucha algo y mañana sigue sumando días.';
+  }
+
+  // ----- 4. «Un día como hoy» -----
+  var MEMORY_PERIODS = [
+    { label:'Hace 1 mes', months:1 },
+    { label:'Hace 6 meses', months:6 },
+    { label:'Hace 1 año', months:12 }
+  ];
+  function renderMemories(){
+    var box = document.getElementById('memoryBox');
+    if(!box) return;
+    box.innerHTML = '';
+    MEMORY_PERIODS.forEach(function(p){
+      var target = new Date();
+      target.setDate(1);
+      target.setMonth(target.getMonth() - p.months);
+      var ts = dayStart(target.getTime()), W = 4 * 86400000;
+      var entries = statsLog.filter(function(e){ return Math.abs(dayStart(e.at) - ts) <= W; });
+      var totalSec = entries.reduce(function(s, e){ return s + (e.sec || 0); }, 0);
+      var block = document.createElement('div'); block.className = 'memory-block';
+      var h = document.createElement('h5');
+      h.textContent = p.label + ' · ' + new Date(ts).toLocaleDateString('es', { month:'long', year:'numeric' });
+      block.appendChild(h);
+      if(!entries.length || totalSec < 30){
+        var np = document.createElement('p');
+        np.textContent = 'Aún no hay recuerdos de ' + p.label.toLowerCase() + ': todavía no hay escucha registrada alrededor de esa fecha. Tu historial irá llenando esta sección con el tiempo.';
+        block.appendChild(np);
+        box.appendChild(block);
+        return;
+      }
+      var songMap = {}, artMap = {};
+      entries.forEach(function(e){
+        var k = e.id || ((e.title || '') + '|' + (e.artist || ''));
+        if(!songMap[k]) songMap[k] = { id: e.id || null, label: (e.title || 'Sin título') + (e.artist ? ' — ' + e.artist : ''), sec: 0 };
+        songMap[k].sec += e.sec || 0;
+        var ak = e.artist || 'Artista desconocido';
+        artMap[ak] = (artMap[ak] || 0) + (e.sec || 0);
+      });
+      var sorted = Object.keys(songMap).map(function(k){ return songMap[k]; }).sort(function(a, b){ return b.sec - a.sec; });
+      var topArt = Object.keys(artMap).sort(function(a, b){ return artMap[b] - artMap[a]; })[0];
+      var intro = document.createElement('p');
+      intro.textContent = 'Escuchaste ' + fmtMins(totalSec) + ' alrededor de esta fecha' + (topArt ? '; tu artista principal era ' + topArt : '') + '. Esto era lo que más sonaba:';
+      block.appendChild(intro);
+      var ul = document.createElement('ul');
+      sorted.slice(0, 3).forEach(function(s){
+        var li = document.createElement('li');
+        li.textContent = s.label + ' · ' + fmtMins(s.sec);
+        ul.appendChild(li);
+      });
+      block.appendChild(ul);
+      var ids = [], seen = {};
+      sorted.forEach(function(s){ if(s.id && trackById(s.id) && !seen[s.id]){ seen[s.id] = 1; ids.push(s.id); } });
+      ids = ids.slice(0, 25);
+      if(ids.length){
+        var btn = document.createElement('button');
+        btn.className = 'btn small primary'; btn.type = 'button'; btn.textContent = 'Reproducir recuerdos';
+        btn.style.marginTop = '10px';
+        btn.addEventListener('click', function(){ playMemoryMix(ids, p.label); });
+        block.appendChild(btn);
+      } else {
+        var gone = document.createElement('p');
+        gone.textContent = 'Esas canciones ya no están en tu biblioteca, así que no se pueden reproducir.';
+        block.appendChild(gone);
+      }
+      box.appendChild(block);
+    });
+  }
+  function playMemoryMix(ids, label){
+    if(!ids.length) return;
+    memoryMixIds = ids.slice();
+    playContext = { type:'memory', playlistId:null };
+    rebuildShuffle(); saveState();
+    selectTrack(ids[0], true);
+    toast('Reproduciendo recuerdos: ' + label);
+  }
+
+  // ----- 5. Tarjeta de letra para compartir -----
+  var lyricCardBlob = null, lyricCardName = 'letra.png';
+  function lyricShareText(){
+    var hasTimed = parsedLyrics.some(function(l){ return l.time != null; });
+    if(hasTimed){
+      var idx = lastLyricIdx >= 0 ? lastLyricIdx : 0;
+      var parts = [];
+      for(var i = idx; i < parsedLyrics.length && parts.length < 3; i++){
+        if(parsedLyrics[i].text) parts.push(parsedLyrics[i].text);
+      }
+      return parts.join('\n');
+    }
+    var sel = document.querySelectorAll('#lyricsScroll .lyric-line.selected');
+    if(!sel.length) return '';
+    return Array.prototype.map.call(sel, function(el){ return el.textContent; }).join('\n');
+  }
+  function drawLyricCard(t, text){
+    var cv = document.createElement('canvas');
+    cv.width = 1080; cv.height = 1080;
+    var cx = cv.getContext('2d');
+    function fit(txt, maxW){
+      if(cx.measureText(txt).width <= maxW) return txt;
+      while(txt.length && cx.measureText(txt + '…').width > maxW) txt = txt.slice(0, -1);
+      return txt + '…';
+    }
+    function paint(img){
+      var grad = cx.createLinearGradient(0, 0, 1080, 1080);
+      grad.addColorStop(0, t.color[0]); grad.addColorStop(1, t.color[1]);
+      cx.fillStyle = grad; cx.fillRect(0, 0, 1080, 1080);
+      var ac = accentDef();
+      cx.fillStyle = ac.value; cx.fillRect(72, 66, 130, 10);
+      if(img){
+        cx.save();
+        cx.beginPath();
+        if(cx.roundRect) cx.roundRect(72, 108, 264, 264, 24); else cx.rect(72, 108, 264, 264);
+        cx.clip();
+        cx.drawImage(img, 72, 108, 264, 264);
+        cx.restore();
+      } else {
+        cx.fillStyle = 'rgba(255,255,255,.16)'; cx.fillRect(72, 108, 264, 264);
+        cx.fillStyle = '#FFFFFF';
+        cx.font = '700 130px Fraunces, Georgia, serif';
+        cx.textAlign = 'center';
+        cx.fillText((t.title || '♪').trim().charAt(0).toUpperCase() || '♪', 204, 285);
+        cx.textAlign = 'left';
+      }
+      cx.fillStyle = '#FFFFFF';
+      cx.font = '800 58px "Plus Jakarta Sans", system-ui, sans-serif';
+      cx.fillText(fit(t.title || 'Sin título', 620), 372, 215);
+      cx.font = '600 38px "Plus Jakarta Sans", system-ui, sans-serif';
+      cx.globalAlpha = 0.88;
+      cx.fillText(fit(t.artist || '', 620), 372, 278);
+      if(t.album){ cx.fillText(fit(t.album, 620), 372, 332); }
+      cx.globalAlpha = 1;
+      // Líneas de letra con ajuste de palabra, máximo 7
+      var words = [];
+      text.split(/\r?\n/).forEach(function(ln){ words.push({ brk: true }); ln.split(/\s+/).forEach(function(w){ if(w) words.push({ w: w }); }); });
+      cx.font = '700 47px "Plus Jakarta Sans", system-ui, sans-serif';
+      var lines = [], cur = '';
+      words.forEach(function(tok){
+        if(tok.brk){ if(cur){ lines.push(cur); cur = ''; } return; }
+        var test = cur ? cur + ' ' + tok.w : tok.w;
+        if(cx.measureText(test).width > 920 && cur){ lines.push(cur); cur = tok.w; }
+        else cur = test;
+      });
+      if(cur) lines.push(cur);
+      if(lines.length > 7){ lines = lines.slice(0, 7); lines[6] = lines[6] + '…'; }
+      cx.fillStyle = ac.value; cx.fillRect(72, 452, 936, 3);
+      var y = 545;
+      cx.fillStyle = '#FFFFFF';
+      lines.forEach(function(ln){ cx.fillText(ln, 72, y); y += 68; });
+      cx.font = '600 27px "Plus Jakarta Sans", system-ui, sans-serif';
+      cx.globalAlpha = 0.8;
+      cx.fillText('Reproductor de Música · Tu música, sin subir nada', 72, 1015);
+      cx.globalAlpha = 1;
+      if(cv.toBlob){
+        cv.toBlob(function(blob){
+          if(!blob){ toast('No se pudo generar la tarjeta de letra.'); return; }
+          lyricCardBlob = blob;
+          lyricCardName = 'letra-' + (t.title || 'cancion').replace(/[^\wáéíóúñü]+/gi, '-').toLowerCase() + '.png';
+          var im = document.getElementById('lyricCardImg');
+          im.src = URL.createObjectURL(blob);
+          document.getElementById('lyricCardBox').style.display = '';
+          toast('Tarjeta de letra lista: descárgala o compártela');
+        }, 'image/png');
+      } else {
+        toast('Tu navegador no pudo generar la imagen de la letra.');
+      }
+    }
+    if(t.coverUrl){
+      var im = new Image();
+      im.onload = function(){ paint(im); };
+      im.onerror = function(){ paint(null); };
+      im.src = t.coverUrl;
+    } else {
+      paint(null);
+    }
+  }
+  document.getElementById('btnShareLyric').addEventListener('click', function(){
+    var t = currentTrack();
+    if(!t){ toast('Primero elige una canción.'); return; }
+    if(!t.lyrics && !t.plainLyrics){
+      toast('«' + t.title + '» aún no tiene letra. Agrega primero una letra (archivo .lrc o texto plano) para poder compartirla.');
+      return;
+    }
+    if(document.getElementById('lyricsBody').style.display === 'none') btnLyricsPanel.click();
+    renderLyrics();
+    var txt = lyricShareText();
+    if(txt === ''){
+      toast('Toca las líneas de la letra que quieres compartir y vuelve a pulsar «Compartir letra».');
+      return;
+    }
+    if(!txt) txt = '♪';
+    drawLyricCard(t, txt);
+  });
+  document.getElementById('btnLyricDownload').addEventListener('click', function(){
+    if(!lyricCardBlob){ toast('Primero genera la tarjeta con «Compartir letra».'); return; }
+    downloadFile(lyricCardName, lyricCardBlob);
+  });
+  document.getElementById('btnLyricShare').addEventListener('click', function(){
+    if(!lyricCardBlob){ toast('Primero genera la tarjeta con «Compartir letra».'); return; }
+    var file = null;
+    try{ file = new File([lyricCardBlob], lyricCardName, { type: 'image/png' }); }catch(e){}
+    if(file && navigator.canShare && navigator.share && navigator.canShare({ files: [file] })){
+      navigator.share({ files: [file], title: 'Letra' }).catch(function(){});
+    } else if(navigator.share){
+      navigator.share({ title: 'Letra', text: 'La letra de la canción que estoy escuchando' }).catch(function(){});
+    } else {
+      toast('Tu navegador no ofrece compartir aquí; usa «Descargar PNG».');
+    }
+  });
+
+  // ----- 6. Tema con foto propia (solo en este dispositivo, almacén meta de IndexedDB) -----
+  var hasBgPhoto = false, bgUrl = null;
+  function applyBgVeil(){
+    var v = document.getElementById('bgVeil');
+    if(v) v.style.opacity = String(1 - bgOpacityVal / 100);
+    var out = document.getElementById('bgOpacityOut'); if(out) out.textContent = bgOpacityVal + '%';
+    var rg = document.getElementById('bgOpacity'); if(rg) rg.value = bgOpacityVal;
+  }
+  function showBg(blob){
+    var wrap = document.getElementById('bgPhoto'), img = document.getElementById('bgImg');
+    if(!wrap || !img) return;
+    if(bgUrl){ try{ URL.revokeObjectURL(bgUrl); }catch(e){} }
+    bgUrl = URL.createObjectURL(blob);
+    img.src = bgUrl;
+    wrap.style.display = '';
+    hasBgPhoto = true;
+    document.getElementById('btnBgRemove').style.display = '';
+    applyBgVeil();
+  }
+  function hideBg(){
+    var wrap = document.getElementById('bgPhoto');
+    if(wrap) wrap.style.display = 'none';
+    hasBgPhoto = false;
+    var rb = document.getElementById('btnBgRemove'); if(rb) rb.style.display = 'none';
+  }
+  function applyBgPhoto(){
+    idbMetaGet('bgPhoto').then(function(v){
+      if(v && v.blob) showBg(v.blob); else hideBg();
+    });
+  }
+  document.getElementById('btnBgPhoto').addEventListener('click', function(){
+    var inp = document.getElementById('bgInput');
+    inp.value = ''; inp.click();
+  });
+  document.getElementById('bgInput').addEventListener('change', function(){
+    var f = this.files && this.files[0];
+    if(!f) return;
+    function store(blob){
+      idbMetaSet('bgPhoto', { blob: blob }).then(function(){
+        showBg(blob);
+        toast('Fondo personalizado aplicado. Se guarda solo en este dispositivo.');
+      });
+    }
+    var url = URL.createObjectURL(f);
+    var im = new Image();
+    im.onload = function(){
+      var w = im.naturalWidth || 0, h = im.naturalHeight || 0;
+      var sc = Math.min(1, 1600 / Math.max(w, h));
+      try{ URL.revokeObjectURL(url); }catch(e){}
+      if(!(sc < 1) || !w || !h){ store(f); return; }
+      try{
+        var cnv = document.createElement('canvas');
+        cnv.width = Math.round(w * sc); cnv.height = Math.round(h * sc);
+        cnv.getContext('2d').drawImage(im, 0, 0, cnv.width, cnv.height);
+        if(cnv.toBlob) cnv.toBlob(function(b){ store(b || f); }, 'image/jpeg', 0.85);
+        else store(f);
+      }catch(e){ store(f); }
+    };
+    im.onerror = function(){ try{ URL.revokeObjectURL(url); }catch(e){} store(f); };
+    im.src = url;
+  });
+  document.getElementById('btnBgRemove').addEventListener('click', function(){
+    idbMetaSet('bgPhoto', null).then(function(){
+      hideBg();
+      toast('Fondo personalizado quitado.');
+    });
+  });
+  document.getElementById('bgOpacity').addEventListener('input', function(ev){
+    var v = parseInt(ev.target.value, 10);
+    if(isFinite(v)) bgOpacityVal = Math.max(10, Math.min(90, v));
+    applyBgVeil(); saveState();
+  });
+
+  function renderPack7(){
+    updateDjUI();
+    if(view === 'stats'){ renderAchievements(); renderMemories(); }
+    checkAchievements();
+  }
+  applyBgPhoto();
+  applyBgVeil();
+  updateDjUI();
 
   // ---------- Init ----------
   var appVersionEl = document.getElementById('appVersion');
