@@ -1224,7 +1224,7 @@
         <div class="update-row">
           <button class="btn small" id="btnCheckUpdate" type="button">Actualizar app</button>
           <button class="btn small danger" id="btnForceUpdate" type="button">Forzar actualización</button>
-          <span class="backup-note" id="updateStatus">Versión de esta app: v<span id="appVersionNote">2.1.0</span>. «Actualizar app» consulta la versión publicada y te dice si ya estás al día antes de recargar. «Forzar actualización» limpia el service worker y las cachés de la app si una actualización se quedó atascada; tu biblioteca, playlists y ajustes (IndexedDB) nunca se tocan.</span>
+          <span class="backup-note" id="updateStatus">Versión de esta app: v<span id="appVersionNote">2.1.1</span>. «Actualizar app» consulta la versión publicada y te dice si ya estás al día antes de recargar. «Forzar actualización» limpia el service worker y las cachés de la app si una actualización se quedó atascada; tu biblioteca, playlists y ajustes (IndexedDB) nunca se tocan.</span>
         </div>
       </div>
 
@@ -1894,7 +1894,7 @@
   <button class="undo-x" id="btnUndoDismiss" type="button" aria-label="Cerrar aviso">×</button>
 </div>
 
-<input type="file" id="fileInput" class="hidden-input" accept="audio/*,video/*,.mp3,.wav,.flac,.ogg,.oga,.m4a,.aac,.opus,.webm,.aif,.aiff,.mp4,.m4v,.mov" multiple />
+<input type="file" id="fileInput" class="hidden-input" accept="audio/*,video/*,.mp3,.wav,.flac,.ogg,.oga,.m4a,.aac,.opus,.webm,.aif,.aiff,.mp4,.m4v,.mov,.lrc" multiple />
 <input type="file" id="folderInput" class="hidden-input" webkitdirectory directory multiple />
 <input type="file" id="lrcInput" class="hidden-input" accept=".lrc,.txt,text/plain" />
 <input type="file" id="coverInput" class="hidden-input" accept="image/*" />
@@ -1942,7 +1942,7 @@
 
   // ---------- State ----------
   var tracks = []; // {id,name,title,artist,album,duration,size,type,addedAt,url,coverUrl,color,rating,stars}
-  var APP_VERSION = '2.1.0'; // al publicar cambios, subir este número y el CACHE de sw.js
+  var APP_VERSION = '2.1.1'; // al publicar cambios, subir este número y el CACHE de sw.js
   var currentId = null;
   var isPlaying = false;
   var shuffle = false;
@@ -2438,32 +2438,127 @@
     return AUDIO_EXT.test((f && f.name) || '');
   }
   function isMediaFile(f){ return isAudioFile(f) || isVideoFile(f); }
+
+  // ----- Emparejado de letras .lrc al añadir -----
+  // En cualquier flujo de agregar (selector de archivos, selector de carpeta
+  // webkitdirectory y arrastrar y soltar, incluidas las carpetas soltadas con
+  // su recorrido de entradas) los .lrc del lote se apartan: nunca crean una
+  // pista. Cada .lrc busca su canción por carpeta de origen cuando la ruta
+  // está disponible (webkitRelativePath o la ruta del recorrido de entradas)
+  // y por nombre base sin extensión, sin distinguir mayúsculas/minúsculas y
+  // tolerando espacios sobrantes. La pareja puede ser un archivo del mismo
+  // lote o una pista que ya esté en la biblioteca. Si la pista ya tenía letra
+  // sincronizada no se sobrescribe. La lectura usa readFileText, la misma
+  // vía (y tolerancia de codificación) que la carga manual de .lrc.
+  function isLrcFile(f){ return /\.lrc$/i.test((f && f.name) || ''); }
+  function lrcBaseKey(name){
+    return (name || '').replace(/\.[^.]+$/, '').trim().toLowerCase();
+  }
+  function fileDir(file){
+    var p = '';
+    if(file){
+      if(file.webkitRelativePath) p = String(file.webkitRelativePath);
+      else if(file._dropPath) p = String(file._dropPath);
+    }
+    p = p.replace(/^\/+/, '');
+    var parts = p.split('/');
+    parts.pop();
+    return parts.join('/').trim().toLowerCase();
+  }
+  function parentDirName(dir){
+    if(!dir) return '';
+    var parts = dir.split('/');
+    return parts[parts.length - 1] || '';
+  }
+  function findLrcPartner(lrcFile, batchTracks){
+    var key = lrcBaseKey(lrcFile.name);
+    if(!key) return null;
+    var dir = fileDir(lrcFile);
+    var pool = [];
+    batchTracks.forEach(function(b){ pool.push({ t: b.track, dir: b.dir }); });
+    tracks.forEach(function(t){
+      var seen = false;
+      for(var i = 0; i < pool.length; i++){ if(pool[i].t === t){ seen = true; break; } }
+      if(!seen) pool.push({ t: t, dir: (t.folder || '').trim().toLowerCase() });
+    });
+    var byBase = pool.filter(function(p){ return lrcBaseKey(p.t.name) === key; });
+    if(!byBase.length) return null;
+    if(dir){
+      var sameDir = byBase.filter(function(p){ return p.dir && p.dir === dir; });
+      if(sameDir.length) return sameDir[0].t;
+      var parent = parentDirName(dir);
+      if(parent){
+        var sameParent = byBase.filter(function(p){ return parentDirName(p.dir) === parent; });
+        if(sameParent.length) return sameParent[0].t;
+      }
+    }
+    return byBase[0].t;
+  }
+  function pairLrcFiles(lrcFiles, batchTracks){
+    var res = { paired: 0, already: 0, unmatched: 0 };
+    var chain = Promise.resolve();
+    lrcFiles.forEach(function(f){
+      chain = chain.then(function(){
+        var t = findLrcPartner(f, batchTracks);
+        if(!t){ res.unmatched++; return; }
+        if(t.lyrics){ res.already++; return; }
+        return readFileText(f).then(function(txt){
+          if(!txt || !txt.trim()){ res.unmatched++; return; }
+          attachLyricsTo(t.id, txt);
+          res.paired++;
+        }).catch(function(){ res.unmatched++; });
+      });
+    });
+    return chain.then(function(){ return res; });
+  }
+
   var adding = false;
-  function addFiles(fileList){
-    var all = Array.prototype.slice.call(fileList||[]);
+  function addFiles(fileList, extraLyrics){
+    var all = Array.prototype.slice.call(fileList || []);
+    var lrcFiles = all.filter(isLrcFile);
+    if(extraLyrics && extraLyrics.length) lrcFiles = lrcFiles.concat(extraLyrics);
     var files = all.filter(isMediaFile);
-    if(!files.length){
+    if(!files.length && !lrcFiles.length){
       if(all.length){
         var sample = all.slice(0,3).map(function(f){ return (f && f.name) || 'sin-nombre'; }).join(', ');
         try{ console.log('[reproductor] archivos recibidos pero ninguno de audio o video:', all.map(function(f){ return {name:f.name, type:f.type, size:f.size}; })); }catch(e){}
         toast('Ningún archivo era de audio o video. Revisé '+all.length+' archivo(s): '+sample+'. Prueba con MP3, WAV, FLAC, M4A, OGG, MP4 o WebM.');
+      } else if(extraLyrics && extraLyrics.length){
+        toast('Ningún archivo era de audio o video. Prueba con MP3, WAV, FLAC, M4A, OGG, MP4 o WebM.');
       }
       return Promise.resolve(0);
     }
     adding = true;
     var added = 0;
+    var batchTracks = [];
     var chain = Promise.resolve();
     files.forEach(function(file){
       chain = chain.then(function(){
-        return processFile(file).then(function(){ added++; render(); });
+        return processFile(file).then(function(t){
+          added++;
+          if(t) batchTracks.push({ track: t, dir: fileDir(file) });
+          render();
+        });
       });
     });
     return chain.then(function(){
+      return pairLrcFiles(lrcFiles, batchTracks)
+        .catch(function(){ return { paired: 0, already: 0, unmatched: lrcFiles.length }; });
+    }).then(function(lrcRes){
       adding = false;
       rebuildShuffle();
       render();
-      if(added===1) toast('1 canción añadida a tu biblioteca');
-      else if(added>1) toast(added+' canciones añadidas a tu biblioteca');
+      var parts = [];
+      if(added===1) parts.push('1 canción añadida a tu biblioteca');
+      else if(added>1) parts.push(added+' canciones añadidas a tu biblioteca');
+      if(lrcFiles.length){
+        var lp = [];
+        if(lrcRes.paired) lp.push(lrcRes.paired + (lrcRes.paired===1 ? ' letra emparejada' : ' letras emparejadas'));
+        if(lrcRes.already) lp.push(lrcRes.already + (lrcRes.already===1 ? ' ya tenía letra (sin tocar)' : ' ya tenían letra (sin tocar)'));
+        if(lrcRes.unmatched) lp.push(lrcRes.unmatched + (lrcRes.unmatched===1 ? ' .lrc sin pareja' : ' .lrc sin pareja'));
+        parts.push('Letras .lrc: ' + (lp.length ? lp.join(' · ') : 'sin cambios'));
+      }
+      if(parts.length) toast(parts.join('. '));
       if(!currentId && tracks.length){
         var fp = firstPlayableId();
         if(fp) selectTrack(fp, false);
@@ -2496,7 +2591,8 @@
         }
         return getDuration(url).then(function(dur){
           var coverUrl = meta.coverBlob ? URL.createObjectURL(meta.coverBlob) : null;
-          var folderPath = file.webkitRelativePath ? String(file.webkitRelativePath).split('/').slice(0,-1).join('/') : '';
+          var relPath = file.webkitRelativePath || file._dropPath || '';
+          var folderPath = relPath ? String(relPath).replace(/^\/+/, '').split('/').slice(0,-1).join('/') : '';
           var kind = isVideoFile(file) ? 'video' : 'audio';
           var track = {
             id:id, name:file.name, title:title, artist:artist, album:meta.album||'',
@@ -4402,18 +4498,72 @@
     ev.preventDefault();
     dragDepth=0; dragOverlay.classList.remove('on'); dropzone.classList.remove('drag');
     if(!ev.dataTransfer) return;
-    filesFromDataTransfer(ev.dataTransfer).then(function(files){
-      files = files || [];
-      var m3uF = files.filter(function(f){ return /\.m3u8?$/i.test(f.name||''); });
-      var restF = files.filter(function(f){ return !/\.m3u8?$/i.test(f.name||''); });
-      var lrcF = restF.filter(function(f){ return /\.(lrc|txt)$/i.test(f.name||''); });
-      var audF = restF.filter(function(f){ return !/\.(lrc|txt)$/i.test(f.name||''); });
-      m3uF.forEach(function(f){ importM3UFile(f); });
-      lrcF.forEach(function(f){ attachDroppedLrc(f); });
-      if(audF.length) addFiles(audF);
-      else if(!files.length) toast('No se encontró ningún archivo en lo que soltaste. Si era una carpeta, prueba con el botón “Carpeta”.');
-    });
+    // Recorrido de entradas (webkitGetAsEntry): es la única forma de entrar
+    // en las carpetas soltadas y de conocer la ruta de cada archivo, que el
+    // emparejado de .lrc usa para exigir la misma carpeta de origen. Los
+    // getAsEntry deben capturarse de forma síncrona durante el evento.
+    var entries = [];
+    var items = ev.dataTransfer.items;
+    if(items && items.length){
+      for(var i=0;i<items.length;i++){
+        var it = items[i];
+        if(it && it.kind==='file' && it.webkitGetAsEntry){
+          var en = it.webkitGetAsEntry();
+          if(en) entries.push(en);
+        }
+      }
+    }
+    if(entries.length){
+      collectDroppedEntries(entries).then(function(files){ handleDroppedFiles(files); });
+    } else if(ev.dataTransfer.files && ev.dataTransfer.files.length){
+      handleDroppedFiles(Array.prototype.slice.call(ev.dataTransfer.files));
+    } else {
+      toast('No se encontró ningún archivo en lo que soltaste. Si era una carpeta, prueba con el botón “Carpeta”.');
+    }
   });
+  function collectDroppedEntries(entries){
+    var files = [];
+    function walk(entry){
+      return new Promise(function(resolve){
+        if(!entry){ resolve(); return; }
+        if(entry.isFile){
+          entry.file(function(f){
+            try{ f._dropPath = String(entry.fullPath || '').replace(/^\/+/, ''); }catch(e){}
+            files.push(f);
+            resolve();
+          }, function(){ resolve(); });
+        } else if(entry.isDirectory){
+          var reader = entry.createReader();
+          var readBatch = function(){
+            reader.readEntries(function(kids){
+              if(!kids || !kids.length){ resolve(); return; }
+              var p = Promise.resolve();
+              Array.prototype.forEach.call(kids, function(k){
+                p = p.then(function(){ return walk(k); });
+              });
+              p.then(readBatch);
+            }, function(){ resolve(); });
+          };
+          readBatch();
+        } else resolve();
+      });
+    }
+    var chain = Promise.resolve();
+    entries.forEach(function(en){ chain = chain.then(function(){ return walk(en); }); });
+    return chain.then(function(){ return files; });
+  }
+  function handleDroppedFiles(allF){
+    if(!allF.length){ toast('No se encontró ningún archivo en lo que soltaste. Si era una carpeta, prueba con el botón “Carpeta”.'); return; }
+    var m3uF = allF.filter(function(f){ return /\.m3u8?$/i.test(f.name||''); });
+    var restF = allF.filter(function(f){ return !/\.m3u8?$/i.test(f.name||''); });
+    var txtF = restF.filter(function(f){ return /\.txt$/i.test(f.name||''); });
+    var mainF = restF.filter(function(f){ return !/\.txt$/i.test(f.name||''); });
+    m3uF.forEach(function(f){ importM3UFile(f); });
+    // Los .lrc los aparta y empareja addFiles; los .txt soltados se tratan
+    // como letras, como hasta ahora, y entran por la misma vía.
+    if(mainF.length || txtF.length) addFiles(mainF, txtF);
+    else if(!m3uF.length) addFiles(restF);
+  }
 
   // ---------- Keyboard ----------
   document.addEventListener('keydown', function(ev){
@@ -5010,17 +5160,6 @@
     t.lyrics = text;
     idbPatch(id, { lyrics: text });
     if(id === currentId){ lyricsKey = ''; renderLyrics(); }
-  }
-  function attachDroppedLrc(file){
-    readFileText(file).then(function(txt){
-      if(!txt.trim()){ toast('El archivo “'+file.name+'” está vacío.'); return; }
-      var stem = (file.name || '').replace(/\.[^.]+$/, '').toLowerCase();
-      var t = tracks.find(function(x){ return (x.name || '').replace(/\.[^.]+$/, '').toLowerCase() === stem; })
-           || tracks.find(function(x){ return cleanName(x.name || '').toLowerCase() === stem; });
-      if(!t){ toast('No encontré una canción llamada como la letra “'+file.name+'”. Cárgala desde el botón ⋯ de la canción.'); return; }
-      attachLyricsTo(t.id, txt);
-      toast('Letra adjuntada a “'+t.title+'”');
-    }).catch(function(){ toast('No se pudo leer el archivo de letra.'); });
   }
   lrcInput.addEventListener('change', function(){
     var f = lrcInput.files && lrcInput.files[0];
@@ -8015,7 +8154,7 @@
   // ---------- Pack de mejoras: actualización, reanudar, deshacer, sincronizar, tap tempo ----------
 
   // ----- 1. Actualización sin atascos -----
-  var APP_VERSION = '2.1.0';
+  var APP_VERSION = '2.1.1';
   document.getElementById('appVersionNote').textContent = APP_VERSION;
   function cmpVersion(a, b){
     var pa = a.split('.').map(function(x){ return parseInt(x, 10) || 0; });
