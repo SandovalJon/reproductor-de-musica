@@ -552,6 +552,41 @@
   .car-rate svg{width:22px; height:22px}
   .car-rate.is-like{border-color:#2FBF71; background:rgba(47,191,113,.22)}
   .car-rate.is-dislike{border-color:#FF6B5E; background:rgba(255,107,94,.2)}
+  /* ===== Modo letra: letra a pantalla completa ===== */
+  .lyricmode{position:fixed; inset:0; z-index:130; display:none; flex-direction:column; color:#fff; background:#0c0b10; overflow:hidden}
+  .lyricmode.on{display:flex}
+  .lm-bg{position:absolute; inset:-46px; width:calc(100% + 92px); height:calc(100% + 92px); object-fit:cover; filter:blur(34px) brightness(.6) saturate(1.25); transform:scale(1.12); z-index:0}
+  .lm-shade{position:absolute; inset:0; z-index:1; background:linear-gradient(180deg, rgba(5,5,8,.42), rgba(5,5,8,.66))}
+  .lm-top{position:relative; z-index:3; text-align:center; padding:calc(16px + env(safe-area-inset-top)) 64px 4px}
+  .lm-kicker{margin:0 0 2px; font-size:11.5px; letter-spacing:.16em; text-transform:uppercase; font-weight:800; color:rgba(255,255,255,.6)}
+  .lm-top h2{margin:0; font-size:clamp(19px,3.6vw,27px); line-height:1.2; font-weight:800}
+  .lm-artist{margin:3px 0 0; font-size:14.5px; font-weight:600; color:rgba(255,255,255,.78)}
+  .lyricmode .party-close{z-index:5}
+  .lm-scroll{position:relative; z-index:2; flex:1; overflow-y:auto; width:100%; scroll-behavior:smooth; -webkit-overflow-scrolling:touch}
+  .lm-lines{max-width:880px; margin:0 auto; padding:32vh 14px}
+  .lm-scroll.plain .lm-lines{padding:22px 14px 36px}
+  .lm-line{padding:9px 10px; text-align:center; font-size:clamp(18px,3.2vw,26px); line-height:1.45; font-weight:600; color:rgba(255,255,255,.38); border-radius:12px; transition:color .25s, font-size .25s}
+  .lm-line[data-time]{cursor:pointer}
+  .lm-line.near{color:rgba(255,255,255,.62)}
+  .lm-line.active{color:#fff; font-weight:800; font-size:clamp(27px,5.4vw,46px); line-height:1.3}
+  .lm-scroll.plain .lm-line{color:rgba(255,255,255,.88); font-size:clamp(19px,3.6vw,28px); cursor:default}
+  .lm-empty{max-width:560px; margin:0 auto; padding:26px 18px 40px; text-align:center}
+  .lm-cover{width:min(54vw,236px); aspect-ratio:1/1; margin:0 auto 20px; border-radius:20px; overflow:hidden; background:rgba(255,255,255,.08); display:grid; place-items:center; font-family:"Fraunces",serif; font-size:76px; font-weight:700; box-shadow:0 22px 54px rgba(0,0,0,.5)}
+  .lm-cover img{width:100%; height:100%; object-fit:cover; display:block}
+  .lm-empty h3{margin:0; font-size:clamp(24px,5vw,36px); line-height:1.15; font-weight:800}
+  .lm-artist2{margin:6px 0 0; font-size:17px; font-weight:600; color:rgba(255,255,255,.8)}
+  .lm-empty-msg{margin:16px 0 0; font-size:15.5px; line-height:1.55; color:rgba(255,255,255,.75)}
+  .lm-bottom{position:relative; z-index:3; padding:10px 20px calc(16px + env(safe-area-inset-bottom)); display:flex; flex-direction:column; align-items:center; gap:9px}
+  .lm-progress{width:100%; max-width:920px; height:4px; border-radius:999px; background:rgba(255,255,255,.22); overflow:hidden; flex:none}
+  #lyricProgFill{height:100%; width:0%; background:var(--accent); border-radius:999px}
+  .lm-times{margin-top:-4px}
+  .lyricmode .party-controls .icon-btn{color:#fff; background:rgba(255,255,255,.12); width:52px; height:52px}
+  .lyricmode .party-controls .icon-btn:hover{background:rgba(255,255,255,.22)}
+  .lyricmode .party-controls .play-btn{background:#fff; color:#171310}
+  .lm-chrome{transition:opacity .35s}
+  .lyricmode.chrome-hidden .lm-chrome{opacity:0; pointer-events:none}
+  .lyricmode.chrome-hidden{cursor:none}
+  .lyricmode.no-lyrics .lm-top{display:none}
   /* ===== Pack 5: gapless, efectos, presets propios, arrastre, letra plana, resumen ===== */
   .modal{max-height:92vh; overflow-y:auto}
   .modal textarea{width:100%; padding:12px 14px; border:1px solid var(--line); border-radius:12px; background:var(--surface-2); color:var(--text); font-size:14px; line-height:1.55; outline:none; font-family:inherit; resize:vertical}
@@ -791,6 +826,10 @@
           <button class="btn small" id="btnCar" type="button">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:15px;height:15px"><path d="M19 17h2c.6 0 1-.4 1-1v-3c0-.9-.7-1.7-1.5-1.9C18.7 10.6 16 10 16 10s-1.3-1.4-2.2-2.3c-.5-.4-1.1-.7-1.8-.7H5c-.6 0-1.1.4-1.4.9l-1.4 2.9A3.7 3.7 0 0 0 2 12v4c0 .6.4 1 1 1h2"/><circle cx="7" cy="17" r="2"/><path d="M9 17h6"/><circle cx="17" cy="17" r="2"/></svg>
             Modo coche
+          </button>
+          <button class="btn small" id="btnLyricMode" type="button">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:15px;height:15px"><path d="M4 6h16M7 12h10M9.5 18h5"/></svg>
+            Modo letra
           </button>
           <button class="btn small" id="btnShareCurrent" type="button" disabled>
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:15px;height:15px"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="m8.6 13.5 6.8 4M15.4 6.5l-6.8 4"/></svg>
@@ -1054,6 +1093,7 @@
               <button class="btn small" id="btnEditPlainLyrics" type="button">Letra en texto plano…</button>
               <button class="btn small" id="btnSyncMode" type="button">Sincronizar letra</button>
               <button class="btn small primary" id="btnShareLyric" type="button">Compartir letra</button>
+              <button class="btn small" id="btnLyricModePanel" type="button">Modo letra</button>
               <button class="btn small danger" id="btnRemoveLrc" type="button" style="display:none">Quitar letra</button>
             </div>
             <div id="lyricCardBox">
@@ -1184,7 +1224,7 @@
         <div class="update-row">
           <button class="btn small" id="btnCheckUpdate" type="button">Actualizar app</button>
           <button class="btn small danger" id="btnForceUpdate" type="button">Forzar actualización</button>
-          <span class="backup-note" id="updateStatus">Versión de esta app: v<span id="appVersionNote">2.0.1</span>. «Actualizar app» consulta la versión publicada y te dice si ya estás al día antes de recargar. «Forzar actualización» limpia el service worker y las cachés de la app si una actualización se quedó atascada; tu biblioteca, playlists y ajustes (IndexedDB) nunca se tocan.</span>
+          <span class="backup-note" id="updateStatus">Versión de esta app: v<span id="appVersionNote">2.1.0</span>. «Actualizar app» consulta la versión publicada y te dice si ya estás al día antes de recargar. «Forzar actualización» limpia el service worker y las cachés de la app si una actualización se quedó atascada; tu biblioteca, playlists y ajustes (IndexedDB) nunca se tocan.</span>
         </div>
       </div>
 
@@ -1788,6 +1828,47 @@
   </div>
 </div>
 
+<div class="lyricmode" id="lyricOverlay" aria-hidden="true">
+  <img class="lm-bg" id="lyricBg" alt="" style="display:none" />
+  <div class="lm-shade" id="lyricShade"></div>
+  <button class="party-close lm-chrome" id="btnLyricClose" type="button" aria-label="Salir del modo letra">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
+  </button>
+  <div class="lm-top lm-chrome">
+    <p class="lm-kicker">Modo letra</p>
+    <h2 id="lyricModeTitle">Elige una canción</h2>
+    <p class="lm-artist" id="lyricModeArtist"></p>
+  </div>
+  <div class="lm-scroll" id="lyricModeScroll">
+    <div class="lm-lines" id="lyricModeLines"></div>
+    <div class="lm-empty" id="lyricModeEmpty" style="display:none">
+      <div class="lm-cover" id="lyricModeCoverWrap">
+        <img id="lyricModeCover" alt="Portada de la canción que suena" style="display:none" />
+        <span id="lyricModeInitial">♪</span>
+      </div>
+      <h3 id="lyricModeEmptyTitle">Elige una canción</h3>
+      <p class="lm-artist2" id="lyricModeEmptyArtist"></p>
+      <p class="lm-empty-msg" id="lyricModeEmptyMsg">Elige una canción para ver su letra aquí, en grande.</p>
+    </div>
+  </div>
+  <div class="lm-bottom lm-chrome">
+    <div class="lm-progress"><div id="lyricProgFill"></div></div>
+    <div class="party-times lm-times"><span id="lyricTimeCur">0:00</span><span id="lyricTimeTot">0:00</span></div>
+    <div class="party-controls">
+      <button class="icon-btn" id="btnLyricPrev" type="button" aria-label="Canción anterior">
+        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M6 5h2v14H6zM20 5v14L9.5 12z"/></svg>
+      </button>
+      <button class="play-btn" id="btnLyricPlay" type="button" aria-label="Reproducir o pausar">
+        <svg id="lyricIconPlay" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5.5v13l11-6.5z"/></svg>
+        <svg id="lyricIconPause" viewBox="0 0 24 24" fill="currentColor" style="display:none"><path d="M7 5h3.5v14H7zM13.5 5H17v14h-3.5z"/></svg>
+      </button>
+      <button class="icon-btn" id="btnLyricNext" type="button" aria-label="Canción siguiente">
+        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M16 5h2v14h-2zM4 5v14l10.5-7z"/></svg>
+      </button>
+    </div>
+  </div>
+</div>
+
 <div class="modal-overlay" id="profileModal" aria-hidden="true">
   <div class="modal" role="dialog" aria-modal="true" aria-labelledby="profileModalTitle">
     <h3 id="profileModalTitle">Perfiles</h3>
@@ -1861,7 +1942,7 @@
 
   // ---------- State ----------
   var tracks = []; // {id,name,title,artist,album,duration,size,type,addedAt,url,coverUrl,color,rating,stars}
-  var APP_VERSION = '2.0.1'; // al publicar cambios, subir este número y el CACHE de sw.js
+  var APP_VERSION = '2.1.0'; // al publicar cambios, subir este número y el CACHE de sw.js
   var currentId = null;
   var isPlaying = false;
   var shuffle = false;
@@ -4843,7 +4924,7 @@
     syncLrcShiftUI();
     var t = currentTrack();
     var key = t ? (t.id + '|' + (t.lyrics ? t.lyrics.length : 0) + '|' + (t.plainLyrics ? t.plainLyrics.length : 0)) : 'none';
-    if(key === lyricsKey){ syncLyrics(); return; }
+    if(key === lyricsKey){ syncLyrics(); if(lyricOpen) buildLyricMode(); return; }
     lyricsKey = key;
     if(t && t.lyrics) parsedLyrics = parseLRC(t.lyrics);
     else if(t && t.plainLyrics) parsedLyrics = t.plainLyrics.split(/\r?\n/).map(function(line){ return { time: null, text: line.trim() }; });
@@ -4858,6 +4939,7 @@
         ? 'Esta canción no tiene letra cargada. Añade un archivo .lrc y la letra avanzará sola mientras suena, con la línea actual resaltada; o pega su letra en texto plano desde «Editar datos» y se mostrará aquí con scroll.'
         : 'Elige una canción para ver su letra.';
       scroll.appendChild(p);
+      if(lyricOpen) buildLyricMode();
       return;
     }
     parsedLyrics.forEach(function(l){
@@ -4879,6 +4961,7 @@
       scroll.appendChild(d);
     });
     syncLyrics();
+    if(lyricOpen) buildLyricMode();
   }
   function syncLyrics(){
     if(!parsedLyrics.length) return;
@@ -4918,6 +5001,8 @@
       if(target > maxTop) target = maxTop;
       scroll.scrollTo({ top: target, behavior: 'smooth' });
     }
+    // Modo letra: la misma sincronización y el mismo centrado, en la vista grande
+    if(lyricOpen) syncLyricMode(false);
   }
   function attachLyricsTo(id, text){
     var t = trackById(id);
@@ -6306,6 +6391,7 @@
     partyRAF = requestAnimationFrame(partyLoop);
   }
   function openParty(){
+    if(lyricOpen) closeLyricMode();
     partyOpen = true;
     partyEl.classList.add('on');
     partyEl.setAttribute('aria-hidden', 'false');
@@ -6796,6 +6882,7 @@
     carRAF = requestAnimationFrame(carLoop);
   }
   function openCar(){
+    if(lyricOpen) closeLyricMode();
     carOpen = true;
     carEl.classList.add('on');
     carEl.setAttribute('aria-hidden', 'false');
@@ -6825,6 +6912,217 @@
     var t = currentTrack(); if(t) setRating(t.id, t.rating === 'dislike' ? null : 'dislike');
   });
   document.addEventListener('keydown', function(ev){ if(ev.key === 'Escape' && carOpen) closeCar(); });
+
+  // ----- Modo letra -----
+  var lyricEl = document.getElementById('lyricOverlay');
+  var lyricOpen = false, lyricRAF = null, lyricBuiltKey = '', lyricLastCentered = -2;
+  var lyricHideTimer = null, lyricFsSeen = false, lyricTintId = '__none', lyricLoopTrackId = '__none';
+  function lyricHasTimed(){
+    return parsedLyrics.some(function(l){ return l.time!=null; });
+  }
+  function buildLyricMode(){
+    var t = currentTrack();
+    var key = lyricsKey + '#' + parsedLyrics.length + '#' + (t ? t.id : 'none');
+    if(key === lyricBuiltKey) return;
+    lyricBuiltKey = key;
+    var box = document.getElementById('lyricModeLines');
+    var empty = document.getElementById('lyricModeEmpty');
+    var scroll = document.getElementById('lyricModeScroll');
+    box.innerHTML = '';
+    lyricLastCentered = -2;
+    if(!parsedLyrics.length){
+      box.style.display = 'none';
+      empty.style.display = '';
+      scroll.classList.remove('plain');
+      lyricEl.classList.add('no-lyrics');
+      lyricEl.classList.remove('chrome-hidden');
+      if(lyricHideTimer){ clearTimeout(lyricHideTimer); lyricHideTimer = null; }
+      document.getElementById('lyricModeEmptyTitle').textContent = t ? t.title : 'Elige una canción';
+      document.getElementById('lyricModeEmptyArtist').textContent = t ? ([t.artist, t.album].filter(Boolean).join(' · ') || t.name) : '';
+      document.getElementById('lyricModeEmptyMsg').textContent = t
+        ? 'Esta canción no tiene letra cargada. Puedes añadir un archivo .lrc o pegar su letra en texto plano desde «Editar datos», y aquí se verá en grande.'
+        : 'Elige una canción para ver su letra aquí, en grande.';
+      var cov = document.getElementById('lyricModeCover'), ini = document.getElementById('lyricModeInitial');
+      if(t && t.coverUrl){
+        if(cov.getAttribute('src') !== t.coverUrl) cov.src = t.coverUrl;
+        cov.style.display = 'block'; ini.style.display = 'none';
+      } else {
+        cov.style.display = 'none'; ini.style.display = '';
+        ini.textContent = t ? ((t.title || '?').trim().charAt(0).toUpperCase() || '♪') : '♪';
+        document.getElementById('lyricModeCoverWrap').style.background = t ? ('linear-gradient(145deg,' + t.color[0] + ',' + t.color[1] + ')') : 'rgba(255,255,255,.08)';
+      }
+      scroll.scrollTop = 0;
+      return;
+    }
+    lyricEl.classList.remove('no-lyrics');
+    empty.style.display = 'none';
+    box.style.display = '';
+    scroll.classList.toggle('plain', !lyricHasTimed());
+    parsedLyrics.forEach(function(l){
+      var d = document.createElement('div');
+      d.className = 'lm-line';
+      d.textContent = l.text || '♪';
+      if(l.time!=null){
+        d.setAttribute('data-time', l.time);
+        d.title = 'Saltar a ' + fmtTime(l.time);
+        d.addEventListener('click', function(){
+          try{ audio.currentTime = l.time; }catch(e){}
+          if(!isPlaying) play();
+        });
+      }
+      box.appendChild(d);
+    });
+    scroll.scrollTop = 0;
+    syncLyricMode(true);
+  }
+  function syncLyricMode(force){
+    if(!lyricOpen || !parsedLyrics.length || !lyricHasTimed()) return;
+    var idx = lastLyricIdx;
+    var box = document.getElementById('lyricModeLines');
+    if(!box) return;
+    var kids = box.children;
+    for(var j=0;j<kids.length;j++){
+      kids[j].classList.toggle('active', j===idx);
+      kids[j].classList.toggle('near', idx>=0 && Math.abs(j-idx)===1);
+    }
+    if(idx<0 || !kids[idx] || (!force && idx===lyricLastCentered)) return;
+    lyricLastCentered = idx;
+    var scroll = document.getElementById('lyricModeScroll');
+    if(!scroll) return;
+    // Mismo centrado ya corregido del panel: el offsetTop se mide contra
+    // .lm-scroll (position:relative), nunca contra un ancestro lejano, y el
+    // destino se limita al rango válido para no caer pegado al fondo.
+    var lineEl = kids[idx];
+    var target = lineEl.offsetTop - scroll.clientHeight/2 + lineEl.offsetHeight/2;
+    var maxTop = Math.max(0, scroll.scrollHeight - scroll.clientHeight);
+    if(target < 0) target = 0;
+    if(target > maxTop) target = maxTop;
+    scroll.scrollTo({ top: target, behavior: 'smooth' });
+  }
+  function setLyricColors(t){
+    var id = t ? t.id : null;
+    if(lyricTintId === id) return;
+    lyricTintId = id;
+    var shade = document.getElementById('lyricShade');
+    var base = t ? t.color[1] : '#3a3a44';
+    var m = /^#?([0-9a-f]{6})$/i.exec(base || '');
+    if(m){
+      var n = parseInt(m[1], 16);
+      shade.style.background = 'linear-gradient(165deg, rgba(' + ((n>>16)&255) + ',' + ((n>>8)&255) + ',' + (n&255) + ',.5), rgba(6,6,9,.8) 74%)';
+    } else {
+      shade.style.background = 'linear-gradient(180deg, rgba(5,5,8,.42), rgba(5,5,8,.7))';
+    }
+    if(!t || !t.coverUrl) return;
+    var img = new Image();
+    img.onload = function(){
+      try{
+        var cv = document.createElement('canvas');
+        cv.width = 10; cv.height = 10;
+        var cx = cv.getContext('2d');
+        cx.drawImage(img, 0, 0, 10, 10);
+        var px = cx.getImageData(0, 0, 10, 10).data;
+        var r = 0, g = 0, b = 0, cnt = 0;
+        for(var i = 0; i < px.length; i += 4){
+          var lum = 0.2126 * px[i] + 0.7152 * px[i+1] + 0.0722 * px[i+2];
+          if(lum < 18 || lum > 242) continue;
+          r += px[i]; g += px[i+1]; b += px[i+2]; cnt++;
+        }
+        if(cnt && lyricTintId === id){
+          shade.style.background = 'linear-gradient(165deg, rgba(' + Math.round(r/cnt) + ',' + Math.round(g/cnt) + ',' + Math.round(b/cnt) + ',.5), rgba(6,6,9,.8) 74%)';
+        }
+      }catch(e){}
+    };
+    img.src = t.coverUrl;
+  }
+  function lyricShowChrome(){
+    if(!lyricOpen) return;
+    lyricEl.classList.remove('chrome-hidden');
+    if(lyricHideTimer) clearTimeout(lyricHideTimer);
+    if(lyricEl.classList.contains('no-lyrics')) return;
+    lyricHideTimer = setTimeout(function(){ if(lyricOpen) lyricEl.classList.add('chrome-hidden'); }, 3400);
+  }
+  function lyricLoop(){
+    if(!lyricOpen) return;
+    var t = currentTrack();
+    var tid = t ? t.id : null;
+    if(tid !== lyricLoopTrackId){
+      lyricLoopTrackId = tid;
+      lyricBuiltKey = '';
+      buildLyricMode();
+    }
+    document.getElementById('lyricModeTitle').textContent = t ? t.title : 'Elige una canción';
+    document.getElementById('lyricModeArtist').textContent = t ? ([t.artist, t.album].filter(Boolean).join(' · ') || t.name) : '';
+    var bg = document.getElementById('lyricBg');
+    if(t && t.coverUrl){
+      if(bg.getAttribute('src') !== t.coverUrl) bg.src = t.coverUrl;
+      bg.style.display = 'block';
+    } else {
+      bg.style.display = 'none';
+    }
+    setLyricColors(t);
+    document.getElementById('lyricIconPlay').style.display = isPlaying ? 'none' : 'block';
+    document.getElementById('lyricIconPause').style.display = isPlaying ? 'block' : 'none';
+    var dur = audio.duration || (t ? t.duration : 0) || 0;
+    var cur = audio.currentTime || 0;
+    document.getElementById('lyricProgFill').style.width = (dur ? Math.min(100, cur / dur * 100) : 0) + '%';
+    document.getElementById('lyricProgFill').style.background = 'var(--accent)';
+    document.getElementById('lyricTimeCur').textContent = fmtTime(cur);
+    document.getElementById('lyricTimeTot').textContent = fmtTime(dur);
+    syncLyricMode(false);
+    lyricRAF = requestAnimationFrame(lyricLoop);
+  }
+  function lyricRequestFs(){
+    try{
+      var fs = lyricEl.requestFullscreen && lyricEl.requestFullscreen();
+      if(fs && fs.catch) fs.catch(function(){
+        setTimeout(function(){
+          if(lyricOpen && !document.fullscreenElement){
+            try{ var f2 = lyricEl.requestFullscreen && lyricEl.requestFullscreen(); if(f2 && f2.catch) f2.catch(function(){}); }catch(e){}
+          }
+        }, 180);
+      });
+    }catch(e){}
+  }
+  function openLyricMode(){
+    if(partyOpen) closeParty();
+    if(carOpen) closeCar();
+    lyricOpen = true;
+    lyricFsSeen = false;
+    lyricEl.classList.add('on');
+    lyricEl.setAttribute('aria-hidden', 'false');
+    renderLyrics();
+    lyricBuiltKey = '';
+    buildLyricMode();
+    lyricLastCentered = -2;
+    syncLyricMode(true);
+    lyricRequestFs();
+    lyricShowChrome();
+    lyricLoop();
+  }
+  function closeLyricMode(){
+    lyricOpen = false;
+    lyricFsSeen = false;
+    lyricEl.classList.remove('on');
+    lyricEl.classList.remove('chrome-hidden');
+    lyricEl.setAttribute('aria-hidden', 'true');
+    if(lyricRAF) cancelAnimationFrame(lyricRAF);
+    lyricRAF = null;
+    if(lyricHideTimer){ clearTimeout(lyricHideTimer); lyricHideTimer = null; }
+    try{ if(document.fullscreenElement) document.exitFullscreen(); }catch(e){}
+  }
+  document.getElementById('btnLyricMode').addEventListener('click', openLyricMode);
+  document.getElementById('btnLyricModePanel').addEventListener('click', openLyricMode);
+  document.getElementById('btnLyricClose').addEventListener('click', closeLyricMode);
+  document.getElementById('btnLyricPlay').addEventListener('click', togglePlay);
+  document.getElementById('btnLyricNext').addEventListener('click', function(){ next(false); if(isPlaying) play(); });
+  document.getElementById('btnLyricPrev').addEventListener('click', function(){ prev(); if(isPlaying) play(); });
+  lyricEl.addEventListener('pointerdown', lyricShowChrome);
+  lyricEl.addEventListener('mousemove', lyricShowChrome);
+  document.addEventListener('keydown', function(ev){ if(ev.key === 'Escape' && lyricOpen) closeLyricMode(); });
+  document.addEventListener('fullscreenchange', function(){
+    if(document.fullscreenElement === lyricEl) lyricFsSeen = true;
+    else if(lyricOpen && lyricFsSeen && !document.fullscreenElement){ lyricFsSeen = false; closeLyricMode(); }
+  });
 
   // ----- Gestos sobre la portada: deslizar para cambiar de canción -----
   function addSwipe(el, onNext, onPrev){
@@ -7717,7 +8015,7 @@
   // ---------- Pack de mejoras: actualización, reanudar, deshacer, sincronizar, tap tempo ----------
 
   // ----- 1. Actualización sin atascos -----
-  var APP_VERSION = '2.0.1';
+  var APP_VERSION = '2.1.0';
   document.getElementById('appVersionNote').textContent = APP_VERSION;
   function cmpVersion(a, b){
     var pa = a.split('.').map(function(x){ return parseInt(x, 10) || 0; });
