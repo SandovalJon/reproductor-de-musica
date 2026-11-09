@@ -1463,7 +1463,7 @@
 
   // ---------- State ----------
   var tracks = []; // {id,name,title,artist,album,duration,size,type,addedAt,url,coverUrl,color,rating,stars}
-  var APP_VERSION = '1.6.0'; // al publicar cambios, subir este número y el CACHE de sw.js
+  var APP_VERSION = '1.6.1'; // al publicar cambios, subir este número y el CACHE de sw.js
   var currentId = null;
   var isPlaying = false;
   var shuffle = false;
@@ -6698,6 +6698,81 @@
     setVoiceStatus('Escuché “' + raw + '”, pero no es un comando que conozca. Prueba: «siguiente», «anterior», «pausa», «aleatorio» o «reproduce» y el nombre de una playlist.');
   }
   var voiceConfirmPending = false;
+  var voiceLangFallback = false; // true tras el reintento con lang «es» genérico (error language-not-supported)
+  var voiceStarting = false; // true mientras corre la prueba previa de micrófono
+
+  // Mensaje de micrófono bloqueado, con los pasos para permitirlo.
+  function voiceMicBlockedMsg(code){
+    return 'El micrófono está bloqueado para esta página. Para permitirlo: toca el candado o el icono junto a la dirección (o el menú ⋮ → Configuración → Configuración de sitios → Micrófono) y pon el micrófono en «Permitir» para esta página; luego toca «Voz» otra vez.' + (code ? ' (' + code + ')' : '');
+  }
+  // Mensaje de micrófono no disponible (sin micrófono u ocupado por otra app).
+  function voiceMicMissingMsg(code){
+    return 'No se encontró un micrófono disponible, o lo está usando otra app. Cierra la otra app y vuelve a intentarlo.' + (code ? ' (' + code + ')' : '');
+  }
+
+  // Arranque del reconocimiento con un reintento: si start() lanza porque ya
+  // había una sesión activa, se detiene la anterior y se reintenta una vez.
+  function tryStartRecog(r, prev, retried){
+    try{ r.start(); }
+    catch(e){
+      if(!retried){
+        try{ if(prev && prev !== r) prev.stop(); }catch(e1){}
+        try{ r.abort(); }catch(e2){}
+        try{ r.stop(); }catch(e3){}
+        setTimeout(function(){ tryStartRecog(r, prev, true); }, 300);
+        return;
+      }
+      if(recog === r){ recogActive = false; syncVoiceBtns(); }
+      setVoiceStatus('No se pudo iniciar el reconocimiento de voz en este navegador.');
+    }
+  }
+
+  function beginRecog(){
+    var SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+    var prev = recog;
+    var r;
+    try{ r = new SR(); }
+    catch(e){
+      recogActive = false; syncVoiceBtns();
+      setVoiceStatus('No se pudo iniciar el reconocimiento de voz en este navegador.');
+      return;
+    }
+    recog = r;
+    r.lang = voiceLangFallback ? 'es' : 'es-MX';
+    r.interimResults = false;
+    r.maxAlternatives = 1;
+    r.onresult = function(ev){
+      var txt = '';
+      try{ txt = ev.results[0][0].transcript || ''; }catch(e){}
+      if(txt) runVoiceCommand(txt);
+      else setVoiceStatus('No te escuché bien. Toca el micrófono y prueba otra vez.');
+    };
+    r.onerror = function(ev){
+      if(recog === r){ recogActive = false; syncVoiceBtns(); }
+      var code = (ev && ev.error) || '';
+      if(code === 'not-allowed') setVoiceStatus('El micrófono está bloqueado para esta página. Permítelo en los ajustes del navegador para usar la voz.');
+      else if(code === 'no-speech') setVoiceStatus('No escuché nada. Toca el micrófono y di un comando.');
+      else if(code === 'aborted') setVoiceStatus('');
+      else if(code === 'network') setVoiceStatus('El reconocimiento de voz necesita internet, porque lo procesa el servicio del navegador (Google), no tu teléfono. Revisa tu conexión y, si estás en la app instalada, prueba también desde la pestaña de Chrome. (network)');
+      else if(code === 'service-not-allowed') setVoiceStatus('El servicio de voz está bloqueado en este contexto. Prueba desde la pestaña de Chrome (no desde la app instalada) y revisa que la app de Google esté activada y actualizada. (service-not-allowed)');
+      else if(code === 'audio-capture') setVoiceStatus(voiceMicMissingMsg('audio-capture'));
+      else if(code === 'language-not-supported'){
+        if(!voiceLangFallback){
+          voiceLangFallback = true;
+          setVoiceStatus('Este contexto no acepta el idioma es-MX; reintentando con español genérico (es)…');
+          setTimeout(function(){ if(!recogActive) beginRecog(); }, 400);
+        } else {
+          setVoiceStatus('El reconocimiento de voz no acepta el español en este contexto. Prueba desde la pestaña de Chrome. (language-not-supported)');
+        }
+      }
+      else setVoiceStatus('No se pudo usar el micrófono ahora mismo. Inténtalo de nuevo.' + (code ? ' (' + code + ')' : ''));
+    };
+    r.onend = function(){ if(recog === r){ recogActive = false; syncVoiceBtns(); } };
+    recogActive = true; syncVoiceBtns();
+    setVoiceStatus('Escuchando… di «siguiente», «pausa», «aleatorio» o «reproduce» y el nombre de una playlist.');
+    tryStartRecog(r, prev, false);
+  }
+
   function startVoice(){
     var SR = window.SpeechRecognition || window.webkitSpeechRecognition;
     if(!SR){
@@ -6721,32 +6796,32 @@
       saveState();
     }
     if(recogActive && recog){ try{ recog.stop(); }catch(e){} return; }
-    try{
-      recog = new SR();
-      recog.lang = 'es-ES';
-      recog.interimResults = false;
-      recog.maxAlternatives = 1;
-      recog.onresult = function(ev){
-        var txt = '';
-        try{ txt = ev.results[0][0].transcript || ''; }catch(e){}
-        if(txt) runVoiceCommand(txt);
-        else setVoiceStatus('No te escuché bien. Toca el micrófono y prueba otra vez.');
-      };
-      recog.onerror = function(ev){
-        recogActive = false; syncVoiceBtns();
-        if(ev.error === 'not-allowed') setVoiceStatus('El micrófono está bloqueado para esta página. Permítelo en los ajustes del navegador para usar la voz.');
-        else if(ev.error === 'no-speech') setVoiceStatus('No escuché nada. Toca el micrófono y di un comando.');
-        else if(ev.error === 'aborted') setVoiceStatus('');
-        else setVoiceStatus('No se pudo usar el micrófono ahora mismo. Inténtalo de nuevo.');
-      };
-      recog.onend = function(){ recogActive = false; syncVoiceBtns(); };
-      recogActive = true; syncVoiceBtns();
-      setVoiceStatus('Escuchando… di «siguiente», «pausa», «aleatorio» o «reproduce» y el nombre de una playlist.');
-      recog.start();
-    }catch(e){
-      recogActive = false; syncVoiceBtns();
-      setVoiceStatus('No se pudo iniciar el reconocimiento de voz en este navegador.');
+    if(voiceStarting) return;
+    voiceLangFallback = false;
+    // Prueba previa de micrófono: solo comprueba permiso y disponibilidad;
+    // las pistas se detienen de inmediato y después arranca el reconocimiento.
+    if(navigator.mediaDevices && navigator.mediaDevices.getUserMedia){
+      voiceStarting = true;
+      setVoiceStatus('Comprobando el micrófono…');
+      navigator.mediaDevices.getUserMedia({ audio: true }).then(function(stream){
+        voiceStarting = false;
+        try{ stream.getTracks().forEach(function(t){ t.stop(); }); }catch(e){}
+        beginRecog();
+      }).catch(function(err){
+        voiceStarting = false;
+        var name = (err && err.name) || '';
+        if(name === 'NotAllowedError' || name === 'SecurityError'){
+          setVoiceStatus(voiceMicBlockedMsg(name));
+        } else if(name === 'NotFoundError' || name === 'NotReadableError' || name === 'OverconstrainedError' || name === 'AbortError'){
+          setVoiceStatus(voiceMicMissingMsg(name === 'NotFoundError' || name === 'OverconstrainedError' ? 'audio-capture' : name));
+        } else {
+          // Otra falla de la prueba no bloquea: el reconocimiento reportará la suya.
+          beginRecog();
+        }
+      });
+      return;
     }
+    beginRecog();
   }
   document.getElementById('btnVoice').addEventListener('click', startVoice);
   document.getElementById('btnCarMic').addEventListener('click', startVoice);
