@@ -612,6 +612,118 @@
   .lyric-line.selected{background:var(--accent-soft); color:var(--accent-dark); font-weight:700; outline:1px dashed var(--accent)}
   #lyricCardBox{margin-top:12px; display:none}
   #lyricCardBox img{width:100%; max-width:340px; border-radius:16px; border:1px solid var(--line); display:block}
+  /* ===== v2.0: rediseño, navegación, ambientes, video, audiolibros, perfiles ===== */
+  :root{ --v2-radius:18px; --v2-shadow:0 10px 30px rgba(20,12,4,.10), 0 2px 6px rgba(20,12,4,.06); }
+  @media (prefers-color-scheme: dark){ :root{ --v2-shadow:0 10px 30px rgba(0,0,0,.45), 0 2px 6px rgba(0,0,0,.35); } }
+  .player-card{border-radius:var(--v2-radius); box-shadow:var(--v2-shadow)}
+  .now-title{letter-spacing:-.01em}
+  .controls .icon-btn{transition:transform .15s ease, background .15s ease}
+  /* Navegación principal v2: barra inferior en pantallas estrechas */
+  #viewTabs{
+    position:fixed; left:0; right:0; bottom:0; z-index:60; margin:0;
+    display:grid; grid-template-columns:repeat(6,1fr); gap:2px;
+    background:var(--surface); border-top:1px solid var(--line);
+    padding:6px 6px calc(6px + env(safe-area-inset-bottom));
+    box-shadow:0 -6px 24px rgba(0,0,0,.10);
+  }
+  #viewTabs .view-tab{
+    flex-direction:column; gap:3px; border:none; background:transparent; border-radius:12px;
+    padding:6px 2px 5px; font-size:9.5px; font-weight:700; line-height:1.1; text-align:center;
+    color:var(--muted); min-width:0;
+  }
+  #viewTabs .view-tab svg{width:20px; height:20px; flex:none}
+  #viewTabs .view-tab.active{background:var(--accent-soft); color:var(--accent-dark)}
+  #viewTabs .view-tab .tab-count{position:absolute; margin-left:26px; margin-top:-4px}
+  #viewTabs .view-tab{position:relative}
+  body{padding-bottom:118px}
+  /* Navegación principal v2: barra lateral en pantallas anchas */
+  @media(min-width:1024px){
+    body{padding-bottom:0}
+    .app{margin-left:228px}
+    #viewTabs{
+      left:0; right:auto; top:0; bottom:0; width:216px;
+      display:flex; flex-direction:column; align-items:stretch; gap:4px;
+      border-top:none; border-right:1px solid var(--line);
+      padding:20px 14px; box-shadow:6px 0 24px rgba(0,0,0,.06);
+      overflow-y:auto;
+    }
+    #viewTabs::before{
+      content:'Secciones'; font-size:12px; font-weight:800; letter-spacing:.14em;
+      text-transform:uppercase; color:var(--muted-2); padding:2px 10px 12px;
+    }
+    #viewTabs .view-tab{
+      flex-direction:row; justify-content:flex-start; text-align:left; gap:10px;
+      padding:10px 12px; font-size:13.5px; border-radius:12px;
+    }
+    #viewTabs .view-tab svg{width:19px; height:19px}
+    #viewTabs .view-tab .tab-count{position:static; margin:0 0 0 auto}
+  }
+  /* Transiciones suaves entre vistas */
+  @keyframes v2viewIn{ from{opacity:0; transform:translateY(7px)} to{opacity:1; transform:none} }
+  .subview{animation:v2viewIn .26s ease}
+  .player-body{animation:v2viewIn .26s ease}
+  @media (prefers-reduced-motion: reduce){
+    .subview, .player-body{animation:none}
+    .controls .icon-btn{transition:none}
+  }
+  /* Video en el área del reproductor */
+  #videoEl{position:absolute; inset:0; width:100%; height:100%; object-fit:contain; background:#000; z-index:3}
+  .cover-wrap.video-on #viz{display:none}
+  #partyVideoSlot{width:100%; max-width:860px; margin:0 auto}
+  #partyVideoSlot #videoEl{position:static; width:100%; height:auto; max-height:62vh; aspect-ratio:16/9; display:block; border-radius:14px}
+  /* Selector de perfil en cabecera */
+  .profile-chip{display:flex; align-items:center; gap:8px; flex-wrap:wrap}
+  .profile-chip label{font-size:12px; font-weight:800; letter-spacing:.08em; text-transform:uppercase; color:var(--muted)}
+  .profile-chip select{
+    padding:9px 12px; border:1px solid var(--line); border-radius:999px; background:var(--surface);
+    color:var(--text); font-size:13.5px; font-weight:700; max-width:190px;
+  }
+  .profile-row{display:flex; align-items:center; gap:8px; padding:10px 12px; border:1px solid var(--line); border-radius:12px; margin-bottom:8px; background:var(--surface-2)}
+  .profile-row .p-name{font-weight:800; font-size:14px; flex:1 1 auto; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
+  .profile-row .p-tag{font-size:11px; font-weight:800; color:var(--accent); text-transform:uppercase; letter-spacing:.06em}
+  /* Ambientes */
+  .mood-grid{display:grid; grid-template-columns:1fr; gap:12px}
+  @media(min-width:640px){ .mood-grid{grid-template-columns:1fr 1fr} }
+  .mood-card{border:1px solid var(--line); background:var(--surface-2); border-radius:var(--v2-radius); padding:16px}
+  .mood-card h4{margin:0; font-size:17px; font-weight:800; display:flex; align-items:center; gap:8px}
+  .mood-card p{margin:6px 0 12px; color:var(--muted); font-size:13px; line-height:1.5}
+  .mood-card .mood-actions{display:flex; flex-wrap:wrap; gap:8px}
+  /* Audiolibros: saltos y capítulos */
+  .ab-row{display:flex; flex-wrap:wrap; gap:8px; align-items:center; margin-top:12px}
+  .ab-row .btn{font-variant-numeric:tabular-nums}
+  .ab-note{font-size:12.5px; font-weight:700; color:var(--accent)}
+  .ab-chapters{margin-top:10px; border:1px solid var(--line); border-radius:14px; padding:10px 12px; background:var(--surface-2)}
+  .ab-chapters h4{margin:0 0 8px; font-size:13px; font-weight:800; letter-spacing:.04em; text-transform:uppercase; color:var(--muted)}
+  .ab-chapter{display:flex; justify-content:space-between; gap:10px; width:100%; text-align:left; background:none; border:none; border-top:1px solid var(--line); padding:8px 4px; font-size:13.5px; font-weight:600; color:var(--text); cursor:pointer}
+  .ab-chapter:first-of-type{border-top:none}
+  .ab-chapter span:last-child{color:var(--muted); font-variant-numeric:tabular-nums}
+  .switch-row{display:flex; align-items:center; gap:10px; font-weight:700; font-size:14px}
+  .switch-row input[type="checkbox"]{width:20px; height:20px; accent-color:var(--accent)}
+  .key-tag{font-weight:800; color:var(--accent); font-variant-numeric:tabular-nums}
+  /* v2: «Sonando ahora» renovada — portada protagonista y controles grandes */
+  @media(min-width:920px){
+    .layout{grid-template-columns:472px 1fr}
+  }
+  .player-card{border-radius:22px}
+  .cover-wrap{box-shadow:inset 0 -30px 60px rgba(0,0,0,.12)}
+  .cover-fallback .big-note{width:88px; height:88px; border-radius:26px}
+  .cover-fallback .big-note svg{width:44px; height:44px}
+  .cover-fallback .initial{font-size:84px}
+  .player-body{padding:24px 24px 22px}
+  .now-kicker{font-size:12px}
+  .now-title{font-size:27px; line-height:1.16}
+  .now-artist{font-size:16px; margin-top:7px}
+  .now-album{font-size:13.5px}
+  .progress-block{margin-top:22px}
+  #seek{height:28px}
+  #seek::-webkit-slider-thumb{width:22px; height:22px; margin-top:-8px}
+  #seek::-moz-range-thumb{width:20px; height:20px}
+  .controls{gap:12px; margin-top:14px}
+  .controls .icon-btn{width:52px; height:52px}
+  .controls .icon-btn svg{width:25px; height:25px}
+  .play-btn{width:78px; height:78px; margin:0 6px}
+  .play-btn svg{width:34px; height:34px}
+  .now-rating .rate-pill{padding:11px 18px; font-size:14.5px}
 </style>
 </head>
 <body>
@@ -623,6 +735,11 @@
       <p>Elige canciones de tu dispositivo y escúchalas aquí mismo. Los archivos no salen de tu equipo: se guardan solo en este navegador para que tu biblioteca siga ahí cuando vuelvas.</p>
     </div>
     <div class="top-actions">
+      <div class="profile-chip">
+        <label for="profileSelect">Perfil</label>
+        <select id="profileSelect" aria-label="Perfil activo"></select>
+        <button class="btn small" id="btnProfiles" type="button">Gestionar perfiles</button>
+      </div>
       <span class="stat-pill" id="statPill">♪ <span><strong id="statCount">0</strong> canciones · <strong id="statTime">0 min</strong></span></span>
       <button class="btn" id="btnFolder" type="button">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>
@@ -651,6 +768,7 @@
           <p id="coverHint">AÑADE TU PRIMERA CANCIÓN</p>
         </div>
         <img id="coverImg" alt="Portada del álbum" style="display:none" />
+        <video id="videoEl" preload="metadata" playsinline style="display:none" aria-label="Video de la canción actual"></video>
         <canvas id="viz" width="800" height="172" aria-hidden="true"></canvas>
         <span class="playing-badge" id="playingBadge"><span class="eq"><i></i><i></i><i></i><i></i></span> SONANDO</span>
       </div>
@@ -677,6 +795,10 @@
           <button class="btn small" id="btnShareCurrent" type="button" disabled>
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:15px;height:15px"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="m8.6 13.5 6.8 4M15.4 6.5l-6.8 4"/></svg>
             Compartir
+          </button>
+          <button class="btn small" id="btnVideoAudioOnly" type="button" style="display:none" aria-pressed="false" title="Ocultar la imagen del video y seguir escuchando solo el audio">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:15px;height:15px"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>
+            Solo audio
           </button>
         </div>
         <div class="resume-bar" id="resumeBar" style="display:none" role="status">
@@ -708,6 +830,18 @@
         <div class="progress-block">
           <div class="time-row"><span id="timeCurrent">0:00</span><span id="timeTotal">0:00</span></div>
           <input type="range" id="seek" min="0" max="1000" value="0" step="1" disabled aria-label="Progreso de la canción" />
+        </div>
+
+        <div class="ab-row" id="abRow" style="display:none">
+          <button class="btn small" id="btnBack30" type="button" title="Retroceder 30 segundos">−30 s</button>
+          <button class="btn small" id="btnBack15" type="button" title="Retroceder 15 segundos">−15 s</button>
+          <button class="btn small" id="btnFwd15" type="button" title="Adelantar 15 segundos">+15 s</button>
+          <button class="btn small" id="btnFwd30" type="button" title="Adelantar 30 segundos">+30 s</button>
+          <span class="ab-note" id="abNote" role="status"></span>
+        </div>
+        <div class="ab-chapters" id="abChapters" style="display:none">
+          <h4>Capítulos</h4>
+          <div id="abChapterList"></div>
         </div>
 
         <div class="controls">
@@ -1032,6 +1166,7 @@
           <button class="view-tab active" type="button" role="tab" aria-selected="true" data-view="library">Biblioteca</button>
           <button class="view-tab" type="button" role="tab" aria-selected="false" data-view="playlists">Playlists <span class="tab-count" id="tabCountPlaylists" style="display:none"></span></button>
           <button class="view-tab" type="button" role="tab" aria-selected="false" data-view="smart">Inteligentes</button>
+          <button class="view-tab" type="button" role="tab" aria-selected="false" data-view="moods">Ambientes</button>
           <button class="view-tab" type="button" role="tab" aria-selected="false" data-view="artists">Artistas</button>
           <button class="view-tab" type="button" role="tab" aria-selected="false" data-view="albums">Álbumes</button>
           <button class="view-tab" type="button" role="tab" aria-selected="false" data-view="folders">Carpetas</button>
@@ -1049,7 +1184,7 @@
         <div class="update-row">
           <button class="btn small" id="btnCheckUpdate" type="button">Actualizar app</button>
           <button class="btn small danger" id="btnForceUpdate" type="button">Forzar actualización</button>
-          <span class="backup-note" id="updateStatus">Versión de esta app: v<span id="appVersionNote">1.9.0</span>. «Actualizar app» consulta la versión publicada y te dice si ya estás al día antes de recargar. «Forzar actualización» limpia el service worker y las cachés de la app si una actualización se quedó atascada; tu biblioteca, playlists y ajustes (IndexedDB) nunca se tocan.</span>
+          <span class="backup-note" id="updateStatus">Versión de esta app: v<span id="appVersionNote">2.0.0</span>. «Actualizar app» consulta la versión publicada y te dice si ya estás al día antes de recargar. «Forzar actualización» limpia el service worker y las cachés de la app si una actualización se quedó atascada; tu biblioteca, playlists y ajustes (IndexedDB) nunca se tocan.</span>
         </div>
       </div>
 
@@ -1223,6 +1358,22 @@
         </div>
         <ul class="track-list" id="smartTrackList"></ul>
         <div class="no-results" id="smartEmpty" style="display:none"></div>
+      </div>
+
+      <!-- AMBIENTES (v2) -->
+      <div class="subview" id="viewMoods" style="display:none">
+        <div class="subview-head">
+          <div>
+            <h3>Ambientes</h3>
+            <p>Tu música clasificada sola por su sonido: ritmo (BPM), energía y brillo detectados del audio en tu dispositivo. Solo aparecen las canciones ya analizadas.</p>
+          </div>
+        </div>
+        <p class="sound-note" id="moodStatus" role="status"></p>
+        <div style="display:flex; flex-wrap:wrap; gap:8px; margin-bottom:14px">
+          <button class="btn primary" id="btnAnalyzeMoods" type="button">Analizar biblioteca</button>
+          <button class="btn" id="btnCancelMoods" type="button" style="display:none">Cancelar análisis</button>
+        </div>
+        <div class="mood-grid" id="moodGrid"></div>
       </div>
 
       <!-- ARTISTAS -->
@@ -1480,6 +1631,19 @@
       </div>
       <p class="sound-note">Escribe el BPM o tócalo: pulsa «Tocar el ritmo» al pulso de la canción (4 toques o más) y se calcula el promedio. El BPM que fijes a mano queda marcado como <strong>manual</strong> <span id="editBpmManualTag"></span>y el análisis automático de la biblioteca no lo sobrescribirá; solo cambiará si lo editas, vuelves a tocar el ritmo o pides re-analizar esta canción. Déjalo vacío al guardar para quitar el BPM.</p>
     </div>
+    <div class="field">
+      <label>Tonalidad (para mezclas armónicas del DJ)</label>
+      <div class="sound-inline">
+        <span id="editKeyText" class="key-tag">Sin detectar</span>
+        <button class="btn small" id="btnReKey" type="button">Detectar tonalidad</button>
+        <span class="sleep-status" id="keyStatus" role="status"></span>
+      </div>
+      <p class="sound-note">Se detecta del audio en tu dispositivo (cromagrama → código Camelot, como el de los DJ). Es de solo lectura: se recalcula con «Detectar tonalidad» o desde la vista Ambientes. También se muestra el ambiente detectado: <span id="editMoodText" class="key-tag">sin analizar</span>.</p>
+    </div>
+    <div class="field">
+      <label class="switch-row"><input type="checkbox" id="editIsAudiobook" /> Es audiolibro/podcast</label>
+      <p class="sound-note">Los audiolibros y podcasts guardan su propia posición: al volver a abrirlos continuarás donde ibas, con botones de ±15/30 segundos y capítulos (los del archivo o tus marcadores). La velocidad se recuerda por serie (mismo álbum).</p>
+    </div>
     <div class="modal-actions">
       <button class="btn small" id="editModalCancel" type="button">Cancelar</button>
       <button class="btn small primary" id="editModalSave" type="button">Guardar</button>
@@ -1518,6 +1682,14 @@
         <label class="batch-apply"><input type="checkbox" id="batchYearOn" /> Aplicar</label>
         <input type="text" id="batchYear" maxlength="4" inputmode="numeric" autocomplete="off" placeholder="Ej.: 1999" />
       </div>
+    </div>
+    <div class="field">
+      <label>Modo audiolibro/podcast</label>
+      <div class="sound-inline">
+        <label class="batch-apply"><input type="checkbox" id="batchBookOn" /> Aplicar</label>
+        <label class="switch-row" style="font-size:13.5px"><input type="checkbox" id="batchBook" /> Es audiolibro/podcast</label>
+      </div>
+      <p class="sound-note">Marcadas así, cada una guarda su propia posición de reproducción y muestra saltos de ±15/30 s y capítulos al sonar.</p>
     </div>
     <p class="sound-note" id="batchSummary" role="status"></p>
     <div class="modal-actions">
@@ -1563,6 +1735,7 @@
     <img id="partyCover" alt="Portada de la canción que suena" style="display:none" />
     <span id="partyInitial">♪</span>
   </div>
+  <div id="partyVideoSlot" style="display:none"></div>
   <h2 id="partyTitle">Modo fiesta</h2>
   <p class="party-artist" id="partyArtist">Elige una canción para empezar</p>
   <canvas id="partyViz" width="1200" height="208" aria-hidden="true"></canvas>
@@ -1615,6 +1788,24 @@
   </div>
 </div>
 
+<div class="modal-overlay" id="profileModal" aria-hidden="true">
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="profileModalTitle">
+    <h3 id="profileModalTitle">Perfiles</h3>
+    <p class="sound-note">Cada perfil tiene sus playlists, inteligentes con reglas, likes, estrellas, historial, estadísticas, logros, cola y su «seguir donde ibas». La biblioteca de archivos es la misma para todos: no se duplica nada.</p>
+    <div id="profileList"></div>
+    <div class="field">
+      <label for="profileNewName">Crear perfil nuevo</label>
+      <div class="sound-inline">
+        <input type="text" id="profileNewName" maxlength="30" autocomplete="off" placeholder="Ej.: Coche, Familia…" style="flex:1 1 140px" />
+        <button class="btn small primary" id="btnProfileCreate" type="button">Crear</button>
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn small" id="profileModalClose" type="button">Cerrar</button>
+    </div>
+  </div>
+</div>
+
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 <div class="undo-bar" id="undoBar" role="alert">
   <span id="undoMsg"></span>
@@ -1622,7 +1813,7 @@
   <button class="undo-x" id="btnUndoDismiss" type="button" aria-label="Cerrar aviso">×</button>
 </div>
 
-<input type="file" id="fileInput" class="hidden-input" accept="audio/*,.mp3,.wav,.flac,.ogg,.oga,.m4a,.aac,.opus,.webm,.aif,.aiff" multiple />
+<input type="file" id="fileInput" class="hidden-input" accept="audio/*,video/*,.mp3,.wav,.flac,.ogg,.oga,.m4a,.aac,.opus,.webm,.aif,.aiff,.mp4,.m4v,.mov" multiple />
 <input type="file" id="folderInput" class="hidden-input" webkitdirectory directory multiple />
 <input type="file" id="lrcInput" class="hidden-input" accept=".lrc,.txt,text/plain" />
 <input type="file" id="coverInput" class="hidden-input" accept="image/*" />
@@ -1637,6 +1828,7 @@
 
   // ---------- Elements ----------
   var audioEl = document.getElementById('audio');
+  var videoEl = document.getElementById('videoEl');
   var audio = audioEl;
   var fileInput = document.getElementById('fileInput');
   var folderInput = document.getElementById('folderInput');
@@ -1669,7 +1861,7 @@
 
   // ---------- State ----------
   var tracks = []; // {id,name,title,artist,album,duration,size,type,addedAt,url,coverUrl,color,rating,stars}
-  var APP_VERSION = '1.9.0'; // al publicar cambios, subir este número y el CACHE de sw.js
+  var APP_VERSION = '2.0.0'; // al publicar cambios, subir este número y el CACHE de sw.js
   var currentId = null;
   var isPlaying = false;
   var shuffle = false;
@@ -1845,6 +2037,9 @@
     if(!stateReady) return;
     clearTimeout(saveStateTimer);
     saveStateTimer = setTimeout(function(){
+      // v2: el perfil activo refresca su foto en profileStore; el resto de
+      // perfiles conserva la suya. Todo vive en el almacén meta (DB sigue v2).
+      profileStore[activeProfileId] = snapshotProfileData();
       idbMetaSet('packState', {
         playlists: playlists,
         queue: queue,
@@ -1857,7 +2052,11 @@
         bgOpacity: bgOpacityVal,
         settings: settings,
         selectedPlaylistId: selectedPlaylistId,
-        playContext: playContext
+        playContext: playContext,
+        profiles: profiles,
+        activeProfileId: activeProfileId,
+        profileStore: profileStore,
+        seriesSpeed: seriesSpeed
       });
     }, 150);
   }
@@ -1876,6 +2075,19 @@
         var bov = parseFloat(s.bgOpacity); if(isFinite(bov)) bgOpacityVal = Math.max(10, Math.min(90, bov));
         if(s.selectedPlaylistId) selectedPlaylistId = s.selectedPlaylistId;
         if(s.playContext && s.playContext.type==='playlist' && playlists.some(function(p){ return p.id===s.playContext.playlistId; })) playContext = s.playContext;
+        // v2: perfiles. Sin datos de perfiles = migración: todo lo existente
+        // queda como está y pasa a ser el perfil «Principal».
+        if(Array.isArray(s.profiles) && s.profiles.length){
+          profiles = s.profiles.filter(function(p){ return p && typeof p.id === 'string' && typeof p.name === 'string' && p.name.trim(); }).map(function(p){ return { id: p.id, name: p.name.trim().slice(0, 30) }; });
+        }
+        if(!profiles.length) profiles = [{ id: 'principal', name: 'Principal' }];
+        if(typeof s.activeProfileId === 'string' && profiles.some(function(p){ return p.id === s.activeProfileId; })) activeProfileId = s.activeProfileId;
+        else activeProfileId = profiles[0].id;
+        if(s.profileStore && typeof s.profileStore === 'object') profileStore = s.profileStore;
+        if(s.seriesSpeed && typeof s.seriesSpeed === 'object'){
+          Object.keys(s.seriesSpeed).forEach(function(k){ var v = parseFloat(s.seriesSpeed[k]); if(isFinite(v) && v >= 0.5 && v <= 2) seriesSpeed[k] = v; });
+        }
+        syncProfileUI();
       }
       // Limpiar referencias a canciones que ya no existen
       var exists = function(id){ return tracks.some(function(t){ return t.id===id; }); };
@@ -2037,7 +2249,7 @@
     return out;
   }
   function parseID3(arrayBuffer){
-    var out = {title:'', artist:'', album:'', genre:'', year:'', coverBlob:null, coverType:''};
+    var out = {title:'', artist:'', album:'', genre:'', year:'', coverBlob:null, coverType:'', chapters:null};
     try{
       var v = new Uint8Array(arrayBuffer);
       if(v.length<10 || v[0]!==0x49 || v[1]!==0x44 || v[2]!==0x33) return out;
@@ -2059,6 +2271,33 @@
           if(id==='TALB') out.album = txt;
           if(id==='TCON') out.genre = cleanGenre(txt);
           if(id==='TYER' || id==='TDRC'){ var ym = /(\d{4})/.exec(txt); if(ym) out.year = ym[1]; }
+        } else if(id==='CHAP' && data.length>12){
+          // v2: capítulos ID3v2 (CHAP) para audiolibros/podcasts: id de elemento
+          // terminado en 0, tiempo de inicio (ms, big-endian) y subtramas TIT2.
+          try{
+            var cp = 0;
+            while(cp < data.length && data[cp] !== 0) cp++;
+            cp++; // fin del id de elemento
+            if(cp + 16 <= data.length){
+              var startMs = ((data[cp]<<24)|(data[cp+1]<<16)|(data[cp+2]<<8)|data[cp+3]) >>> 0;
+              var sub = cp + 16, chapTitle = '';
+              while(sub + 10 <= data.length){
+                var sid = String.fromCharCode(data[sub],data[sub+1],data[sub+2],data[sub+3]);
+                if(!/^[A-Z0-9]{4}$/.test(sid)) break;
+                var ssize = (ver===4)
+                  ? (((data[sub+4]&0x7f)<<21)|((data[sub+5]&0x7f)<<14)|((data[sub+6]&0x7f)<<7)|(data[sub+7]&0x7f))
+                  : (((data[sub+4]<<24)|(data[sub+5]<<16)|(data[sub+6]<<8)|data[sub+7]) >>> 0);
+                if(ssize <= 0 || sub + 10 + ssize > data.length + 16) break;
+                if(sid === 'TIT2'){
+                  var sdata = data.slice(sub+10, sub+10+ssize);
+                  if(sdata.length > 1) chapTitle = decodeText(sdata.slice(1), sdata[0]);
+                }
+                sub += 10 + ssize;
+              }
+              if(!out.chapters) out.chapters = [];
+              out.chapters.push({ title: chapTitle || ('Capítulo ' + (out.chapters.length + 1)), start: startMs / 1000 });
+            }
+          }catch(e2){}
         } else if(id==='APIC' && data.length>4){
           var enc = data[0], p=1, mime='';
           while(p<data.length && data[p]!==0){ mime+=String.fromCharCode(data[p]); p++; }
@@ -2092,7 +2331,15 @@
       var done=false;
       function finish(d){ if(!done){ done=true; resolve(isFinite(d)?d:0); } }
       a.onloadedmetadata = function(){ finish(a.duration); };
-      a.onerror = function(){ finish(0); };
+      a.onerror = function(){
+        // v2: puede ser un video cuyo códec de audio no lee <audio>; se prueba con <video>
+        var ve = document.createElement('video');
+        ve.preload = 'metadata';
+        ve.onloadedmetadata = function(){ finish(ve.duration); };
+        ve.onerror = function(){ finish(0); };
+        setTimeout(function(){ finish(0); }, 4000);
+        ve.src = url;
+      };
       setTimeout(function(){ finish(0); }, 4000);
       a.src = url;
     });
@@ -2100,20 +2347,25 @@
 
   // ---------- Adding files ----------
   var AUDIO_EXT = /\.(mp3|wav|flac|ogg|oga|m4a|m4b|m4r|aac|opus|weba|webm|aif|aiff|mp4|3gp|wma)$/i;
+  var VIDEO_EXT = /\.(mp4|m4v|mov|webm)$/i;
+  function isVideoFile(f){
+    return (f.type && f.type.indexOf('video')===0) || VIDEO_EXT.test(f.name||'');
+  }
   function isAudioFile(f){
     var t = (f && f.type) || '';
     if(t.indexOf('audio')===0 || t==='video/mp4' || t==='video/x-m4v') return true;
     return AUDIO_EXT.test((f && f.name) || '');
   }
+  function isMediaFile(f){ return isAudioFile(f) || isVideoFile(f); }
   var adding = false;
   function addFiles(fileList){
     var all = Array.prototype.slice.call(fileList||[]);
-    var files = all.filter(isAudioFile);
+    var files = all.filter(isMediaFile);
     if(!files.length){
       if(all.length){
         var sample = all.slice(0,3).map(function(f){ return (f && f.name) || 'sin-nombre'; }).join(', ');
-        try{ console.log('[reproductor] archivos recibidos pero ninguno de audio:', all.map(function(f){ return {name:f.name, type:f.type, size:f.size}; })); }catch(e){}
-        toast('Ningún archivo era de audio. Revisé '+all.length+' archivo(s): '+sample+'. Prueba con MP3, WAV, FLAC, M4A u OGG.');
+        try{ console.log('[reproductor] archivos recibidos pero ninguno de audio o video:', all.map(function(f){ return {name:f.name, type:f.type, size:f.size}; })); }catch(e){}
+        toast('Ningún archivo era de audio o video. Revisé '+all.length+' archivo(s): '+sample+'. Prueba con MP3, WAV, FLAC, M4A, OGG, MP4 o WebM.');
       }
       return Promise.resolve(0);
     }
@@ -2146,7 +2398,7 @@
     return file.slice(0, headSize).arrayBuffer()
       .catch(function(){ return new ArrayBuffer(0); })
       .then(function(buf){
-        var meta = buf && buf.byteLength ? parseID3(buf) : {title:'',artist:'',album:'',genre:'',year:'',coverBlob:null};
+        var meta = buf && buf.byteLength ? parseID3(buf) : {title:'',artist:'',album:'',genre:'',year:'',coverBlob:null,chapters:null};
         if(buf && buf.byteLength && (!meta.genre || !meta.year)){
           var vc = parseVorbisComment(buf);
           if(vc.genre && !meta.genre) meta.genre = vc.genre;
@@ -2164,13 +2416,16 @@
         return getDuration(url).then(function(dur){
           var coverUrl = meta.coverBlob ? URL.createObjectURL(meta.coverBlob) : null;
           var folderPath = file.webkitRelativePath ? String(file.webkitRelativePath).split('/').slice(0,-1).join('/') : '';
+          var kind = isVideoFile(file) ? 'video' : 'audio';
           var track = {
             id:id, name:file.name, title:title, artist:artist, album:meta.album||'',
             duration:dur, size:file.size, type:file.type, addedAt:Date.now(),
             url:url, coverUrl:coverUrl, color:colorFor(title+file.name), rating:null, stars:0,
             lyrics:null, plainLyrics:'', normDb:null, volAdj:0,
             genre:meta.genre||'', year:meta.year||'', tags:[], memSpeed:null, memEq:null, lyricShift:0,
-            folder:folderPath, abLoop:null, bookmarks:[], silence:null, bpm:null, bpmManual:false, audioHash:null
+            folder:folderPath, abLoop:null, bookmarks:[], silence:null, bpm:null, bpmManual:false, audioHash:null,
+            kind:kind, energy:null, brightness:null, mood:null, musicalKey:null, keyName:null,
+            isAudiobook:false, abPos:0, chapters:(meta.chapters && meta.chapters.length) ? meta.chapters : null
           };
           tracks.unshift(track);
           // Persist (blob + metadata + cover blob)
@@ -2179,7 +2434,9 @@
             title:title, artist:artist, album:meta.album||'', duration:dur,
             addedAt:track.addedAt, coverBlob:meta.coverBlob||null, rating:null, stars:0, lyrics:null, plainLyrics:'', normDb:null, volAdj:0,
             genre:meta.genre||'', year:meta.year||'', tags:[], memSpeed:null, memEq:null, lyricShift:0,
-            folder:folderPath, abLoop:null, bookmarks:[], silence:null, bpm:null, bpmManual:false, audioHash:null
+            folder:folderPath, abLoop:null, bookmarks:[], silence:null, bpm:null, bpmManual:false, audioHash:null,
+            kind:kind, energy:null, brightness:null, mood:null, musicalKey:null, keyName:null,
+            isAudiobook:false, abPos:0, chapters:track.chapters
           }).then(function(){ return track; });
         });
       });
@@ -2215,7 +2472,16 @@
           silence: (r.silence && typeof r.silence.start==='number' && typeof r.silence.end==='number' && r.silence.end>r.silence.start) ? {start:r.silence.start, end:r.silence.end} : null,
           bpm: (typeof r.bpm==='number' && isFinite(r.bpm) && r.bpm>0) ? Math.round(r.bpm) : null,
           bpmManual: !!r.bpmManual,
-          audioHash: (typeof r.audioHash==='string' && r.audioHash) ? r.audioHash : null
+          audioHash: (typeof r.audioHash==='string' && r.audioHash) ? r.audioHash : null,
+          kind: (r.kind === 'video') ? 'video' : 'audio',
+          energy: (typeof r.energy==='number' && isFinite(r.energy)) ? Math.max(0, Math.min(1, r.energy)) : null,
+          brightness: (typeof r.brightness==='number' && isFinite(r.brightness)) ? Math.max(0, Math.min(1, r.brightness)) : null,
+          mood: (r.mood === 'fiesta' || r.mood === 'relajado' || r.mood === 'energia' || r.mood === 'concentracion') ? r.mood : null,
+          musicalKey: (typeof r.musicalKey==='string' && /^\d{1,2}[AB]$/.test(r.musicalKey)) ? r.musicalKey : null,
+          keyName: (typeof r.keyName==='string' && r.keyName) ? r.keyName : null,
+          isAudiobook: !!r.isAudiobook,
+          abPos: (typeof r.abPos==='number' && isFinite(r.abPos) && r.abPos > 0) ? r.abPos : 0,
+          chapters: Array.isArray(r.chapters) ? r.chapters.filter(function(c){ return c && typeof c.start==='number' && isFinite(c.start) && c.start >= 0; }).map(function(c){ return { title:(typeof c.title==='string' && c.title) ? c.title : 'Capítulo', start:c.start }; }).sort(function(a,b){ return a.start-b.start; }) : null
         });
       });
       // Fill missing durations in background
@@ -2623,6 +2889,7 @@
     document.getElementById('viewQueue').style.display = v==='queue' ? '' : 'none';
     document.getElementById('viewHistory').style.display = v==='history' ? '' : 'none';
     document.getElementById('viewSmart').style.display = v==='smart' ? '' : 'none';
+    document.getElementById('viewMoods').style.display = v==='moods' ? '' : 'none';
     document.getElementById('viewArtists').style.display = v==='artists' ? '' : 'none';
     document.getElementById('viewAlbums').style.display = v==='albums' ? '' : 'none';
     document.getElementById('viewFolders').style.display = v==='folders' ? '' : 'none';
@@ -2738,6 +3005,7 @@
     if(typeof renderPack6 === 'function') renderPack6();
     if(typeof renderPack7 === 'function') renderPack7();
     if(typeof updateDiscoverCount === 'function') updateDiscoverCount();
+    if(typeof renderV2 === 'function') renderV2();
     if(view==='smart') renderSmart();
     if(view==='artists') renderGroups('artist');
     if(view==='albums') renderGroups('album');
@@ -3199,7 +3467,7 @@
       analyser.connect(masterGain);
       masterGain.connect(audioCtx.destination);
       // Cada deck (audio principal y deck de crossfade) entra a la cadena con su propio gain
-      [audioEl, audioB].forEach(function(el){
+      [audioEl, audioB, videoEl].forEach(function(el){
         var src = audioCtx.createMediaElementSource(el);
         var ng = audioCtx.createGain();
         ng.gain.value = 1;
@@ -3208,13 +3476,14 @@
         src.connect(ng);
         ng.connect(g);
         g.connect(eqFilters[0]);
-        deckGains[el === audioEl ? 'a' : 'b'] = g;
-        normGains[el === audioEl ? 'a' : 'b'] = ng;
+        deckGains[deckKeyOf(el)] = g;
+        normGains[deckKeyOf(el)] = ng;
       });
       refreshNorm();
     }catch(e){ audioCtx=null; analyser=null; eqFilters=[]; deckGains={}; normGains={}; masterGain=null; fxBassFilter=null; fxVocalFilter=null; fxWetGain=null; }
   }
-  function gainOf(el){ return deckGains[el === audioEl ? 'a' : 'b'] || null; }
+  function deckKeyOf(el){ return el === audioEl ? 'a' : (el === audioB ? 'b' : 'v'); }
+  function gainOf(el){ return deckGains[deckKeyOf(el)] || null; }
   function applyEqValues(vals){
     for(var i=0;i<eqFilters.length;i++){ try{ eqFilters[i].gain.value = (vals && typeof vals[i]==='number') ? vals[i] : 0; }catch(e){} }
   }
@@ -3299,6 +3568,7 @@
     cancelSleepFade();
     gaplessTargetId = null;
     currentId = id;
+    v2PrepareDeck(t);
     audio.src = t.url;
     audio.playbackRate = (typeof t.memSpeed==='number') ? t.memSpeed : settings.speed;
     audio.volume = effVolume();
@@ -3307,6 +3577,7 @@
     setSeekUI(0);
     timeCurrent.textContent='0:00';
     renderNow(); renderList();
+    v2OnSelectTrack(t);
     saveResume(true);
     if(autoplay) play();
   }
@@ -3395,6 +3666,9 @@
   // Contexto de reproducción: biblioteca completa o una playlist personalizada.
   // Solo entran canciones reproducibles (sin dislike), igual que siempre.
   function contextPlayableIds(){
+    if(playContext.type==='mood'){
+      return tracks.filter(function(t){ return t.mood===playContext.moodId && isPlayable(t); }).map(function(t){ return t.id; });
+    }
     if(playContext.type==='memory'){
       return memoryMixIds.filter(function(id){ var t=trackById(id); return t && isPlayable(t); });
     }
@@ -3520,6 +3794,9 @@
   function startCrossfade(targetId, durSec){
     var t = trackById(targetId);
     if(!t || fading) return false;
+    // v2: con videos el crossfade/gapless se degrada a corte simple, sin romperse
+    var curT = currentTrack();
+    if((curT && curT.kind === 'video') || t.kind === 'video') return false;
     ensureVisualizer();
     if(!audioCtx || !analyser) return false;
     if(audioCtx.state==='suspended') audioCtx.resume();
@@ -3600,6 +3877,8 @@
   }
   function maybePreloadGapless(){
     if(!settings.gapless || settings.crossfade || fading || !isPlaying) return;
+    var curG = currentTrack();
+    if(curG && curG.kind === 'video') return; // v2: los videos cortan simple al terminar
     var dur = audio.duration;
     if(dur && isFinite(dur) && dur - audio.currentTime > 25) return;
     var tgt = gaplessNextTarget();
@@ -3607,6 +3886,7 @@
     if(gaplessTargetId === tgt.id) return;
     var t = trackById(tgt.id);
     if(!t) return;
+    if(t.kind === 'video'){ gaplessTargetId = null; return; }
     var od = otherDeck();
     try{
       od.preload = 'auto';
@@ -3806,6 +4086,7 @@
   }
   bindDeck(audioEl);
   bindDeck(audioB);
+  bindDeck(videoEl); // v2: el <video> es un tercer deck con la misma cadena de audio
 
   seek.addEventListener('input', function(){
     seeking = true;
@@ -3826,6 +4107,7 @@
     var v = effVolume();
     audioEl.volume = v;
     audioB.volume = v;
+    videoEl.volume = v;
   }
   function applyVolume(v){
     cancelSleepFade();
@@ -4230,8 +4512,11 @@
     var st = (ct && typeof ct.memSpeed === 'number') ? ct : null;
     if(st){ st.memSpeed = v; idbPatchSoon(st.id, { memSpeed: v }); }
     else { settings.speed = v; saveState(); }
+    // v2: en audiolibros/podcasts la velocidad se recuerda por serie (mismo álbum)
+    if(ct && ct.isAudiobook){ seriesSpeed[seriesKeyOf(ct)] = v; saveState(); }
     audioEl.playbackRate = v;
     audioB.playbackRate = v;
+    videoEl.playbackRate = v;
     setSpeedUI(v);
     syncMemUI();
   }
@@ -4425,7 +4710,7 @@
   }
 
   // ----- Volumen parejo (normalización) -----
-  function normGainOf(el){ return normGains[el === audioEl ? 'a' : 'b'] || null; }
+  function normGainOf(el){ return normGains[deckKeyOf(el)] || null; }
   function appliedGainDb(t){
     if(!t) return 0;
     var db = t.volAdj || 0;
@@ -4707,6 +4992,10 @@
     document.getElementById('editSilStart').value = t.silence ? t.silence.start : '';
     document.getElementById('editSilEnd').value = t.silence ? t.silence.end : '';
     document.getElementById('editBpm').value = (typeof t.bpm === 'number' && t.bpm) ? t.bpm : '';
+    document.getElementById('editKeyText').textContent = t.musicalKey ? (t.musicalKey + (t.keyName ? ' · ' + t.keyName : '')) : 'Sin detectar';
+    document.getElementById('editMoodText').textContent = t.mood ? moodLabel(t.mood) : 'sin analizar';
+    document.getElementById('keyStatus').textContent = '';
+    document.getElementById('editIsAudiobook').checked = !!t.isAudiobook;
     document.getElementById('editBpmManualTag').textContent = t.bpmManual ? '(ahora está fijado a mano) ' : '';
     document.getElementById('tapEditStatus').textContent = '';
     tapEditTimes = [];
@@ -4761,6 +5050,9 @@
       if(bpmVal !== t.bpm){ t.bpm = bpmVal; patch.bpm = bpmVal; }
       if(!t.bpmManual){ t.bpmManual = true; patch.bpmManual = true; }
     }
+    // v2: modo audiolibro/podcast por elemento
+    var newBook = document.getElementById('editIsAudiobook').checked;
+    if(newBook !== !!t.isAudiobook){ t.isAudiobook = newBook; patch.isAudiobook = newBook; if(t.id === currentId) v2OnSelectTrack(t); }
     t.color = colorFor(t.title + t.name);
     t._sf = null; // la búsqueda tolerante recalcula sus datos
     if(Object.keys(patch).length) idbPatch(t.id, patch);
@@ -5044,7 +5336,7 @@
     var data = {
       app: 'reproductor-de-musica',
       kind: 'respaldo',
-      version: 9,
+      version: 10,
       exportedAt: new Date().toISOString(),
       playlists: playlists,
       customSmart: customSmart,
@@ -5052,6 +5344,11 @@
       history: playHistory,
       counts: playCounts,
       statsLog: statsLog,
+      profiles: {
+        activeId: activeProfileId,
+        list: profiles,
+        store: (function(){ var s2 = {}; Object.keys(profileStore).forEach(function(k){ s2[k] = profileStore[k]; }); s2[activeProfileId] = snapshotProfileData(); return s2; })()
+      },
       settings: {
         eq: settings.eq, eqPreset: settings.eqPreset, speed: settings.speed,
         crossfade: settings.crossfade, crossfadeSec: settings.crossfadeSec,
@@ -5082,7 +5379,17 @@
           lyricShift: (typeof t.lyricShift === 'number' ? t.lyricShift : 0),
           bpm: (typeof t.bpm === 'number' ? t.bpm : null),
           bpmManual: !!t.bpmManual,
-          audioHash: (typeof t.audioHash === 'string' ? t.audioHash : null)
+          audioHash: (typeof t.audioHash === 'string' ? t.audioHash : null),
+          stars: (typeof t.stars === 'number' ? t.stars : null),
+          kind: t.kind || 'audio',
+          energy: (typeof t.energy === 'number' ? t.energy : null),
+          brightness: (typeof t.brightness === 'number' ? t.brightness : null),
+          mood: t.mood || null,
+          musicalKey: t.musicalKey || null,
+          keyName: t.keyName || null,
+          isAudiobook: !!t.isAudiobook,
+          abPos: (typeof t.abPos === 'number' ? t.abPos : 0),
+          chapters: (Array.isArray(t.chapters) && t.chapters.length) ? t.chapters : null
         };
       })
     };
@@ -5124,6 +5431,18 @@
         if(typeof td.bpm === 'number' && isFinite(td.bpm) && td.bpm > 0){ t.bpm = Math.round(td.bpm); patch.bpm = t.bpm; }
         if(typeof td.bpmManual === 'boolean'){ t.bpmManual = td.bpmManual; patch.bpmManual = td.bpmManual; }
         if(typeof td.audioHash === 'string' && td.audioHash){ t.audioHash = td.audioHash; patch.audioHash = td.audioHash; }
+        // v2 (respaldo v10): estrellas y campos nuevos por pista
+        if(typeof td.stars === 'number' && isFinite(td.stars)){ t.stars = Math.max(0, Math.min(3, Math.round(td.stars))); patch.stars = t.stars; }
+        if(td.kind === 'video' || td.kind === 'audio'){ t.kind = td.kind; patch.kind = td.kind; }
+        if(typeof td.energy === 'number' && isFinite(td.energy)){ t.energy = Math.max(0, Math.min(1, td.energy)); patch.energy = t.energy; }
+        if(typeof td.brightness === 'number' && isFinite(td.brightness)){ t.brightness = Math.max(0, Math.min(1, td.brightness)); patch.brightness = t.brightness; }
+        if(td.mood === 'fiesta' || td.mood === 'relajado' || td.mood === 'energia' || td.mood === 'concentracion'){ t.mood = td.mood; patch.mood = td.mood; }
+        else if(td.mood === null){ t.mood = null; patch.mood = null; }
+        if(typeof td.musicalKey === 'string' && /^\d{1,2}[AB]$/.test(td.musicalKey)){ t.musicalKey = td.musicalKey; patch.musicalKey = td.musicalKey; }
+        if(typeof td.keyName === 'string' && td.keyName){ t.keyName = td.keyName.slice(0, 40); patch.keyName = t.keyName; }
+        if(typeof td.isAudiobook === 'boolean'){ t.isAudiobook = td.isAudiobook; patch.isAudiobook = td.isAudiobook; }
+        if(typeof td.abPos === 'number' && isFinite(td.abPos) && td.abPos >= 0){ t.abPos = td.abPos; patch.abPos = td.abPos; }
+        if(Array.isArray(td.chapters)){ var chs = td.chapters.filter(function(c){ return c && typeof c.start === 'number' && isFinite(c.start) && c.start >= 0; }).map(function(c){ return { title: (typeof c.title === 'string' && c.title) ? c.title.slice(0, 80) : 'Capítulo', start: c.start }; }).sort(function(a, b){ return a.start - b.start; }); t.chapters = chs.length ? chs : null; patch.chapters = t.chapters; }
         t._sf = null; // la búsqueda tolerante recalcula sus datos
         t.color = colorFor(t.title + t.name);
         if(Object.keys(patch).length) idbPatch(t.id, patch);
@@ -5155,6 +5474,23 @@
       if(data.settings && typeof data.settings === 'object'){
         applySettingsObject(data.settings);
       }
+      // v2: perfiles del respaldo. Un respaldo v10 trae perfiles completos;
+      // uno viejo (v5–v9) se importa asignándolo todo al perfil «Principal».
+      if(data.profiles && Array.isArray(data.profiles.list) && data.profiles.list.length){
+        var cleanProfiles = data.profiles.list.filter(function(p){ return p && typeof p.id === 'string' && typeof p.name === 'string' && p.name.trim(); }).map(function(p){ return { id: p.id, name: p.name.trim().slice(0, 30) }; });
+        if(cleanProfiles.length){
+          profiles = cleanProfiles;
+          profileStore = (data.profiles.store && typeof data.profiles.store === 'object') ? data.profiles.store : {};
+          activeProfileId = profiles.some(function(p){ return p.id === data.profiles.activeId; }) ? data.profiles.activeId : profiles[0].id;
+          // Los datos vivos ya aplicados son los del perfil activo del respaldo
+          profileStore[activeProfileId] = snapshotProfileData();
+        }
+      } else {
+        if(!profiles.some(function(p){ return p.id === 'principal'; })) profiles.unshift({ id: 'principal', name: 'Principal' });
+        activeProfileId = 'principal';
+        profileStore['principal'] = snapshotProfileData();
+      }
+      syncProfileUI();
       applySettingsToUI();
       rebuildShuffle();
       saveState();
@@ -6021,7 +6357,9 @@
   function applyMemForTrack(t){
     if(!t) return;
     var spd = (typeof t.memSpeed === 'number') ? t.memSpeed : settings.speed;
-    try{ audioEl.playbackRate = spd; audioB.playbackRate = spd; }catch(e){}
+    // v2: los audiolibros recuerdan la velocidad de su serie (mismo álbum)
+    if(t.isAudiobook && typeof seriesSpeed[seriesKeyOf(t)] === 'number') spd = seriesSpeed[seriesKeyOf(t)];
+    try{ audioEl.playbackRate = spd; audioB.playbackRate = spd; videoEl.playbackRate = spd; }catch(e){}
     setSpeedUI(spd);
     var eqv = Array.isArray(t.memEq) ? t.memEq : settings.eq;
     applyEqValues(eqv);
@@ -6285,6 +6623,13 @@
     var st = document.getElementById('batchSummary');
     var save = document.getElementById('batchModalSave');
     if(!batchIds.length){ st.textContent = ''; save.disabled = true; return; }
+    // v2: el modo audiolibro por lotes también habilita el botón de aplicar
+    if(document.getElementById('batchBookOn').checked){
+      var nTxt2 = batchIds.length + (batchIds.length === 1 ? ' canción' : ' canciones');
+      st.textContent = 'Se modificarán ' + nTxt2 + ': ' + (chosen.length ? chosen.map(function(c){ return c.label + ' → “' + c.value + '”'; }).join(' · ') + ' · ' : '') + (document.getElementById('batchBook').checked ? 'marcar como audiolibro/podcast' : 'quitar marca de audiolibro/podcast') + '. Los demás datos no se tocan.';
+      save.disabled = false;
+      return;
+    }
     var nTxt = batchIds.length + (batchIds.length === 1 ? ' canción' : ' canciones');
     if(!chosen.length){
       st.textContent = 'Se modificarán ' + nTxt + ': marca «Aplicar» y escribe un valor en al menos un campo para poder aplicar.';
@@ -6298,6 +6643,8 @@
     var ids = selectedIdList();
     if(!ids.length){ toast('Primero marca al menos una canción.'); return; }
     batchIds = ids.slice();
+    document.getElementById('batchBookOn').checked = false;
+    document.getElementById('batchBook').checked = false;
     BATCH_FIELDS.forEach(function(f){
       document.getElementById(f.on).checked = false;
       var vals = {};
@@ -6315,17 +6662,22 @@
   }
   function applyBatchEditor(){
     var chosen = batchChosenFields();
-    if(!batchIds.length || !chosen.length){ updateBatchSummary(); return; }
+    var bookOn = document.getElementById('batchBookOn').checked;
+    var bookVal = document.getElementById('batchBook').checked;
+    if(!batchIds.length || (!chosen.length && !bookOn)){ updateBatchSummary(); return; }
     var patch = {};
     chosen.forEach(function(c){ patch[c.key] = c.value; });
+    if(bookOn) patch.isAudiobook = bookVal;
     var n = 0;
     batchIds.forEach(function(id){
       var t = trackById(id); if(!t) return;
       chosen.forEach(function(c){ t[c.key] = c.value; });
+      if(bookOn) t.isAudiobook = bookVal;
       t._sf = null; // la búsqueda tolerante recalcula sus datos
       idbPatch(t.id, patch);
       n++;
     });
+    if(bookOn) chosen.push({ key:'isAudiobook', label: bookVal ? 'Audiolibro/podcast: sí' : 'Audiolibro/podcast: no' });
     closeBatchEditor();
     exitMulti();
     render();
@@ -7357,7 +7709,7 @@
   // ---------- Pack de mejoras: actualización, reanudar, deshacer, sincronizar, tap tempo ----------
 
   // ----- 1. Actualización sin atascos -----
-  var APP_VERSION = '1.9.0';
+  var APP_VERSION = '2.0.0';
   document.getElementById('appVersionNote').textContent = APP_VERSION;
   function cmpVersion(a, b){
     var pa = a.split('.').map(function(x){ return parseInt(x, 10) || 0; });
@@ -7416,18 +7768,20 @@
 
   // ----- 3. Seguir donde ibas -----
   var resumeArmed = false, pendingSeekPos = null, lastResumeSave = 0;
+  var lastResumeObj = null; // v2: copia en memoria para guardarla por perfil
   function saveResume(force){
     if(!resumeArmed || !stateReady || !currentId) return;
     var now = Date.now();
     if(!force && now - lastResumeSave < 2000) return;
     lastResumeSave = now;
     saveState(); // la cola y el contexto viajan en el estado guardado
-    idbMetaSet('resumeState', {
+    lastResumeObj = {
       id: currentId,
       pos: Math.max(0, audio.currentTime || 0),
       context: { type: playContext.type, playlistId: playContext.playlistId },
       at: now
-    });
+    };
+    idbMetaSet('resumeState', lastResumeObj);
   }
   function restoreResume(rs){
     if(!rs || !rs.id) return;
@@ -8037,10 +8391,20 @@
     pool = pool.filter(function(id){ return id !== currentId; });
     var cur = currentTrack();
     var curBpm = (cur && typeof cur.bpm === 'number' && cur.bpm > 0) ? cur.bpm : null;
+    var curKey = (cur && cur.musicalKey) ? parseCamelot(cur.musicalKey) : null;
     var best = null, bestScore = -Infinity;
     pool.forEach(function(id){
       var t = trackById(id); if(!t) return;
       var score = 0;
+      // v2 DJ armónico: compatibilidad de tonalidad en la rueda Camelot
+      if(curKey && t.musicalKey){
+        var ck = parseCamelot(t.musicalKey);
+        if(ck){
+          if(ck.n === curKey.n && ck.l === curKey.l) score += 40;              // misma tonalidad
+          else if(ck.l === curKey.l && Math.abs(ck.n - curKey.n) === 1) score += 30; // ±1 misma letra
+          else if(ck.n === curKey.n && ck.l !== curKey.l) score += 25;        // relativa mayor/menor
+        }
+      }
       if(curBpm && typeof t.bpm === 'number' && t.bpm > 0){
         var rel = Math.abs(t.bpm - curBpm) / curBpm;
         score += rel <= 0.15 ? (30 - rel * 120) : Math.max(0, 10 - rel * 30);
@@ -8064,15 +8428,15 @@
     document.getElementById('djState').textContent = djMode ? 'Activado' : 'Apagado';
     var nid = djMode ? djPickNext() : null;
     var nt = nid ? trackById(nid) : null;
-    document.getElementById('djStatus').textContent = djMode ? ('Siguiente según DJ: ' + (nt ? nt.title : '—')) : '';
+    document.getElementById('djStatus').textContent = djMode ? ('Siguiente según DJ: ' + (nt ? nt.title + (nt.musicalKey ? ' · ' + nt.musicalKey : '') : '—')) : '';
     var ind = document.getElementById('djIndicator');
     ind.style.display = djMode ? '' : 'none';
-    if(djMode) ind.textContent = '🎧 Modo DJ activo' + (nt ? ' · Siguiente: ' + nt.title : '');
+    if(djMode) ind.textContent = '🎧 Modo DJ activo' + (nt ? ' · Siguiente: ' + nt.title + (nt.musicalKey ? ' · ' + nt.musicalKey : '') : '');
     var box = document.getElementById('djNextBox');
     box.style.display = djMode ? '' : 'none';
     if(djMode){
       document.getElementById('djNextText').textContent = nt
-        ? ('La próxima será «' + nt.title + '»' + (nt.artist ? ' de ' + nt.artist : '') + (typeof nt.bpm === 'number' && nt.bpm ? ' · ' + nt.bpm + ' BPM' : '') + ', elegida por cercanía de ritmo con la que suena y por tus gustos.')
+        ? ('La próxima será «' + nt.title + '»' + (nt.artist ? ' de ' + nt.artist : '') + (typeof nt.bpm === 'number' && nt.bpm ? ' · ' + nt.bpm + ' BPM' : '') + (nt.musicalKey ? ' · Tonalidad ' + nt.musicalKey + (nt.keyName ? ' (' + nt.keyName + ')' : '') : '') + ', elegida por cercanía de ritmo, compatibilidad armónica (Camelot) y tus gustos.')
         : 'Al terminar la canción actual, el DJ elegirá la siguiente desde este contexto.';
     }
   }
@@ -8454,6 +8818,570 @@
   applyBgPhoto();
   applyBgVeil();
   updateDjUI();
+
+  // ================= v2.0: perfiles, ambientes, DJ armónico, videos, audiolibros =================
+  var profiles = [{ id: 'principal', name: 'Principal' }];
+  var activeProfileId = 'principal';
+  var profileStore = {};
+  var seriesSpeed = {};
+  var videoAudioOnly = false;
+  var moodAnalyzing = false, moodCancel = false;
+  var profileDeleteArm = null;
+
+  function seriesKeyOf(t){ return (((t && t.album) || '').trim().toLowerCase()) || ((t && t.title) || ''); }
+  function moodLabel(m){ return { fiesta: 'Fiesta', relajado: 'Relajado', energia: 'Energía', concentracion: 'Concentración' }[m] || ''; }
+  function parseCamelot(code){ var m = /^(\d{1,2})([AB])$/.exec(code || ''); return m ? { n: parseInt(m[1], 10), l: m[2] } : null; }
+
+  // ---------- Perfiles ----------
+  function collectRatings(){
+    var out = {};
+    tracks.forEach(function(t){
+      if(t.rating || (typeof t.stars === 'number' && t.stars > 0)) out[t.id] = { rating: t.rating || null, stars: (typeof t.stars === 'number' ? t.stars : null) };
+    });
+    return out;
+  }
+  function snapshotProfileData(){
+    var pcCopy = {};
+    try{ pcCopy = JSON.parse(JSON.stringify(playContext)); }catch(e){ pcCopy = { type: 'library', playlistId: null }; }
+    if(pcCopy.type === 'memory' && typeof memoryMixIds !== 'undefined' && Array.isArray(memoryMixIds)) pcCopy.memoryIds = memoryMixIds.slice();
+    return {
+      playlists: JSON.parse(JSON.stringify(playlists)),
+      queue: queue.slice(),
+      history: playHistory.slice(0, 100),
+      counts: JSON.parse(JSON.stringify(playCounts)),
+      statsLog: statsLog.slice(-1500),
+      customSmart: JSON.parse(JSON.stringify(customSmart)),
+      celebrated: celebratedBadges.slice(),
+      selectedPlaylistId: selectedPlaylistId,
+      playContext: pcCopy,
+      ratings: collectRatings(),
+      resume: lastResumeObj
+    };
+  }
+  function applyProfileData(d){
+    d = d || {};
+    var existsP = function(id){ return tracks.some(function(t){ return t.id === id; }); };
+    playlists = Array.isArray(d.playlists) ? d.playlists.filter(function(p){ return p && p.id && Array.isArray(p.trackIds); }).map(function(p){ return { id: p.id, name: p.name, trackIds: p.trackIds.filter(existsP) }; }) : [];
+    queue = Array.isArray(d.queue) ? d.queue.filter(existsP) : [];
+    playHistory = Array.isArray(d.history) ? d.history.filter(function(h){ return h && existsP(h.id); }).slice(0, 100) : [];
+    playCounts = (d.counts && typeof d.counts === 'object') ? d.counts : {};
+    Object.keys(playCounts).forEach(function(id){ if(!existsP(id)) delete playCounts[id]; });
+    statsLog = Array.isArray(d.statsLog) ? d.statsLog.filter(function(e){ return e && typeof e.sec === 'number' && isFinite(e.sec); }).slice(-1500) : [];
+    customSmart = Array.isArray(d.customSmart) ? sanitizeCustomSmart(d.customSmart) : [];
+    celebratedBadges = Array.isArray(d.celebrated) ? d.celebrated.filter(function(x){ return typeof x === 'string'; }).slice(0, 60) : [];
+    selectedPlaylistId = (d.selectedPlaylistId && playlists.some(function(p){ return p.id === d.selectedPlaylistId; })) ? d.selectedPlaylistId : (playlists.length ? playlists[0].id : null);
+    var pc = d.playContext;
+    if(pc && pc.type === 'playlist' && playlists.some(function(p){ return p.id === pc.playlistId; })) playContext = { type: 'playlist', playlistId: pc.playlistId };
+    else if(pc && pc.type === 'smart' && typeof pc.smartId === 'string') playContext = { type: 'smart', smartId: pc.smartId };
+    else if(pc && pc.type === 'mood' && typeof pc.moodId === 'string') playContext = { type: 'mood', moodId: pc.moodId };
+    else if(pc && pc.type === 'folder') playContext = { type: 'folder', folderKey: pc.folderKey || '' };
+    else if(pc && pc.type === 'group') playContext = { type: 'group', groupKind: pc.groupKind, groupKey: pc.groupKey };
+    else if(pc && pc.type === 'memory' && Array.isArray(pc.memoryIds)){ playContext = { type: 'memory' }; memoryMixIds = pc.memoryIds.slice(); }
+    else playContext = { type: 'library', playlistId: null };
+    // Capa de likes/dislikes y estrellas del perfil sobre las pistas compartidas
+    var layer = (d.ratings && typeof d.ratings === 'object') ? d.ratings : {};
+    tracks.forEach(function(t){
+      var r = layer[t.id];
+      var nr = r ? ((r.rating === 'like' || r.rating === 'dislike') ? r.rating : null) : null;
+      var ns = (r && typeof r.stars === 'number') ? Math.max(0, Math.min(3, Math.round(r.stars))) : null;
+      if(nr !== t.rating || ns !== t.stars){ t.rating = nr; t.stars = ns; idbPatch(t.id, { rating: nr, stars: ns }); }
+    });
+    lastResumeObj = d.resume || null;
+    idbMetaSet('resumeState', lastResumeObj);
+  }
+  function switchProfile(id){
+    if(!profiles.some(function(p){ return p.id === id; })) return;
+    if(id === activeProfileId){ syncProfileUI(); return; }
+    try{ pause(); }catch(e){}
+    try{ videoEl.pause(); }catch(e){}
+    isPlaying = false;
+    profileStore[activeProfileId] = snapshotProfileData();
+    activeProfileId = id;
+    applyProfileData(profileStore[id]);
+    djSession = {};
+    djCacheFor = '__none__'; djCacheId = null;
+    rebuildShuffle();
+    saveState();
+    syncProfileUI();
+    render(); renderPack();
+    if(lastResumeObj) restoreResume(lastResumeObj);
+    else document.getElementById('resumeBar').style.display = 'none';
+    var p = profiles.find(function(x){ return x.id === id; });
+    toast('Perfil activo: «' + (p ? p.name : '') + '». La biblioteca de archivos es la misma; playlists, likes, historial y estadísticas son los de este perfil.');
+  }
+  function syncProfileUI(){
+    var sel = document.getElementById('profileSelect');
+    if(!sel) return;
+    sel.innerHTML = '';
+    profiles.forEach(function(p){
+      var o = document.createElement('option');
+      o.value = p.id; o.textContent = p.name;
+      sel.appendChild(o);
+    });
+    sel.value = activeProfileId;
+  }
+  document.getElementById('profileSelect').addEventListener('change', function(ev){ switchProfile(ev.target.value); });
+  var profileModal = document.getElementById('profileModal');
+  function renderProfileList(){
+    var wrap = document.getElementById('profileList');
+    if(!wrap) return;
+    wrap.innerHTML = '';
+    profiles.forEach(function(p){
+      var row = document.createElement('div'); row.className = 'profile-row';
+      var nm = document.createElement('span'); nm.className = 'p-name'; nm.textContent = p.name;
+      row.appendChild(nm);
+      if(p.id === activeProfileId){
+        var tag = document.createElement('span'); tag.className = 'p-tag'; tag.textContent = 'Activo';
+        row.appendChild(tag);
+      } else {
+        var use = document.createElement('button'); use.className = 'btn small'; use.type = 'button'; use.textContent = 'Usar';
+        use.addEventListener('click', function(){ switchProfile(p.id); renderProfileList(); });
+        row.appendChild(use);
+      }
+      var ren = document.createElement('button'); ren.className = 'btn small'; ren.type = 'button'; ren.textContent = 'Renombrar';
+      ren.addEventListener('click', function(){
+        row.innerHTML = '';
+        var inp = document.createElement('input');
+        inp.type = 'text'; inp.maxLength = 30; inp.value = p.name;
+        inp.style.cssText = 'flex:1 1 120px; padding:8px 10px; border:1px solid var(--line); border-radius:10px; background:var(--surface); color:var(--text)';
+        var ok = document.createElement('button'); ok.className = 'btn small primary'; ok.type = 'button'; ok.textContent = 'Guardar';
+        ok.addEventListener('click', function(){
+          var v = inp.value.trim();
+          if(v){ p.name = v.slice(0, 30); saveState(); syncProfileUI(); toast('Perfil renombrado a «' + p.name + '».'); }
+          renderProfileList();
+        });
+        row.appendChild(inp); row.appendChild(ok);
+        try{ inp.focus(); }catch(e){}
+      });
+      row.appendChild(ren);
+      if(profiles.length > 1){
+        var del = document.createElement('button'); del.className = 'btn small danger'; del.type = 'button'; del.textContent = 'Borrar';
+        del.addEventListener('click', function(){
+          if(profileDeleteArm === p.id){
+            profileDeleteArm = null;
+            var wasActive = (activeProfileId === p.id);
+            profiles = profiles.filter(function(x){ return x.id !== p.id; });
+            delete profileStore[p.id];
+            if(wasActive){
+              activeProfileId = profiles[0].id;
+              try{ pause(); }catch(e){}
+              applyProfileData(profileStore[activeProfileId]);
+              rebuildShuffle();
+            }
+            saveState(); syncProfileUI(); renderProfileList(); render(); renderPack();
+            if(wasActive){ if(lastResumeObj) restoreResume(lastResumeObj); else document.getElementById('resumeBar').style.display = 'none'; }
+            toast('Perfil borrado. La biblioteca de archivos no se tocó.');
+          } else {
+            profileDeleteArm = p.id;
+            del.textContent = '¿Seguro? Toca otra vez';
+            setTimeout(function(){ if(profileDeleteArm === p.id){ profileDeleteArm = null; del.textContent = 'Borrar'; } }, 3500);
+          }
+        });
+        row.appendChild(del);
+      }
+      wrap.appendChild(row);
+    });
+  }
+  document.getElementById('btnProfiles').addEventListener('click', function(){
+    renderProfileList();
+    profileModal.classList.add('on'); profileModal.setAttribute('aria-hidden', 'false');
+  });
+  document.getElementById('profileModalClose').addEventListener('click', function(){
+    profileModal.classList.remove('on'); profileModal.setAttribute('aria-hidden', 'true');
+  });
+  profileModal.addEventListener('click', function(ev){ if(ev.target === profileModal){ profileModal.classList.remove('on'); profileModal.setAttribute('aria-hidden', 'true'); } });
+  document.getElementById('btnProfileCreate').addEventListener('click', function(){
+    var inp = document.getElementById('profileNewName');
+    var name = inp.value.trim();
+    if(!name){ toast('Escribe primero un nombre para el perfil nuevo.'); return; }
+    var id = 'p' + Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+    profiles.push({ id: id, name: name.slice(0, 30) });
+    profileStore[id] = { playlists: [], queue: [], history: [], counts: {}, statsLog: [], customSmart: [], celebrated: [], selectedPlaylistId: null, playContext: { type: 'library', playlistId: null }, ratings: {}, resume: null };
+    inp.value = '';
+    saveState(); syncProfileUI(); renderProfileList();
+    toast('Perfil «' + name + '» creado. Usa «Usar» para cambiar a él.');
+  });
+
+  // ---------- Análisis v2: energía/brillo, ambiente y tonalidad (Camelot) ----------
+  function fftInPlace(re, im){
+    var n = re.length;
+    for(var i = 1, j = 0; i < n; i++){
+      var bit = n >> 1;
+      for(; j & bit; bit >>= 1) j ^= bit;
+      j ^= bit;
+      if(i < j){ var tr = re[i]; re[i] = re[j]; re[j] = tr; var ti = im[i]; im[i] = im[j]; im[j] = ti; }
+    }
+    for(var len = 2; len <= n; len <<= 1){
+      var ang = -2 * Math.PI / len, wr = Math.cos(ang), wi = Math.sin(ang);
+      for(var i2 = 0; i2 < n; i2 += len){
+        var cwr = 1, cwi = 0;
+        for(var k = 0; k < len / 2; k++){
+          var ur = re[i2 + k], ui = im[i2 + k];
+          var vr = re[i2 + k + len / 2] * cwr - im[i2 + k + len / 2] * cwi;
+          var vi = re[i2 + k + len / 2] * cwi + im[i2 + k + len / 2] * cwr;
+          re[i2 + k] = ur + vr; im[i2 + k] = ui + vi;
+          re[i2 + k + len / 2] = ur - vr; im[i2 + k + len / 2] = ui - vi;
+          var nwr = cwr * wr - cwi * wi; cwi = cwr * wi + cwi * wr; cwr = nwr;
+        }
+      }
+    }
+  }
+  function detectKey(chroma){
+    var MAJ = [6.35, 2.23, 3.48, 2.33, 4.38, 4.09, 2.52, 5.19, 2.39, 3.66, 2.29, 2.88];
+    var MIN = [6.33, 2.68, 3.52, 5.38, 2.60, 3.53, 2.54, 4.75, 3.98, 2.69, 3.34, 3.17];
+    var NAMES = ['C', 'C#', 'D', 'Eb', 'E', 'F', 'F#', 'G', 'Ab', 'A', 'Bb', 'B'];
+    var CAM_MAJ = { 0: '8B', 7: '9B', 2: '10B', 9: '11B', 4: '12B', 11: '1B', 6: '2B', 1: '3B', 8: '4B', 3: '5B', 10: '6B', 5: '7B' };
+    var CAM_MIN = { 9: '8A', 4: '9A', 11: '10A', 6: '11A', 1: '12A', 8: '1A', 3: '2A', 10: '3A', 5: '4A', 0: '5A', 7: '6A', 2: '7A' };
+    var total = 0; for(var i = 0; i < 12; i++) total += chroma[i];
+    if(total <= 0) return null;
+    function corr(profile, tonic){
+      var mx = 0, my = 0, a;
+      for(a = 0; a < 12; a++){ mx += chroma[(tonic + a) % 12]; my += profile[a]; }
+      mx /= 12; my /= 12;
+      var num = 0, dx = 0, dy = 0;
+      for(a = 0; a < 12; a++){ var ex = chroma[(tonic + a) % 12] - mx, ey = profile[a] - my; num += ex * ey; dx += ex * ex; dy += ey * ey; }
+      return (dx > 0 && dy > 0) ? num / Math.sqrt(dx * dy) : -1;
+    }
+    var best = { score: -2, tonic: 0, minor: false };
+    for(var t2 = 0; t2 < 12; t2++){
+      var sm = corr(MAJ, t2); if(sm > best.score) best = { score: sm, tonic: t2, minor: false };
+      var sn = corr(MIN, t2); if(sn > best.score) best = { score: sn, tonic: t2, minor: true };
+    }
+    if(best.score < 0.25) return null;
+    return { code: best.minor ? CAM_MIN[best.tonic] : CAM_MAJ[best.tonic], name: NAMES[best.tonic] + (best.minor ? ' menor' : ' mayor') };
+  }
+  function computeFeatures(ab){
+    try{
+      var rate = ab.sampleRate;
+      var ch0 = ab.getChannelData(0);
+      var ch1 = ab.numberOfChannels > 1 ? ab.getChannelData(1) : ch0;
+      var len = Math.min(ab.length, Math.floor(rate * 120));
+      if(len < Math.floor(rate * 2)) return null;
+      var sum = 0, cnt = 0, i;
+      for(i = 0; i < len; i += 8){ var s = (ch0[i] + ch1[i]) * 0.5; sum += s * s; cnt++; }
+      var rms = Math.sqrt(sum / Math.max(1, cnt));
+      var loud = Math.max(0, Math.min(1, rms * 3.4));
+      var N = 2048;
+      var frames = Math.min(260, Math.floor((len - N) / Math.floor(rate * 0.35)));
+      if(frames < 8) return null;
+      var chroma = new Float32Array(12);
+      var centSum = 0, centN = 0;
+      var re = new Float32Array(N), im = new Float32Array(N);
+      for(var f = 0; f < frames; f++){
+        var off = Math.floor(f * (len - N) / frames);
+        for(var j = 0; j < N; j++){ var w = 0.5 - 0.5 * Math.cos(2 * Math.PI * j / (N - 1)); re[j] = ((ch0[off + j] + ch1[off + j]) * 0.5) * w; im[j] = 0; }
+        fftInPlace(re, im);
+        var cNum = 0, cDen = 0;
+        for(var b = 1; b < N / 2; b++){
+          var mag = Math.sqrt(re[b] * re[b] + im[b] * im[b]);
+          var freq = b * rate / N;
+          if(freq < 30 || freq > 12000) continue;
+          cNum += freq * mag; cDen += mag;
+          if(freq >= 55 && freq <= 4200 && mag > 0){
+            var pc = Math.round(69 + 12 * (Math.log(freq / 440) / Math.LN2)) % 12;
+            if(pc < 0) pc += 12;
+            chroma[pc] += mag;
+          }
+        }
+        if(cDen > 0){ centSum += cNum / cDen; centN++; }
+      }
+      var centroid = centN ? centSum / centN : 0;
+      var brightness = Math.max(0, Math.min(1, centroid / 6200));
+      var energy = Math.max(0, Math.min(1, 0.55 * loud + 0.45 * brightness));
+      return { energy: energy, brightness: brightness, key: detectKey(chroma) };
+    }catch(e){ return null; }
+  }
+  function moodFromFeatures(bpm, e){
+    if(typeof e !== 'number') return null;
+    if(bpm && bpm >= 115 && e >= 0.60) return 'fiesta';
+    if(bpm && bpm <= 95 && e <= 0.42) return 'relajado';
+    if(e >= 0.28 && e <= 0.55 && (!bpm || (bpm >= 70 && bpm <= 112))) return 'concentracion';
+    if((bpm && bpm >= 100) || e >= 0.60) return 'energia';
+    if(!bpm){ if(e <= 0.32) return 'relajado'; if(e >= 0.72) return 'energia'; }
+    return null;
+  }
+  function analyzeAudioFeatures(t){
+    if(!t) return Promise.resolve(false);
+    if(t._feat) return t._feat;
+    t._feat = fetch(t.url).then(function(r){ return r.arrayBuffer(); })
+      .then(function(buf){ return decodeAudio(buf); })
+      .then(function(ab){
+        var feats = computeFeatures(ab);
+        if(!feats) return false;
+        var bpm = (typeof t.bpm === 'number' && t.bpm) ? t.bpm : estimateBpm(ab);
+        var patch = { energy: feats.energy, brightness: feats.brightness };
+        t.energy = feats.energy; t.brightness = feats.brightness;
+        if(bpm && !(typeof t.bpm === 'number' && t.bpm)){ t.bpm = bpm; patch.bpm = bpm; }
+        t.mood = moodFromFeatures((typeof t.bpm === 'number' && t.bpm) ? t.bpm : bpm, feats.energy);
+        patch.mood = t.mood;
+        if(feats.key){ t.musicalKey = feats.key.code; t.keyName = feats.key.name; patch.musicalKey = t.musicalKey; patch.keyName = t.keyName; }
+        idbPatch(t.id, patch);
+        return true;
+      })
+      .catch(function(){ return false; })
+      .then(function(res){ t._feat = null; return res; });
+    return t._feat;
+  }
+  document.getElementById('btnReKey').addEventListener('click', function(){
+    var t = trackById(editTargetId);
+    if(!t) return;
+    var st = document.getElementById('keyStatus');
+    st.textContent = 'Detectando…';
+    analyzeAudioFeatures(t).then(function(ok){
+      st.textContent = '';
+      if(ok){
+        document.getElementById('editKeyText').textContent = t.musicalKey ? (t.musicalKey + (t.keyName ? ' · ' + t.keyName : '')) : 'Sin detectar';
+        document.getElementById('editMoodText').textContent = t.mood ? moodLabel(t.mood) : 'sin ambiente';
+        toast('Análisis de «' + t.title + '»: tonalidad ' + (t.musicalKey || 'no detectada') + (t.mood ? ', ambiente ' + moodLabel(t.mood) : '') + '.');
+      } else {
+        toast('No se pudo decodificar el audio de «' + t.title + '»: queda sin tonalidad ni ambiente, sin error.');
+      }
+    });
+  });
+
+  // ---------- Vista Ambientes ----------
+  var MOODS = [
+    { id: 'fiesta', name: 'Fiesta', desc: 'Ritmo de 115 BPM o más y energía alta: las que animan cualquier reunión.' },
+    { id: 'energia', name: 'Energía', desc: 'Ritmo de 100 BPM o más, o energía alta sin llegar a fiesta: para moverte.' },
+    { id: 'relajado', name: 'Relajado', desc: 'Ritmo de 95 BPM o menos y energía baja: suaves y tranquilas.' },
+    { id: 'concentracion', name: 'Concentración', desc: 'Energía media-baja y ritmo moderado: fondo para leer, estudiar o trabajar.' }
+  ];
+  function moodTracks(id){ return tracks.filter(function(t){ return t.mood === id; }); }
+  function playMood(id, shufflePlay){
+    var list = moodTracks(id).filter(isPlayable);
+    if(!list.length){ toast('Ese ambiente aún no tiene canciones reproducibles. Analiza tu biblioteca primero.'); return; }
+    playContext = { type: 'mood', moodId: id };
+    if(shufflePlay && !shuffle){
+      shuffle = true;
+      var bs = document.getElementById('btnShuffle');
+      bs.classList.add('active'); bs.setAttribute('aria-pressed', 'true');
+    }
+    rebuildShuffle(); saveState();
+    var firstId = (shufflePlay && shuffleOrder.length) ? shuffleOrder[0] : list[0].id;
+    selectTrack(firstId, true);
+    toast((shufflePlay ? 'Reproduciendo en aleatorio: ambiente ' : 'Reproduciendo: ambiente ') + moodLabel(id));
+  }
+  function renderMoods(){
+    var grid = document.getElementById('moodGrid');
+    if(!grid) return;
+    grid.innerHTML = '';
+    MOODS.forEach(function(m){
+      var list = moodTracks(m.id);
+      var card = document.createElement('div'); card.className = 'mood-card';
+      var h = document.createElement('h4'); h.textContent = m.name + ' · ' + list.length + (list.length === 1 ? ' canción' : ' canciones');
+      var p = document.createElement('p'); p.textContent = m.desc;
+      var acts = document.createElement('div'); acts.className = 'mood-actions';
+      var b1 = document.createElement('button'); b1.className = 'btn small primary'; b1.type = 'button'; b1.textContent = 'Reproducir';
+      var b2 = document.createElement('button'); b2.className = 'btn small'; b2.type = 'button'; b2.textContent = 'Aleatorio';
+      if(!list.length){ b1.disabled = true; b2.disabled = true; }
+      b1.addEventListener('click', function(){ playMood(m.id, false); });
+      b2.addEventListener('click', function(){ playMood(m.id, true); });
+      acts.appendChild(b1); acts.appendChild(b2);
+      card.appendChild(h); card.appendChild(p); card.appendChild(acts);
+      grid.appendChild(card);
+    });
+    var st = document.getElementById('moodStatus');
+    if(st && !moodAnalyzing){
+      var un = tracks.filter(function(t){ return typeof t.energy !== 'number'; }).length;
+      st.textContent = !tracks.length ? 'Añade canciones para clasificarlas por ambiente.' :
+        (un ? (un + (un === 1 ? ' elemento sin analizar' : ' elementos sin analizar') + '. El análisis también detecta la tonalidad (Camelot) para el DJ armónico.') : 'Toda tu biblioteca está analizada: ambientes y tonalidades al día.');
+    }
+  }
+  function analyzeAllMoods(){
+    if(moodAnalyzing) return;
+    var st = document.getElementById('moodStatus');
+    var pending = tracks.filter(function(t){ return typeof t.energy !== 'number' || !t.musicalKey; });
+    if(!tracks.length){ toast('Añade canciones primero.'); return; }
+    if(!pending.length){ if(st) st.textContent = 'Toda tu biblioteca ya está analizada (ambiente y tonalidad).'; return; }
+    moodAnalyzing = true; moodCancel = false;
+    document.getElementById('btnCancelMoods').style.display = '';
+    var done = 0, okCount = 0;
+    var chain = Promise.resolve();
+    pending.forEach(function(t){
+      chain = chain.then(function(){
+        if(moodCancel) return;
+        return analyzeAudioFeatures(t).then(function(ok){
+          done++; if(ok) okCount++;
+          if(st) st.textContent = 'Analizando ambientes y tonalidades… ' + done + ' de ' + pending.length + '.';
+        });
+      });
+    });
+    chain.then(function(){
+      moodAnalyzing = false;
+      document.getElementById('btnCancelMoods').style.display = 'none';
+      if(st) st.textContent = moodCancel
+        ? 'Análisis cancelado. Lo ya analizado queda guardado.'
+        : 'Análisis terminado: ' + okCount + ' de ' + pending.length + ' con ambiente y tonalidad. Si alguna quedó sin datos, su audio no se pudo decodificar y sigue en la biblioteca sin problema.';
+      renderMoods(); renderList();
+    });
+  }
+  document.getElementById('btnAnalyzeMoods').addEventListener('click', analyzeAllMoods);
+  document.getElementById('btnCancelMoods').addEventListener('click', function(){ moodCancel = true; });
+
+  // ---------- Videos ----------
+  function v2PrepareDeck(t){
+    var wantVideo = !!(t && t.kind === 'video');
+    if(wantVideo){
+      if(audio !== videoEl){
+        try{ audioEl.pause(); audioB.pause(); }catch(e){}
+        audio = videoEl;
+      }
+      document.getElementById('coverWrap').classList.add('video-on');
+      videoEl.style.display = videoAudioOnly ? 'none' : '';
+    } else {
+      if(audio === videoEl){
+        try{ videoEl.pause(); }catch(e){}
+        audio = audioEl;
+      }
+      videoEl.style.display = 'none';
+      document.getElementById('coverWrap').classList.remove('video-on');
+      if(typeof partyOpen !== 'undefined' && partyOpen) moveVideoToPlayer();
+    }
+    var b = document.getElementById('btnVideoAudioOnly');
+    if(b) b.style.display = wantVideo ? '' : 'none';
+  }
+  function moveVideoToParty(){
+    var t = currentTrack();
+    if(!t || t.kind !== 'video' || videoAudioOnly) return;
+    var slot = document.getElementById('partyVideoSlot');
+    slot.style.display = '';
+    slot.appendChild(videoEl);
+    videoEl.style.display = '';
+    document.getElementById('partyCoverWrap').style.display = 'none';
+  }
+  function moveVideoToPlayer(){
+    var slot = document.getElementById('partyVideoSlot');
+    if(videoEl.parentNode !== slot) return;
+    document.getElementById('coverWrap').insertBefore(videoEl, document.getElementById('viz'));
+    slot.style.display = 'none';
+    document.getElementById('partyCoverWrap').style.display = '';
+    var t = currentTrack();
+    videoEl.style.display = (t && t.kind === 'video' && !videoAudioOnly) ? '' : 'none';
+  }
+  document.getElementById('btnParty').addEventListener('click', function(){ setTimeout(moveVideoToParty, 0); });
+  document.getElementById('btnPartyClose').addEventListener('click', function(){ moveVideoToPlayer(); });
+  document.addEventListener('keydown', function(ev){ if(ev.key === 'Escape') moveVideoToPlayer(); });
+  document.getElementById('btnVideoAudioOnly').addEventListener('click', function(){
+    videoAudioOnly = !videoAudioOnly;
+    this.classList.toggle('on', videoAudioOnly);
+    this.setAttribute('aria-pressed', videoAudioOnly ? 'true' : 'false');
+    var t = currentTrack();
+    if(t && t.kind === 'video'){
+      if(videoAudioOnly){ moveVideoToPlayer(); videoEl.style.display = 'none'; }
+      else videoEl.style.display = '';
+    }
+    toast(videoAudioOnly ? 'Solo audio: la imagen del video se oculta y la música sigue sonando.' : 'Mostrando el video otra vez.');
+  });
+  window.addEventListener('error', function(ev){
+    if(ev.target !== videoEl) return;
+    var t = currentTrack();
+    if(t && t.kind === 'video'){
+      setTimeout(function(){ toast('Este navegador no puede reproducir el video «' + t.title + '»: su códec no es compatible aquí, así que no sonará desde este archivo.'); }, 80);
+    }
+  }, true);
+
+  // ---------- Audiolibros y podcasts ----------
+  function chaptersOf(t){
+    if(t.chapters && t.chapters.length) return t.chapters.map(function(c){ return { title: c.title, start: c.start }; });
+    if(t.bookmarks && t.bookmarks.length) return t.bookmarks.slice().sort(function(a, b){ return a.time - b.time; }).map(function(b){ return { title: b.name, start: b.time }; });
+    return [];
+  }
+  function renderAbExtras(t){
+    var row = document.getElementById('abRow');
+    var box = document.getElementById('abChapters');
+    var note = document.getElementById('abNote');
+    if(!row || !box) return;
+    var isBook = !!(t && t.isAudiobook);
+    row.style.display = isBook ? '' : 'none';
+    if(!isBook){ box.style.display = 'none'; if(note) note.textContent = ''; return; }
+    var chs = chaptersOf(t);
+    if(chs.length){
+      box.style.display = '';
+      var list = document.getElementById('abChapterList');
+      list.innerHTML = '';
+      chs.forEach(function(c){
+        var b = document.createElement('button');
+        b.type = 'button'; b.className = 'ab-chapter';
+        var s1 = document.createElement('span'); s1.textContent = c.title;
+        var s2 = document.createElement('span'); s2.textContent = fmtTime(c.start);
+        b.appendChild(s1); b.appendChild(s2);
+        b.addEventListener('click', function(){ try{ audio.currentTime = c.start; }catch(e){} if(!isPlaying) play(); });
+        list.appendChild(b);
+      });
+    } else box.style.display = 'none';
+  }
+  function v2OnSelectTrack(t){
+    renderAbExtras(t);
+    if(t && t.isAudiobook && t.abPos > 5 && (!t.duration || t.abPos < t.duration - 10)){
+      pendingSeekPos = t.abPos;
+      var note = document.getElementById('abNote');
+      if(note) note.textContent = 'Continuando en ' + fmtTime(t.abPos);
+      setTimeout(function(){
+        if(pendingSeekPos != null && audio.readyState >= 1){
+          try{ audio.currentTime = pendingSeekPos; }catch(e){}
+          pendingSeekPos = null;
+        }
+      }, 700);
+    }
+  }
+  function seekBy(sec){
+    try{
+      var dur = audio.duration || 0;
+      audio.currentTime = Math.max(0, dur ? Math.min(dur, (audio.currentTime || 0) + sec) : (audio.currentTime || 0) + sec);
+    }catch(e){}
+  }
+  document.getElementById('btnBack30').addEventListener('click', function(){ seekBy(-30); });
+  document.getElementById('btnBack15').addEventListener('click', function(){ seekBy(-15); });
+  document.getElementById('btnFwd15').addEventListener('click', function(){ seekBy(15); });
+  document.getElementById('btnFwd30').addEventListener('click', function(){ seekBy(30); });
+  function saveAbPos(){
+    var t = currentTrack();
+    if(t && t.isAudiobook && audio.currentTime > 0){
+      t.abPos = Math.floor(audio.currentTime);
+      idbPatchSoon(t.id, { abPos: t.abPos });
+    }
+  }
+  [audioEl, audioB, videoEl].forEach(function(el){
+    el.addEventListener('pause', function(){ if(el === audio) saveAbPos(); });
+  });
+  setInterval(function(){ if(isPlaying) saveAbPos(); }, 5000);
+  document.getElementById('batchBookOn').addEventListener('change', updateBatchSummary);
+  document.getElementById('batchBook').addEventListener('change', updateBatchSummary);
+
+  // ---------- Navegación v2: iconos en las pestañas ----------
+  // La barra de navegación sale de la tarjeta de la biblioteca (que la
+  // recorta con su overflow) y pasa a ser hija directa del body: así la
+  // barra inferior/lateral fija es alcanzable siempre, en móvil y escritorio.
+  // Mover el nodo conserva intactos sus eventos (la delegación vive en él).
+  var navEl = document.getElementById('viewTabs');
+  if(navEl && navEl.parentNode !== document.body) document.body.appendChild(navEl);
+  var NAV_ICONS = {
+    library: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>',
+    playlists: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 6h13M8 12h13M8 18h13"/><path d="M3.5 6h.01M3.5 12h.01M3.5 18h.01"/></svg>',
+    smart: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l2.7 5.6 6.1.8-4.5 4.3 1.1 6.1L12 17l-5.4 2.8 1.1-6.1L3.2 9.4l6.1-.8z"/></svg>',
+    moods: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>',
+    artists: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 3.6-6.5 8-6.5s8 2.5 8 6.5"/></svg>',
+    albums: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="2.5"/></svg>',
+    folders: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>',
+    stats: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 20v-9M12 20V4M19 20v-6"/></svg>',
+    summary: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 10h18"/></svg>',
+    dup: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>',
+    queue: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h12M4 12h12"/><path d="M15 15.5 21 19l-6 3.5z"/></svg>',
+    history: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg>'
+  };
+  document.querySelectorAll('#viewTabs .view-tab').forEach(function(tb){
+    var ic = NAV_ICONS[tb.getAttribute('data-view')];
+    if(!ic) return;
+    var holder = document.createElement('span');
+    holder.style.display = 'contents';
+    holder.innerHTML = ic;
+    tb.insertBefore(holder, tb.firstChild);
+  });
+
+  function renderV2(){
+    if(view === 'moods' && !moodAnalyzing) renderMoods();
+  }
+  syncProfileUI();
 
   // ---------- Init ----------
   var appVersionEl = document.getElementById('appVersion');
