@@ -1115,7 +1115,7 @@
         <div class="update-row">
           <button class="btn small" id="btnCheckUpdate" type="button">Actualizar app</button>
           <button class="btn small danger" id="btnForceUpdate" type="button">Forzar actualización</button>
-          <span class="backup-note" id="updateStatus">Versión de esta app: v<span id="appVersionNote">2.1.2</span>. «Actualizar app» consulta la versión publicada y te dice si ya estás al día antes de recargar. «Forzar actualización» limpia el service worker y las cachés de la app si una actualización se quedó atascada; tu biblioteca, playlists y ajustes (IndexedDB) nunca se tocan.</span>
+          <span class="backup-note" id="updateStatus">Versión de esta app: v<span id="appVersionNote">2.1.3</span>. «Actualizar app» consulta la versión publicada y te dice si ya estás al día antes de recargar. «Forzar actualización» limpia el service worker y las cachés de la app si una actualización se quedó atascada; tu biblioteca, playlists y ajustes (IndexedDB) nunca se tocan.</span>
         </div>
       </div>
 
@@ -1786,7 +1786,7 @@
 
   // ---------- State ----------
   var tracks = []; // {id,name,title,artist,album,duration,size,type,addedAt,url,coverUrl,color,rating,stars}
-  var APP_VERSION = '2.1.2'; // al publicar cambios, subir este número y el CACHE de sw.js
+  var APP_VERSION = '2.1.3'; // al publicar cambios, subir este número y el CACHE de sw.js
   var currentId = null;
   var isPlaying = false;
   var shuffle = false;
@@ -2270,6 +2270,30 @@
     });
   }
 
+  // Reparación v2.1.3: la duración se averigua en una cola aparte, en serie
+  // y SIN bloquear el alta. Antes processFile esperaba a getDuration() por
+  // cada archivo, y esa espera depende de que un elemento de medios cargue
+  // metadatos o de que salte un setTimeout de respaldo: en una pestaña en
+  // segundo plano el navegador difiere esa carga y estrangula los
+  // temporizadores, así que añadir canciones con la app detrás se quedaba
+  // prácticamente congelado (en primer plano ni se notaba). Ahora la
+  // canción se guarda al momento con duración 0 y la sonda la rellena al
+  // llegar (también se rellena sola al reproducirla, vía loadedmetadata).
+  var durProbeChain = Promise.resolve();
+  function probeDurationLater(track){
+    durProbeChain = durProbeChain.then(function(){
+      if(!track || track.duration) return null;
+      return getDuration(track.url).then(function(d){
+        if(d && isFinite(d) && !track.duration){
+          track.duration = d;
+          idbPatch(track.id, { duration: d });
+          renderStats(); renderList();
+        }
+      });
+    }).catch(function(){});
+    return durProbeChain;
+  }
+
   // ---------- Adding files ----------
   var AUDIO_EXT = /\.(mp3|wav|flac|ogg|oga|m4a|m4b|m4r|aac|opus|weba|webm|aif|aiff|mp4|3gp|wma)$/i;
   var VIDEO_EXT = /\.(mp4|m4v|mov|webm)$/i;
@@ -2342,33 +2366,35 @@
           artist = artist || parts[0].trim();
           title = parts.slice(1).join(' - ').trim() || title;
         }
-        return getDuration(url).then(function(dur){
-          var coverUrl = meta.coverBlob ? URL.createObjectURL(meta.coverBlob) : null;
-          var relPath = file.webkitRelativePath || file._dropPath || '';
-          var folderPath = relPath ? String(relPath).replace(/^\/+/, '').split('/').slice(0,-1).join('/') : '';
-          var kind = isVideoFile(file) ? 'video' : 'audio';
-          var track = {
-            id:id, name:file.name, title:title, artist:artist, album:meta.album||'',
-            duration:dur, size:file.size, type:file.type, addedAt:Date.now(),
-            url:url, coverUrl:coverUrl, color:colorFor(title+file.name), rating:null, stars:0,
-            normDb:null, volAdj:0,
-            genre:meta.genre||'', year:meta.year||'', tags:[], memSpeed:null, memEq:null,
-            folder:folderPath, abLoop:null, bookmarks:[], silence:null, bpm:null, bpmManual:false, audioHash:null,
-            kind:kind, energy:null, brightness:null, mood:null, musicalKey:null, keyName:null,
-            isAudiobook:false, abPos:0, chapters:(meta.chapters && meta.chapters.length) ? meta.chapters : null
-          };
-          tracks.unshift(track);
-          // Persist (blob + metadata + cover blob)
-          return idbPut({
-            id:id, blob:file, name:file.name, type:file.type, size:file.size,
-            title:title, artist:artist, album:meta.album||'', duration:dur,
-            addedAt:track.addedAt, coverBlob:meta.coverBlob||null, rating:null, stars:0, normDb:null, volAdj:0,
-            genre:meta.genre||'', year:meta.year||'', tags:[], memSpeed:null, memEq:null,
-            folder:folderPath, abLoop:null, bookmarks:[], silence:null, bpm:null, bpmManual:false, audioHash:null,
-            kind:kind, energy:null, brightness:null, mood:null, musicalKey:null, keyName:null,
-            isAudiobook:false, abPos:0, chapters:track.chapters
-          }).then(function(){ return track; });
-        });
+        // Reparación v2.1.3: NO se espera a la duración para dar de alta la
+        // canción (ver probeDurationLater). Se guarda con duración 0 y la
+        // sonda diferida la completa en cuanto el navegador la entrega.
+        var coverUrl = meta.coverBlob ? URL.createObjectURL(meta.coverBlob) : null;
+        var relPath = file.webkitRelativePath || file._dropPath || '';
+        var folderPath = relPath ? String(relPath).replace(/^\/+/, '').split('/').slice(0,-1).join('/') : '';
+        var kind = isVideoFile(file) ? 'video' : 'audio';
+        var track = {
+          id:id, name:file.name, title:title, artist:artist, album:meta.album||'',
+          duration:0, size:file.size, type:file.type, addedAt:Date.now(),
+          url:url, coverUrl:coverUrl, color:colorFor(title+file.name), rating:null, stars:0,
+          normDb:null, volAdj:0,
+          genre:meta.genre||'', year:meta.year||'', tags:[], memSpeed:null, memEq:null,
+          folder:folderPath, abLoop:null, bookmarks:[], silence:null, bpm:null, bpmManual:false, audioHash:null,
+          kind:kind, energy:null, brightness:null, mood:null, musicalKey:null, keyName:null,
+          isAudiobook:false, abPos:0, chapters:(meta.chapters && meta.chapters.length) ? meta.chapters : null
+        };
+        tracks.unshift(track);
+        probeDurationLater(track);
+        // Persist (blob + metadata + cover blob)
+        return idbPut({
+          id:id, blob:file, name:file.name, type:file.type, size:file.size,
+          title:title, artist:artist, album:meta.album||'', duration:0,
+          addedAt:track.addedAt, coverBlob:meta.coverBlob||null, rating:null, stars:0, normDb:null, volAdj:0,
+          genre:meta.genre||'', year:meta.year||'', tags:[], memSpeed:null, memEq:null,
+          folder:folderPath, abLoop:null, bookmarks:[], silence:null, bpm:null, bpmManual:false, audioHash:null,
+          kind:kind, energy:null, brightness:null, mood:null, musicalKey:null, keyName:null,
+          isAudiobook:false, abPos:0, chapters:track.chapters
+        }).then(function(){ return track; });
       });
   }
 
@@ -3352,7 +3378,13 @@
     try{
       var AC = window.AudioContext || window.webkitAudioContext;
       if(!AC) return;
-      audioCtx = new AC();
+      // Reparación v2.1.3 (Android): contexto pensado para REPRODUCIR, no
+      // para grabar. Con el búfer mínimo por defecto, varios Android se
+      // quedan sin margen con esta cadena (EQ de 5 bandas + efectos +
+      // convolver + analizador) y el audio sale con chasquidos y ruido;
+      // 'playback' pide un búfer más holgado a cambio de unos ms de latencia.
+      try{ audioCtx = new AC({ latencyHint: 'playback' }); }
+      catch(e){ audioCtx = new AC(); }
       analyser = audioCtx.createAnalyser();
       analyser.fftSize = 128;
       masterGain = audioCtx.createGain();
@@ -3383,7 +3415,21 @@
       fxWetGain.connect(analyser);
       applyFx();
       analyser.connect(masterGain);
-      masterGain.connect(audioCtx.destination);
+      // Reparación v2.1.3: limitador final antes de la salida. La cadena
+      // puede sumar muchos dB (volumen parejo hasta +12 dB, ajuste por
+      // canción, bandas del EQ, realce de graves y de voz) y, sin red de
+      // seguridad, la señal recortaba en seco a la salida: distorsión con
+      // ruido, mucho más evidente en el altavoz de un Android. El limitador
+      // (umbral −1,5 dB, ratio 20:1) es transparente cuando no se roza el
+      // techo y solo recorta los picos que antes distorsionaban.
+      var limiter = audioCtx.createDynamicsCompressor();
+      limiter.threshold.value = -1.5;
+      limiter.knee.value = 0;
+      limiter.ratio.value = 20;
+      limiter.attack.value = 0.002;
+      limiter.release.value = 0.24;
+      masterGain.connect(limiter);
+      limiter.connect(audioCtx.destination);
       // Cada deck (audio principal y deck de crossfade) entra a la cadena con su propio gain
       [audioEl, audioB, videoEl].forEach(function(el){
         var src = audioCtx.createMediaElementSource(el);
@@ -7461,7 +7507,7 @@
   // ---------- Pack de mejoras: actualización, reanudar, deshacer, tap tempo ----------
 
   // ----- 1. Actualización sin atascos -----
-  var APP_VERSION = '2.1.2';
+  var APP_VERSION = '2.1.3';
   document.getElementById('appVersionNote').textContent = APP_VERSION;
   function cmpVersion(a, b){
     var pa = a.split('.').map(function(x){ return parseInt(x, 10) || 0; });
