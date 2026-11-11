@@ -363,6 +363,19 @@
   }
   .resume-bar span{flex:1 1 200px}
   .update-row{display:flex; flex-wrap:wrap; gap:8px; align-items:center; margin-top:8px}
+  /* ===== Pack 8: radio de una canción y aviso de respaldo ===== */
+  .radio-bar{
+    margin-top:12px; padding:11px 13px; border:1px solid var(--accent); border-radius:14px;
+    background:var(--accent-soft); display:flex; flex-wrap:wrap; align-items:center; gap:9px;
+    font-size:13.5px; font-weight:600; line-height:1.45;
+  }
+  .radio-bar span{flex:1 1 200px}
+  .backup-reminder{
+    margin-top:10px; display:none; gap:8px; align-items:center; flex-wrap:wrap;
+    background:var(--accent-soft); border:1px solid var(--line); border-radius:12px; padding:10px 12px; font-size:13px; line-height:1.45;
+  }
+  .backup-reminder.show{display:flex}
+  .backup-reminder span{flex:1 1 220px}
   .tap-flash{border-color:var(--accent) !important; color:var(--accent) !important}
   /* ===== Pack completo: pestañas, playlists, cola, historial, sonido ===== */
   .view-tabs{display:flex; flex-wrap:wrap; gap:6px; margin-top:14px}
@@ -764,6 +777,10 @@
         <p class="now-artist" id="nowArtist">Añade archivos de audio para empezar</p>
         <p class="now-album" id="nowAlbum"></p>
         <p id="djIndicator" style="display:none; margin:8px 0 0; font-size:12.5px; font-weight:800; color:var(--accent)"></p>
+        <div class="radio-bar" id="radioBar" style="display:none" role="status">
+          <span id="radioText"></span>
+          <button class="btn small" id="btnRadioStop" type="button">Detener radio</button>
+        </div>
         <div style="margin-top:10px; display:flex; flex-wrap:wrap; gap:8px">
           <button class="btn small" id="btnEditCurrent" type="button" disabled>
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:15px;height:15px"><path d="M17 3a2.8 2.8 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></svg>
@@ -784,6 +801,14 @@
           <button class="btn small" id="btnVideoAudioOnly" type="button" style="display:none" aria-pressed="false" title="Ocultar la imagen del video y seguir escuchando solo el audio">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:15px;height:15px"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>
             Solo audio
+          </button>
+          <button class="btn small" id="btnRadioCurrent" type="button" title="Reproducir esta canción y seguir con una radio de canciones parecidas">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:15px;height:15px"><path d="M4.9 19.1a10 10 0 0 1 0-14.2M7.8 16.2a6 6 0 0 1 0-8.4M19.1 4.9a10 10 0 0 1 0 14.2M16.2 7.8a6 6 0 0 1 0 8.4"/><circle cx="12" cy="12" r="1.6" fill="currentColor" stroke="none"/></svg>
+            Radio
+          </button>
+          <button class="btn small" id="btnPip" type="button" style="display:none" title="Ver el video en una ventanita flotante mientras navegas la app">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:15px;height:15px"><rect x="2" y="4" width="20" height="16" rx="2"/><rect x="12" y="12" width="7" height="5" rx="1" fill="currentColor" stroke="none"/></svg>
+            Video flotante
           </button>
         </div>
         <div class="resume-bar" id="resumeBar" style="display:none" role="status">
@@ -937,6 +962,20 @@
               <p class="sound-note">Realce de graves con nivel ajustable, un toque de reverb de sala y «voz clara» para destacar las frecuencias de la voz. Se aplican en vivo y se guardan en este dispositivo.</p>
             </div>
             <div class="sound-group">
+              <div class="sound-group-head"><h4>Balance y mono</h4></div>
+              <div class="sound-inline">
+                <span style="font-size:12.5px; font-weight:800; color:var(--muted)" aria-hidden="true">I</span>
+                <input type="range" id="balanceRange" min="-100" max="100" step="1" value="0" aria-label="Balance izquierda-derecha" />
+                <span style="font-size:12.5px; font-weight:800; color:var(--muted)" aria-hidden="true">D</span>
+                <output id="balanceOut" for="balanceRange">Centro</output>
+                <button class="btn small" id="btnBalanceCenter" type="button">Centrar</button>
+              </div>
+              <div class="sound-inline" style="margin-top:8px">
+                <button class="toggle-pill" id="btnMono" type="button" aria-pressed="false"><span class="dot"></span><span>Mono:&nbsp;</span><span id="monoState">Apagado</span></button>
+              </div>
+              <p class="sound-note">Balance: mueve el sonido entre el lado izquierdo y el derecho, por si un audífono suena más flojo o solo llevas uno puesto. Mono: suma los dos canales y los manda iguales a ambos lados, para no perderte nada de la mezcla con un solo audífono. Se guardan en este dispositivo y también viajan dentro del respaldo.</p>
+            </div>
+            <div class="sound-group">
               <div class="sound-group-head"><h4>Apariencia</h4></div>
               <p class="sound-note" style="margin-top:0">Color de acento: recolorea botones y elementos activos al instante.</p>
               <div class="accent-dots" id="accentDots" role="group" aria-label="Color de acento"></div>
@@ -1076,6 +1115,10 @@
             <option value="title">Título A–Z</option>
             <option value="artist">Artista A–Z</option>
             <option value="duration">Duración</option>
+            <option value="bpmAsc">BPM (menor a mayor)</option>
+            <option value="bpmDesc">BPM (mayor a menor)</option>
+            <option value="energy">Energía (mayor a menor)</option>
+            <option value="key">Tonalidad (orden Camelot)</option>
           </select>
         </div>
         <div class="filter-chips" id="ratingFilters" role="group" aria-label="Filtrar por like o dislike">
@@ -1111,11 +1154,17 @@
           <button class="btn small" id="btnExportBackup" type="button">Exportar respaldo</button>
           <button class="btn small" id="btnImportBackup" type="button">Importar respaldo</button>
           <span class="backup-note">El respaldo guarda playlists, likes, historial, contadores y ajustes en un archivo. No incluye los archivos de audio.</span>
+          <span class="backup-note" id="lastBackupNote" style="flex:1 1 100%">Sin copia todavía</span>
+        </div>
+        <div class="backup-reminder" id="backupReminder" role="status">
+          <span id="backupReminderText"></span>
+          <button class="btn small primary" id="btnBackupNow" type="button">Exportar copia ahora</button>
+          <button class="btn small" id="btnBackupDismiss" type="button">Ahora no</button>
         </div>
         <div class="update-row">
           <button class="btn small" id="btnCheckUpdate" type="button">Actualizar app</button>
           <button class="btn small danger" id="btnForceUpdate" type="button">Forzar actualización</button>
-          <span class="backup-note" id="updateStatus">Versión de esta app: v<span id="appVersionNote">2.1.4</span>. «Actualizar app» consulta la versión publicada y te dice si ya estás al día antes de recargar. «Forzar actualización» limpia el service worker y las cachés de la app si una actualización se quedó atascada; tu biblioteca, playlists y ajustes (IndexedDB) nunca se tocan.</span>
+          <span class="backup-note" id="updateStatus">Versión de esta app: v<span id="appVersionNote">2.2.0</span>. «Actualizar app» consulta la versión publicada y te dice si ya estás al día antes de recargar. «Forzar actualización» limpia el service worker y las cachés de la app si una actualización se quedó atascada; tu biblioteca, playlists y ajustes (IndexedDB) nunca se tocan.</span>
         </div>
       </div>
 
@@ -1786,7 +1835,7 @@
 
   // ---------- State ----------
   var tracks = []; // {id,name,title,artist,album,duration,size,type,addedAt,url,coverUrl,color,rating,stars}
-  var APP_VERSION = '2.1.4'; // al publicar cambios, subir este número y el CACHE de sw.js
+  var APP_VERSION = '2.2.0'; // al publicar cambios, subir este número y el CACHE de sw.js
   var currentId = null;
   var isPlaying = false;
   var shuffle = false;
@@ -1822,6 +1871,8 @@
     skipSilence: false,
     gapless: true,
     fadePause: true,
+    balance: 0, // Pack 8: -1 (izquierda) … 0 (centro) … 1 (derecha)
+    mono: false, // Pack 8: suma de ambos canales
     fx: { bassOn: false, bassDb: 6, reverb: false, vocal: false },
     customPresets: [],
     theme: 'auto', // Pack 6: 'auto' | 'light' | 'dark'
@@ -1858,6 +1909,8 @@
     settings.skipSilence = !!ds.skipSilence;
     if(typeof ds.gapless === 'boolean') settings.gapless = ds.gapless;
     if(typeof ds.fadePause === 'boolean') settings.fadePause = ds.fadePause;
+    var bal = parseFloat(ds.balance); if(isFinite(bal)) settings.balance = Math.max(-1, Math.min(1, bal));
+    settings.mono = !!ds.mono;
     if(ds.fx) settings.fx = sanitizeFx(ds.fx);
     if(Array.isArray(ds.customPresets)) settings.customPresets = sanitizeCustomPresets(ds.customPresets);
     // Pack 6: apariencia y alarma, con valores por defecto sensatos
@@ -2532,6 +2585,40 @@
     else if(mode==='title') list.sort(function(a,b){ return a.title.localeCompare(b.title,'es'); });
     else if(mode==='artist') list.sort(function(a,b){ return (a.artist||'~').localeCompare(b.artist||'~','es') || a.title.localeCompare(b.title,'es'); });
     else if(mode==='duration') list.sort(function(a,b){ return (b.duration||0)-(a.duration||0); });
+    else if(mode==='bpmAsc' || mode==='bpmDesc'){
+      // Pack 8: ordenar por BPM analizado; sin análisis, al final siempre
+      var dirB = mode==='bpmAsc' ? 1 : -1;
+      list.sort(function(a,b){
+        var av = (typeof a.bpm==='number' && a.bpm>0) ? a.bpm : null;
+        var bv = (typeof b.bpm==='number' && b.bpm>0) ? b.bpm : null;
+        if(av===null && bv===null) return 0;
+        if(av===null) return 1;
+        if(bv===null) return -1;
+        return (av-bv)*dirB;
+      });
+    }
+    else if(mode==='energy'){
+      // Pack 8: mayor energía primero; sin análisis, al final
+      list.sort(function(a,b){
+        var av = (typeof a.energy==='number') ? a.energy : null;
+        var bv = (typeof b.energy==='number') ? b.energy : null;
+        if(av===null && bv===null) return 0;
+        if(av===null) return 1;
+        if(bv===null) return -1;
+        return bv-av;
+      });
+    }
+    else if(mode==='key'){
+      // Pack 8: orden de la rueda Camelot (1A, 1B, 2A, 2B…); sin tonalidad, al final
+      list.sort(function(a,b){
+        var ka = parseCamelot(a.musicalKey), kb = parseCamelot(b.musicalKey);
+        if(!ka && !kb) return 0;
+        if(!ka) return 1;
+        if(!kb) return -1;
+        if(ka.n !== kb.n) return ka.n - kb.n;
+        return ka.l < kb.l ? -1 : 1;
+      });
+    }
     else if(mode==='added' && !filterText){ /* tracks already newest-first, but keep library order for playback */ }
     return list;
   }
@@ -2567,6 +2654,7 @@
       document.getElementById('footLeft').innerHTML = '<strong>'+fmtTime(playableTime)+'</strong> en playlist · <strong>'+fmtTime(total)+'</strong> en total' + (likedCount? ' · '+likedCount+' con like' : '') + (dislikedCount? ' · '+dislikedCount+' con dislike' : '');
       document.getElementById('footRight').textContent = fmtSize(sizeTotal)+' guardados en este dispositivo';
     } else foot.style.display='none';
+    if(typeof checkBackupReminder === 'function') checkBackupReminder(); // Pack 8
   }
 
   // ----- Pack de mejoras 2: portadas perezosas y lista por lotes -----
@@ -3221,6 +3309,8 @@
     var SVG_LIST = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M8 6h13M8 12h13M8 18h13"/><path d="M3.5 6h.01M3.5 12h.01M3.5 18h.01"/></svg>';
     item('Tocar siguiente', SVG_NEXT, function(){ queueNext(id); });
     item('Añadir a la cola', SVG_QUEUE, function(){ queueAdd(id); });
+    var SVG_RADIO = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4.9 19.1a10 10 0 0 1 0-14.2M7.8 16.2a6 6 0 0 1 0-8.4M19.1 4.9a10 10 0 0 1 0 14.2M16.2 7.8a6 6 0 0 1 0 8.4"/><circle cx="12" cy="12" r="1.6" fill="currentColor" stroke="none"/></svg>';
+    item('Radio de esta canción', SVG_RADIO, function(){ startRadio(id); });
     var SVG_EDIT = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.8 2.8 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></svg>';
     var SVG_SHARE = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="m8.6 13.5 6.8 4M15.4 6.5l-6.8 4"/></svg>';
     item('Compartir', SVG_SHARE, function(){ shareTrack(t); });
@@ -3358,6 +3448,7 @@
   var audioCtx=null, analyser=null, vizRAF=null;
   var eqFilters=[], deckGains={}, normGains={}, masterGain=null;
   var fxBassFilter=null, fxVocalFilter=null, fxWetGain=null; // Pack 5: efectos
+  var balPan=null, balStereoGain=null, balMonoGain=null; // Pack 8: etapa de balance y mono
   var fxConvolver=null, fxReverbOn=false; // la rama del reverb solo se conecta al grafo si está encendida
   function makeImpulse(ctx, durSec, decay){
     var rate = ctx.sampleRate, len = Math.floor(rate*durSec);
@@ -3389,6 +3480,13 @@
         fxReverbOn = false;
       }
     }
+  }
+  // Pack 8: aplica el balance (StereoPannerNode) y el modo mono (suma de
+  // canales) sobre la etapa que vive entre masterGain y el limitador.
+  function applyBalance(){
+    if(balPan && balPan.pan){ try{ balPan.pan.value = settings.balance || 0; }catch(e){} }
+    if(balStereoGain){ try{ balStereoGain.gain.value = settings.mono ? 0 : 1; }catch(e){} }
+    if(balMonoGain){ try{ balMonoGain.gain.value = settings.mono ? 1 : 0; }catch(e){} }
   }
   var EQ_FREQS = [60, 250, 1000, 4000, 12000];
   function ensureVisualizer(){
@@ -3447,7 +3545,34 @@
       limiter.ratio.value = 20;
       limiter.attack.value = 0.002;
       limiter.release.value = 0.24;
-      masterGain.connect(limiter);
+      // Pack 8: etapa de balance y mono entre masterGain y el limitador
+      // final: masterGain → panoramizador → (ruta estéreo directa | suma
+      // mono) → limitador → salida. Con balance centrado y mono apagado
+      // la ruta es transparente; la ruta que no suena lleva su ganancia
+      // a 0 y la suma mono usa divisores baratos (splitter/merger), así
+      // que no añade carga apreciable al hilo de audio.
+      balPan = audioCtx.createStereoPanner ? audioCtx.createStereoPanner() : audioCtx.createGain();
+      if(balPan.pan) balPan.pan.value = settings.balance || 0;
+      balStereoGain = audioCtx.createGain();
+      balStereoGain.gain.value = settings.mono ? 0 : 1;
+      balMonoGain = audioCtx.createGain();
+      balMonoGain.gain.value = settings.mono ? 1 : 0;
+      var balIn = audioCtx.createGain();
+      balPan.connect(balStereoGain);
+      balStereoGain.connect(balIn);
+      var balSplit = audioCtx.createChannelSplitter(2);
+      var balGL = audioCtx.createGain(); balGL.gain.value = 0.5;
+      var balGR = audioCtx.createGain(); balGR.gain.value = 0.5;
+      var balMerge = audioCtx.createChannelMerger(2);
+      balPan.connect(balSplit);
+      balSplit.connect(balGL, 0);
+      balSplit.connect(balGR, 1);
+      balGL.connect(balMerge, 0, 0); balGL.connect(balMerge, 0, 1);
+      balGR.connect(balMerge, 0, 0); balGR.connect(balMerge, 0, 1);
+      balMerge.connect(balMonoGain);
+      balMonoGain.connect(balIn);
+      masterGain.connect(balPan);
+      balIn.connect(limiter);
       limiter.connect(audioCtx.destination);
       // Cada deck (audio principal y deck de crossfade) entra a la cadena con su propio gain
       [audioEl, audioB, videoEl].forEach(function(el){
@@ -3463,7 +3588,7 @@
         normGains[deckKeyOf(el)] = ng;
       });
       refreshNorm();
-    }catch(e){ audioCtx=null; analyser=null; eqFilters=[]; deckGains={}; normGains={}; masterGain=null; fxBassFilter=null; fxVocalFilter=null; fxWetGain=null; fxConvolver=null; fxReverbOn=false; }
+    }catch(e){ audioCtx=null; analyser=null; eqFilters=[]; deckGains={}; normGains={}; masterGain=null; fxBassFilter=null; fxVocalFilter=null; fxWetGain=null; fxConvolver=null; fxReverbOn=false; balPan=null; balStereoGain=null; balMonoGain=null; }
   }
   function deckKeyOf(el){ return el === audioEl ? 'a' : (el === audioB ? 'b' : 'v'); }
   // Reparación v2.1.4 (se traba con audífonos Bluetooth): el AudioContext
@@ -3581,6 +3706,11 @@
     }
     cancelCrossfade();
     cancelSleepFade();
+    cancelFadePause();
+    // Pack 8: elegir una canción a mano (toque en una lista, una playlist,
+    // un ambiente…) sale de la radio; los avances propios de la radio
+    // llegan con radioInternal activo y no la cancelan.
+    if(radioState.active && !radioInternal && id !== radioState.seedId) stopRadio(true);
     gaplessTargetId = null;
     currentId = id;
     v2PrepareDeck(t);
@@ -3597,6 +3727,7 @@
     if(autoplay) play();
   }
   function play(){
+    cancelFadePause();
     cancelSleepFade(); // volver a reproducir: el volumen del usuario regresa intacto
     var cur = currentTrack();
     // Arranque: con aleatorio activado, la primera canción es al azar
@@ -3638,25 +3769,39 @@
     if(p && p.catch) p.catch(function(){ toast('No se pudo reproducir este archivo.'); });
   }
   function pause(){
+    cancelFadePause();
     audio.pause();
     if(fading){ try{ otherDeck().pause(); }catch(e){} }
   }
   var fadePauseTimer = null;
+  var fadePauseToken = 0;
+  // Pack 8: anula cualquier fundido de pausa pendiente. Lo llaman play(),
+  // pause() y selectTrack(): si la canción termina, cambia o se reanuda
+  // durante los ~300 ms del fundido, el temporizador viejo queda obsoleto
+  // y no puede pausar lo nuevo ni desincronizar el estado play/pausa.
+  function cancelFadePause(){
+    fadePauseToken++;
+    if(fadePauseTimer){ clearTimeout(fadePauseTimer); fadePauseTimer = null; }
+  }
   function pauseWithFade(){
+    cancelFadePause();
     var g = (audioCtx && settings.fadePause) ? gainOf(audio) : null;
     if(!g || !audioCtx){ pause(); return; }
+    var token = fadePauseToken;
+    var deck = audio;
     try{
       var now = audioCtx.currentTime;
       g.gain.cancelScheduledValues(now);
       g.gain.setValueAtTime(g.gain.value, now);
-      g.gain.linearRampToValueAtTime(0, now + 0.35);
+      g.gain.linearRampToValueAtTime(0, now + 0.3);
     }catch(e){ pause(); return; }
-    clearTimeout(fadePauseTimer);
     fadePauseTimer = setTimeout(function(){
+      fadePauseTimer = null;
+      if(token !== fadePauseToken || audio !== deck) return; // el fundido quedó obsoleto
       pause();
       var g2 = gainOf(audio);
       if(g2 && audioCtx){ try{ g2.gain.cancelScheduledValues(audioCtx.currentTime); g2.gain.value = 1; }catch(e){} }
-    }, 370);
+    }, 320);
   }
   function playWithFade(){
     play();
@@ -3666,7 +3811,7 @@
       var now = audioCtx.currentTime;
       g.gain.cancelScheduledValues(now);
       g.gain.setValueAtTime(0, now);
-      g.gain.linearRampToValueAtTime(1, now + 0.35);
+      g.gain.linearRampToValueAtTime(1, now + 0.3);
     }catch(e){}
   }
   function togglePlay(){
@@ -3771,6 +3916,24 @@
       return;
     }
     if(auto && repeatMode===2 && cur && isPlayable(cur)){ audio.currentTime=0; lastCountedId=null; play(); return; }
+    // Pack 8: Radio de una canción — al terminar, sigue una parecida a la
+    // semilla. La cola manual del usuario manda (queue.length) y Repetir
+    // una sigue teniendo prioridad, igual que con el modo DJ.
+    if(radioState.active && !queue.length && !(auto && repeatMode===2)){
+      var rId = radioPickNext();
+      if(rId){
+        lastCountedId = null;
+        if(auto && isPlaying && !settings.crossfade && startCrossfade(rId, 2)){ updateRadioUI(); return; }
+        var wpR = isPlaying;
+        radioInternal = true;
+        selectTrack(rId, wpR);
+        radioInternal = false;
+        if(!wpR) renderNow();
+        return;
+      }
+      stopRadio(true);
+      toast('La radio se detuvo: no quedan más canciones parecidas por sonar.');
+    }
     // Pack 7: Modo DJ — la siguiente la elige el DJ por cercanía de BPM
     if(djMode && !queue.length && !(auto && repeatMode===2)){
       var djId = djPickNext();
@@ -3858,6 +4021,7 @@
     // ¿Hay siguiente? (cola primero, luego contexto; sin wrap si repeat está apagado)
     var targetId = peekQueueNext();
     var fromQueue = !!targetId;
+    if(!targetId && radioState.active) targetId = radioPickNext();
     if(!targetId && djMode) targetId = djPickNext();
     if(!targetId){
       if(repeatMode===0 && !shuffle){
@@ -3881,6 +4045,7 @@
     if(repeatMode===2 || sleepAfterTrack || (typeof sleepSongsLeft !== 'undefined' && sleepSongsLeft===1)) return null;
     var q = peekQueueNext();
     if(q) return { id:q, fromQueue:true };
+    if(radioState.active){ var rd = radioPickNext(); if(rd && rd !== currentId) return { id:rd, fromQueue:false }; }
     if(djMode){ var dd = djPickNext(); if(dd && dd !== currentId) return { id:dd, fromQueue:false }; }
     if(repeatMode===0 && !shuffle){
       var list = contextPlayableIds();
@@ -4597,6 +4762,8 @@
     syncSilenceUI();
     if(typeof syncGaplessUI === 'function') syncGaplessUI();
     if(typeof syncFxUI === 'function') syncFxUI();
+    if(typeof syncBalanceUI === 'function') syncBalanceUI();
+    if(typeof applyBalance === 'function') applyBalance();
     if(typeof renderCustomPresets === 'function') renderCustomPresets();
     if(typeof applyFx === 'function') applyFx();
     document.getElementById('crossfadeRange').value = settings.crossfadeSec;
@@ -5251,6 +5418,7 @@
         crossfade: settings.crossfade, crossfadeSec: settings.crossfadeSec,
         volume: settings.volume, normalize: settings.normalize, skipSilence: settings.skipSilence,
         gapless: settings.gapless, fadePause: settings.fadePause,
+        balance: settings.balance, mono: settings.mono,
         fx: { bassOn: settings.fx.bassOn, bassDb: settings.fx.bassDb, reverb: settings.fx.reverb, vocal: settings.fx.vocal },
         customPresets: settings.customPresets,
         theme: settings.theme, accent: settings.accent, vizStyle: settings.vizStyle,
@@ -5287,6 +5455,13 @@
       })
     };
     downloadFile('respaldo-reproductor.json', new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' }));
+    // Pack 8: la fecha y el tamaño de esta copia quedan SOLO en el meta del
+    // dispositivo (nunca dentro del archivo de respaldo), para poder avisar
+    // cuando la biblioteca crezca mucho sin una copia nueva.
+    backupInfo = { at: Date.now(), count: tracks.length, snooze: tracks.length };
+    idbMetaSet('backupInfo', backupInfo);
+    if(typeof updateLastBackupNote === 'function') updateLastBackupNote();
+    if(typeof checkBackupReminder === 'function') checkBackupReminder();
     toast('Respaldo exportado: playlists, likes, historial y ajustes');
   }
   function importBackup(file){
@@ -7558,7 +7733,7 @@
   // ---------- Pack de mejoras: actualización, reanudar, deshacer, tap tempo ----------
 
   // ----- 1. Actualización sin atascos -----
-  var APP_VERSION = '2.1.4';
+  var APP_VERSION = '2.2.0';
   document.getElementById('appVersionNote').textContent = APP_VERSION;
   function cmpVersion(a, b){
     var pa = a.split('.').map(function(x){ return parseInt(x, 10) || 0; });
@@ -8209,6 +8384,206 @@
     }
     saveState(); updateDjUI();
     toast(djMode ? 'Modo DJ activado: cada siguiente canción se elegirá por cercanía de BPM.' : 'Modo DJ desactivado: vuelve el orden normal de la lista, sin interrumpir lo que suena.');
+  });
+
+  // ---------- Pack 8: radio de una canción, video flotante, balance/mono y aviso de respaldo ----------
+
+  // ----- Radio de una canción -----
+  var radioState = { active:false, seedId:null, seedTitle:'', played:{} };
+  var radioInternal = false; // true mientras la propia radio cambia de canción
+  var radioCacheFor = '__none__', radioCacheId = null;
+  function radioPickNext(){
+    if(!radioState.active) return null;
+    if(radioCacheFor === currentId && radioCacheId && trackById(radioCacheId)) return radioCacheId;
+    var seed = trackById(radioState.seedId);
+    var ref = currentTrack() || seed;
+    if(!ref) return null;
+    var pool = playableTracks().filter(function(t){ return t.id !== currentId && !radioState.played[t.id]; });
+    if(!pool.length){
+      // Ya sonó todo lo reproducible en esta radio: empieza un ciclo nuevo
+      // sin repetir la que está sonando ahora mismo.
+      radioState.played = {};
+      if(currentId) radioState.played[currentId] = 1;
+      pool = playableTracks().filter(function(t){ return t.id !== currentId; });
+      if(!pool.length) return null;
+    }
+    var refBpm = (typeof ref.bpm === 'number' && ref.bpm > 0) ? ref.bpm : null;
+    var refKey = ref.musicalKey ? parseCamelot(ref.musicalKey) : null;
+    var best = null, bestScore = -Infinity;
+    pool.forEach(function(t){
+      var score = 0;
+      // Compatibilidad de tonalidad en la rueda Camelot, como en el DJ armónico
+      if(refKey && t.musicalKey){
+        var ck = parseCamelot(t.musicalKey);
+        if(ck){
+          if(ck.n === refKey.n && ck.l === refKey.l) score += 40;                    // misma tonalidad
+          else if(ck.l === refKey.l && Math.abs(ck.n - refKey.n) === 1) score += 30; // ±1 en la rueda
+          else if(ck.n === refKey.n) score += 25;                                    // relativa mayor/menor
+        }
+      }
+      // Cercanía de BPM
+      if(refBpm && typeof t.bpm === 'number' && t.bpm > 0){
+        var rel = Math.abs(t.bpm - refBpm) / refBpm;
+        score += rel <= 0.15 ? (30 - rel * 120) : Math.max(0, 10 - rel * 30);
+      } else score += 10;
+      // Cercanía de energía/ambiente analizados
+      if(typeof ref.energy === 'number' && typeof t.energy === 'number') score += (1 - Math.abs(t.energy - ref.energy)) * 20;
+      else score += 5;
+      if(ref.mood && t.mood && t.mood === ref.mood) score += 8;
+      // Bono por ser del mismo artista o álbum que la semilla
+      if(seed && t.id !== seed.id){
+        if(seed.artist && t.artist && t.artist.toLowerCase() === seed.artist.toLowerCase()) score += 12;
+        if(seed.album && t.album && t.album.toLowerCase() === seed.album.toLowerCase()) score += 8;
+      }
+      if(t.rating === 'like') score += 6;
+      if(typeof t.stars === 'number') score += t.stars * 1.5;
+      score += Math.random() * 4;
+      if(score > bestScore){ bestScore = score; best = t.id; }
+    });
+    radioCacheFor = currentId; radioCacheId = best;
+    if(best) radioState.played[best] = 1;
+    return best;
+  }
+  function updateRadioUI(){
+    var bar = document.getElementById('radioBar');
+    if(!bar) return;
+    bar.style.display = radioState.active ? '' : 'none';
+    if(radioState.active){
+      var seed = trackById(radioState.seedId);
+      document.getElementById('radioText').textContent = '📻 Radio de «' + (seed ? seed.title : radioState.seedTitle) + '» activa: al terminar cada canción seguirá otra parecida.';
+    }
+  }
+  function startRadio(id){
+    var t = trackById(id);
+    if(!t) return;
+    if(t.rating === 'dislike'){ toast('«' + t.title + '» tiene dislike y no puede ser la semilla de la radio.'); return; }
+    radioState = { active:true, seedId:id, seedTitle:t.title, played:{} };
+    radioState.played[id] = 1;
+    radioCacheFor = '__none__'; radioCacheId = null;
+    updateRadioUI();
+    radioInternal = true;
+    selectTrack(id, true);
+    radioInternal = false;
+    toast('Radio de «' + t.title + '»: seguirán canciones parecidas. Puedes detenerla desde el reproductor.');
+  }
+  function stopRadio(silent){
+    if(!radioState.active) return;
+    radioState.active = false;
+    radioState.seedId = null;
+    radioCacheFor = '__none__'; radioCacheId = null;
+    updateRadioUI();
+    if(!silent) toast('Radio detenida: sigue el orden normal de la lista.');
+  }
+  document.getElementById('btnRadioStop').addEventListener('click', function(){ stopRadio(false); });
+  document.getElementById('btnRadioCurrent').addEventListener('click', function(){
+    var t = currentTrack();
+    if(!t){ toast('Elige primero una canción para empezar su radio.'); return; }
+    startRadio(t.id);
+  });
+
+  // ----- Video flotante (picture-in-picture) -----
+  function pipSupported(){
+    return !!(document.pictureInPictureEnabled && typeof videoEl.requestPictureInPicture === 'function');
+  }
+  function refreshPipBtn(){
+    var b = document.getElementById('btnPip');
+    if(!b) return;
+    var t = currentTrack();
+    // En modo «solo audio» la imagen está oculta a propósito: el botón no
+    // aparece, y ese modo no se ve afectado por el video flotante.
+    b.style.display = (t && t.kind === 'video' && !videoAudioOnly && pipSupported()) ? '' : 'none';
+  }
+  document.getElementById('btnPip').addEventListener('click', function(){
+    var t = currentTrack();
+    if(!t || t.kind !== 'video') return;
+    if(document.pictureInPictureElement === videoEl){
+      var xp = document.exitPictureInPicture();
+      if(xp && xp.catch) xp.catch(function(){});
+      return;
+    }
+    if(videoEl.readyState === 0){ toast('El video aún se está cargando; prueba el flotante en un segundo.'); return; }
+    try{
+      var rp = videoEl.requestPictureInPicture();
+      if(rp && rp.catch) rp.catch(function(){ toast('Este navegador no pudo abrir el video flotante para este video.'); });
+    }catch(e){ toast('Este navegador no pudo abrir el video flotante para este video.'); }
+  });
+
+  // ----- Balance y mono: controles del panel de sonido -----
+  function balanceLabel(v){
+    if(!v) return 'Centro';
+    return v < 0 ? (Math.round(-v * 100) + '% izquierda') : (Math.round(v * 100) + '% derecha');
+  }
+  function syncBalanceUI(){
+    var r = document.getElementById('balanceRange');
+    if(!r) return;
+    r.value = Math.round((settings.balance || 0) * 100);
+    document.getElementById('balanceOut').textContent = balanceLabel(settings.balance || 0);
+    var bm = document.getElementById('btnMono');
+    bm.classList.toggle('on', !!settings.mono);
+    bm.setAttribute('aria-pressed', settings.mono ? 'true' : 'false');
+    document.getElementById('monoState').textContent = settings.mono ? 'Activado' : 'Apagado';
+  }
+  document.getElementById('balanceRange').addEventListener('input', function(ev){
+    settings.balance = Math.max(-1, Math.min(1, (parseInt(ev.target.value, 10) || 0) / 100));
+    document.getElementById('balanceOut').textContent = balanceLabel(settings.balance);
+    applyBalance(); saveState();
+  });
+  document.getElementById('btnBalanceCenter').addEventListener('click', function(){
+    settings.balance = 0;
+    syncBalanceUI(); applyBalance(); saveState();
+    toast('Balance centrado');
+  });
+  document.getElementById('btnMono').addEventListener('click', function(){
+    settings.mono = !settings.mono;
+    syncBalanceUI(); applyBalance(); saveState();
+    toast(settings.mono ? 'Modo mono activado: los dos canales suenan sumados en ambos lados.' : 'Modo mono desactivado: estéreo normal.');
+  });
+  syncBalanceUI();
+
+  // ----- Aviso de respaldo -----
+  // backupInfo vive SOLO en el almacén meta del dispositivo (fecha y nº de
+  // canciones de la última copia exportada, y hasta qué tamaño de
+  // biblioteca se descartó el aviso). Nunca entra en el archivo de respaldo.
+  var backupInfo = null;
+  function fmtBackupDate(ts){
+    var d = new Date(ts);
+    return d.toLocaleDateString('es', { day:'numeric', month:'short', year:'numeric' }) + ', ' + d.toLocaleTimeString('es', { hour:'2-digit', minute:'2-digit' });
+  }
+  function updateLastBackupNote(){
+    var el = document.getElementById('lastBackupNote');
+    if(!el) return;
+    el.textContent = (backupInfo && backupInfo.at)
+      ? ('Última copia: ' + fmtBackupDate(backupInfo.at) + ' · con ' + (backupInfo.count || 0) + ((backupInfo.count || 0) === 1 ? ' canción' : ' canciones'))
+      : 'Sin copia todavía';
+  }
+  function checkBackupReminder(){
+    var bar = document.getElementById('backupReminder');
+    if(!bar) return;
+    var n = tracks.length;
+    var base = backupInfo ? Math.max(backupInfo.count || 0, backupInfo.snooze || 0) : 0;
+    var grew = n - base;
+    var show = grew >= 25 || (base > 0 && grew >= Math.max(5, Math.ceil(base * 0.2)));
+    if(show){
+      document.getElementById('backupReminderText').textContent = (backupInfo && backupInfo.at)
+        ? ('Tu biblioteca creció ' + grew + (grew === 1 ? ' canción' : ' canciones') + ' desde la última copia (' + fmtBackupDate(backupInfo.at) + '). Un respaldo nuevo guarda tus playlists, likes y ajustes.')
+        : ('Ya tienes ' + n + ' canciones y todavía no exportaste ningún respaldo. Una copia guarda tus playlists, likes y ajustes por si le pasa algo a este navegador.');
+      bar.classList.add('show');
+    } else {
+      bar.classList.remove('show');
+    }
+  }
+  document.getElementById('btnBackupNow').addEventListener('click', function(){ exportBackup(); });
+  document.getElementById('btnBackupDismiss').addEventListener('click', function(){
+    if(!backupInfo) backupInfo = { at:0, count:0, snooze:0 };
+    backupInfo.snooze = tracks.length; // no insistir hasta que crezca otro tanto
+    idbMetaSet('backupInfo', backupInfo);
+    checkBackupReminder();
+    toast('Vale: no te lo recuerdo hasta que la biblioteca crezca otro tanto.');
+  });
+  idbMetaGet('backupInfo').then(function(b){
+    if(b && typeof b === 'object') backupInfo = { at:(typeof b.at === 'number' ? b.at : 0), count:(typeof b.count === 'number' ? b.count : 0), snooze:(typeof b.snooze === 'number' ? b.snooze : 0) };
+    updateLastBackupNote();
+    checkBackupReminder();
   });
 
   // ----- 3. Logros y racha -----
@@ -8868,6 +9243,7 @@
     }
     var b = document.getElementById('btnVideoAudioOnly');
     if(b) b.style.display = wantVideo ? '' : 'none';
+    refreshPipBtn(); // Pack 8: el botón «Video flotante» sigue al video actual
   }
   function moveVideoToParty(){
     var t = currentTrack();
@@ -8899,6 +9275,7 @@
       if(videoAudioOnly){ moveVideoToPlayer(); videoEl.style.display = 'none'; }
       else videoEl.style.display = '';
     }
+    refreshPipBtn(); // Pack 8: en «solo audio» el botón flotante se oculta
     toast(videoAudioOnly ? 'Solo audio: la imagen del video se oculta y la música sigue sonando.' : 'Mostrando el video otra vez.');
   });
   window.addEventListener('error', function(ev){
