@@ -1115,7 +1115,7 @@
         <div class="update-row">
           <button class="btn small" id="btnCheckUpdate" type="button">Actualizar app</button>
           <button class="btn small danger" id="btnForceUpdate" type="button">Forzar actualización</button>
-          <span class="backup-note" id="updateStatus">Versión de esta app: v<span id="appVersionNote">2.1.3</span>. «Actualizar app» consulta la versión publicada y te dice si ya estás al día antes de recargar. «Forzar actualización» limpia el service worker y las cachés de la app si una actualización se quedó atascada; tu biblioteca, playlists y ajustes (IndexedDB) nunca se tocan.</span>
+          <span class="backup-note" id="updateStatus">Versión de esta app: v<span id="appVersionNote">2.1.4</span>. «Actualizar app» consulta la versión publicada y te dice si ya estás al día antes de recargar. «Forzar actualización» limpia el service worker y las cachés de la app si una actualización se quedó atascada; tu biblioteca, playlists y ajustes (IndexedDB) nunca se tocan.</span>
         </div>
       </div>
 
@@ -1786,7 +1786,7 @@
 
   // ---------- State ----------
   var tracks = []; // {id,name,title,artist,album,duration,size,type,addedAt,url,coverUrl,color,rating,stars}
-  var APP_VERSION = '2.1.3'; // al publicar cambios, subir este número y el CACHE de sw.js
+  var APP_VERSION = '2.1.4'; // al publicar cambios, subir este número y el CACHE de sw.js
   var currentId = null;
   var isPlaying = false;
   var shuffle = false;
@@ -3358,6 +3358,7 @@
   var audioCtx=null, analyser=null, vizRAF=null;
   var eqFilters=[], deckGains={}, normGains={}, masterGain=null;
   var fxBassFilter=null, fxVocalFilter=null, fxWetGain=null; // Pack 5: efectos
+  var fxConvolver=null, fxReverbOn=false; // la rama del reverb solo se conecta al grafo si está encendida
   function makeImpulse(ctx, durSec, decay){
     var rate = ctx.sampleRate, len = Math.floor(rate*durSec);
     var buf = ctx.createBuffer(2, len, rate);
@@ -3371,6 +3372,23 @@
     if(fxBassFilter){ try{ fxBassFilter.gain.value = settings.fx.bassOn ? settings.fx.bassDb : 0; }catch(e){} }
     if(fxVocalFilter){ try{ fxVocalFilter.gain.value = settings.fx.vocal ? 5 : 0; }catch(e){} }
     if(fxWetGain){ try{ fxWetGain.gain.value = settings.fx.reverb ? 0.22 : 0; }catch(e){} }
+    // Reparación v2.1.4 (se traba con audífonos Bluetooth): el convolver del
+    // reverb es el nodo más caro de la cadena y procesa la señal SIEMPRE,
+    // también con el reverb apagado —poner la ganancia húmeda a 0 solo
+    // silencia su salida, no detiene la convolución—. Ese coste constante
+    // deja sin margen al hilo de audio cuando la salida es Bluetooth (su
+    // búfer efectivo en Android es más justo que el del altavoz) y la
+    // música se traba, aunque por el altavoz suene bien. Ahora la rama
+    // húmeda solo existe en el grafo mientras el reverb está encendido.
+    if(fxConvolver && fxVocalFilter && fxWetGain){
+      if(settings.fx.reverb && !fxReverbOn){
+        try{ fxVocalFilter.connect(fxConvolver); fxConvolver.connect(fxWetGain); fxReverbOn = true; }catch(e){}
+      } else if(!settings.fx.reverb && fxReverbOn){
+        try{ fxVocalFilter.disconnect(fxConvolver); }catch(e){}
+        try{ fxConvolver.disconnect(fxWetGain); }catch(e){}
+        fxReverbOn = false;
+      }
+    }
   }
   var EQ_FREQS = [60, 250, 1000, 4000, 12000];
   function ensureVisualizer(){
@@ -3404,14 +3422,15 @@
       fxBassFilter.type = 'lowshelf'; fxBassFilter.frequency.value = 120;
       fxVocalFilter = audioCtx.createBiquadFilter();
       fxVocalFilter.type = 'peaking'; fxVocalFilter.frequency.value = 2800; fxVocalFilter.Q.value = 0.9;
-      var convolver = audioCtx.createConvolver();
-      try{ convolver.buffer = makeImpulse(audioCtx, 1.6, 2.6); }catch(e){}
+      fxConvolver = audioCtx.createConvolver();
+      try{ fxConvolver.buffer = makeImpulse(audioCtx, 1.6, 2.6); }catch(e){}
       fxWetGain = audioCtx.createGain();
       eqFilters[eqFilters.length-1].connect(fxBassFilter);
       fxBassFilter.connect(fxVocalFilter);
       fxVocalFilter.connect(analyser);
-      fxVocalFilter.connect(convolver);
-      convolver.connect(fxWetGain);
+      fxVocalFilter.connect(fxConvolver);
+      fxConvolver.connect(fxWetGain);
+      fxReverbOn = true; // applyFx() lo desconecta enseguida si el reverb está apagado
       fxWetGain.connect(analyser);
       applyFx();
       analyser.connect(masterGain);
@@ -3444,9 +3463,41 @@
         normGains[deckKeyOf(el)] = ng;
       });
       refreshNorm();
-    }catch(e){ audioCtx=null; analyser=null; eqFilters=[]; deckGains={}; normGains={}; masterGain=null; fxBassFilter=null; fxVocalFilter=null; fxWetGain=null; }
+    }catch(e){ audioCtx=null; analyser=null; eqFilters=[]; deckGains={}; normGains={}; masterGain=null; fxBassFilter=null; fxVocalFilter=null; fxWetGain=null; fxConvolver=null; fxReverbOn=false; }
   }
   function deckKeyOf(el){ return el === audioEl ? 'a' : (el === audioB ? 'b' : 'v'); }
+  // Reparación v2.1.4 (se traba con audífonos Bluetooth): el AudioContext
+  // queda atado a la salida que había al crearse (búfer y frecuencia del
+  // altavoz, normalmente). Si después se conectan unos audífonos Bluetooth
+  // —o se desconectan—, Chrome en Android no renegocia la salida de un
+  // contexto ya abierto: la ruta Bluetooth hereda la configuración anterior,
+  // se queda sin margen y el audio se traba, aunque la misma canción suene
+  // bien por el altavoz y en otros reproductores. Al detectar el cambio de
+  // dispositivos se suspende y se reanuda el contexto para que reabra la
+  // salida contra el dispositivo actual. El grafo no se toca (nodos y
+  // fuentes de los decks intactos) y la reproducción sigue donde iba: solo
+  // hay una micro-pausa en el instante del cambio, que es justo cuando la
+  // salida física también está cambiando.
+  var outSwitchTimer = null;
+  if(navigator.mediaDevices && navigator.mediaDevices.addEventListener){
+    navigator.mediaDevices.addEventListener('devicechange', function(){
+      if(!audioCtx) return;
+      if(outSwitchTimer) clearTimeout(outSwitchTimer);
+      outSwitchTimer = setTimeout(function(){
+        outSwitchTimer = null;
+        if(!audioCtx) return;
+        try{
+          var reopen = function(){
+            setTimeout(function(){
+              try{ var rp = audioCtx && audioCtx.resume(); if(rp && rp.catch) rp.catch(function(){}); }catch(e){}
+            }, 150);
+          };
+          var sp = audioCtx.suspend();
+          if(sp && sp.then) sp.then(reopen, reopen); else reopen();
+        }catch(e){}
+      }, 350);
+    });
+  }
   function gainOf(el){ return deckGains[deckKeyOf(el)] || null; }
   function applyEqValues(vals){
     for(var i=0;i<eqFilters.length;i++){ try{ eqFilters[i].gain.value = (vals && typeof vals[i]==='number') ? vals[i] : 0; }catch(e){} }
@@ -7507,7 +7558,7 @@
   // ---------- Pack de mejoras: actualización, reanudar, deshacer, tap tempo ----------
 
   // ----- 1. Actualización sin atascos -----
-  var APP_VERSION = '2.1.3';
+  var APP_VERSION = '2.1.4';
   document.getElementById('appVersionNote').textContent = APP_VERSION;
   function cmpVersion(a, b){
     var pa = a.split('.').map(function(x){ return parseInt(x, 10) || 0; });
