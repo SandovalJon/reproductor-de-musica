@@ -873,6 +873,9 @@
             <span id="repeatOne" style="display:none; position:absolute; top:2px; right:2px; background:var(--accent); color:#fff; font-size:9px; font-weight:800; width:15px; height:15px; border-radius:50%; place-items:center">1</span>
           </button>
         </div>
+        <div style="display:flex; justify-content:center; margin-top:10px">
+          <button class="toggle-pill" id="btnSmartShuffle" type="button" aria-pressed="false"><span class="dot"></span><span>Aleatorio inteligente:&nbsp;</span><span id="smartShuffleState">Apagado</span></button>
+        </div>
 
         <div class="secondary-row">
           <div class="vol-group">
@@ -903,7 +906,7 @@
           <div class="sound-body" id="soundBody" style="display:none">
             <div class="sound-group">
               <div class="sound-group-head">
-                <h4>Ecualizador · 5 bandas</h4>
+                <h4>Ecualizador · 10 bandas</h4>
                 <label class="sr-only" for="eqPreset">Preajuste de ecualizador</label>
                 <select id="eqPreset">
                   <option value="flat">Plano</option>
@@ -1153,6 +1156,7 @@
         <div class="backup-row">
           <button class="btn small" id="btnExportBackup" type="button">Exportar respaldo</button>
           <button class="btn small" id="btnImportBackup" type="button">Importar respaldo</button>
+          <button class="btn small" id="btnHealth" type="button">Revisar biblioteca</button>
           <span class="backup-note">El respaldo guarda playlists, likes, historial, contadores y ajustes en un archivo. No incluye los archivos de audio.</span>
           <span class="backup-note" id="lastBackupNote" style="flex:1 1 100%">Sin copia todavía</span>
         </div>
@@ -1164,7 +1168,7 @@
         <div class="update-row">
           <button class="btn small" id="btnCheckUpdate" type="button">Actualizar app</button>
           <button class="btn small danger" id="btnForceUpdate" type="button">Forzar actualización</button>
-          <span class="backup-note" id="updateStatus">Versión de esta app: v<span id="appVersionNote">2.2.0</span>. «Actualizar app» consulta la versión publicada y te dice si ya estás al día antes de recargar. «Forzar actualización» limpia el service worker y las cachés de la app si una actualización se quedó atascada; tu biblioteca, playlists y ajustes (IndexedDB) nunca se tocan.</span>
+          <span class="backup-note" id="updateStatus">Versión de esta app: v<span id="appVersionNote">2.3.0</span>. «Actualizar app» consulta la versión publicada y te dice si ya estás al día antes de recargar. «Forzar actualización» limpia el service worker y las cachés de la app si una actualización se quedó atascada; tu biblioteca, playlists y ajustes (IndexedDB) nunca se tocan.</span>
         </div>
       </div>
 
@@ -1211,6 +1215,7 @@
       <div class="subview" id="viewPlaylists" style="display:none">
         <div class="subview-actions" style="padding-top:16px">
           <button class="btn small" id="btnImportM3u" type="button">Importar lista .m3u</button>
+          <button class="btn small" id="btnTextList" type="button">Crear desde lista de texto</button>
           <span class="backup-note">Lee una lista .m3u de otro reproductor y la arma aquí como playlist, con las canciones que coincidan en tu biblioteca por nombre de archivo y por título.</span>
         </div>
         <div class="pl-bar" id="plBar"></div>
@@ -1702,6 +1707,43 @@
   </div>
 </div>
 
+<div class="modal-overlay" id="tlModal" aria-hidden="true">
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="tlModalTitle">
+    <h3 id="tlModalTitle">Crear playlist desde una lista de texto</h3>
+    <p>Pega una canción por línea en formato «Artista – Título». También se acepta «Título – Artista» si la primera forma no coincide, guiones – o -, y líneas con solo el título. Cada línea se busca solo en tu biblioteca, con la misma tolerancia de la búsqueda (acentos y errores menores); si hay varias coincidencias, entra la más exacta.</p>
+    <div class="field">
+      <label for="tlName">Nombre de la playlist</label>
+      <input type="text" id="tlName" maxlength="60" placeholder="Ej.: Pegada de otro servicio" autocomplete="off" />
+    </div>
+    <div class="field">
+      <label for="tlText">Canciones, una por línea</label>
+      <textarea id="tlText" rows="9" placeholder="Artista – Título&#10;Otro artista - Otra canción&#10;Solo un título"></textarea>
+    </div>
+    <div id="tlResult" style="display:none"></div>
+    <div class="modal-actions">
+      <button class="btn small" id="tlModalCancel" type="button">Cerrar</button>
+      <button class="btn small primary" id="tlModalCreate" type="button">Crear playlist</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="healthModal" aria-hidden="true">
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="healthModalTitle">
+    <h3 id="healthModalTitle">Salud de la biblioteca</h3>
+    <p>Revisión solo a demanda, nunca automática: comprueba canción por canción que el archivo guardado se pueda cargar/decodificar y que su duración sea válida. Las canciones sanas no se tocan nunca.</p>
+    <div style="height:8px; border-radius:999px; background:var(--surface-2); border:1px solid var(--line); overflow:hidden; margin:10px 0 6px"><div id="healthBar" style="height:100%; width:0%; background:var(--accent); transition:width .2s"></div></div>
+    <p class="sound-note" id="healthStatus" role="status">Pulsa «Empezar revisión» para comprobar tu biblioteca.</p>
+    <div id="healthResults"></div>
+    <div class="modal-actions" style="flex-wrap:wrap">
+      <button class="btn small danger" id="btnHealthRemoveSel" type="button" style="display:none">Quitar seleccionadas</button>
+      <button class="btn small danger" id="btnHealthRemoveAll" type="button" style="display:none">Quitar todas las problemáticas</button>
+      <button class="btn small" id="btnHealthCancel" type="button" style="display:none">Cancelar revisión</button>
+      <button class="btn small" id="healthModalClose" type="button">Cerrar</button>
+      <button class="btn small primary" id="btnHealthStart" type="button">Empezar revisión</button>
+    </div>
+  </div>
+</div>
+
 <div class="party" id="partyOverlay" aria-hidden="true">
   <button class="party-close" id="btnPartyClose" type="button" aria-label="Salir del modo fiesta">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
@@ -1727,6 +1769,9 @@
     <button class="icon-btn" id="btnPartyNext" type="button" aria-label="Canción siguiente">
       <svg viewBox="0 0 24 24" fill="currentColor"><path d="M16 5h2v14h-2zM4 5v14l10.5-7z"/></svg>
     </button>
+  </div>
+  <div style="display:flex; justify-content:center; margin-top:18px">
+    <button class="toggle-pill" id="btnWakeParty" type="button" aria-pressed="false"><span class="dot"></span><span>Mantener pantalla encendida:&nbsp;</span><span id="wakePartyState">Apagada</span></button>
   </div>
 </div>
 
@@ -1760,6 +1805,9 @@
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 14V2"/><path d="M9 18.12 10 14H4.17a2 2 0 0 1-1.92-2.56l2.33-8A2 2 0 0 1 6.5 2H20a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2h-2.76a2 2 0 0 0-1.79 1.11L12 22a3.13 3.13 0 0 1-3-3.88Z"/></svg>
       No me gusta
     </button>
+  </div>
+  <div style="display:flex; justify-content:center; margin-top:18px">
+    <button class="toggle-pill" id="btnWakeCar" type="button" aria-pressed="false"><span class="dot"></span><span>Mantener pantalla encendida:&nbsp;</span><span id="wakeCarState">Apagada</span></button>
   </div>
 </div>
 
@@ -1835,7 +1883,7 @@
 
   // ---------- State ----------
   var tracks = []; // {id,name,title,artist,album,duration,size,type,addedAt,url,coverUrl,color,rating,stars}
-  var APP_VERSION = '2.2.0'; // al publicar cambios, subir este número y el CACHE de sw.js
+  var APP_VERSION = '2.3.0'; // al publicar cambios, subir este número y el CACHE de sw.js
   var currentId = null;
   var isPlaying = false;
   var shuffle = false;
@@ -1861,7 +1909,7 @@
   var playContext = { type:'library', playlistId:null };
   var lastCountedId = null;
   var settings = {
-    eq: [0,0,0,0,0],
+    eq: [0,0,0,0,0,0,0,0,0,0], // Pack 9: ecualizador de 10 bandas (la conversión 5→10 vive en eqTo10)
     eqPreset: 'flat',
     speed: 1,
     crossfade: false,
@@ -1873,6 +1921,8 @@
     fadePause: true,
     balance: 0, // Pack 8: -1 (izquierda) … 0 (centro) … 1 (derecha)
     mono: false, // Pack 8: suma de ambos canales
+    smartShuffle: false, // Pack 9: el aleatorio reparte artistas y álbumes para que no suenen seguidos
+    wakeLock: false, // Pack 9: mantener la pantalla encendida dentro de Fiesta y Coche
     fx: { bassOn: false, bassDb: 6, reverb: false, vocal: false },
     customPresets: [],
     theme: 'auto', // Pack 6: 'auto' | 'light' | 'dark'
@@ -1893,13 +1943,13 @@
   }
   function sanitizeCustomPresets(list){
     if(!Array.isArray(list)) return [];
-    return list.filter(function(p){ return p && typeof p.name === 'string' && p.name.trim() && Array.isArray(p.values) && p.values.length === 5 && p.values.every(function(v){ return typeof v === 'number' && isFinite(v); }); })
+    return list.filter(function(p){ return p && typeof p.name === 'string' && p.name.trim() && Array.isArray(p.values) && (p.values.length === 5 || p.values.length === 10) && p.values.every(function(v){ return typeof v === 'number' && isFinite(v); }); })
       .slice(0, 30)
-      .map(function(p){ return { name: p.name.trim().slice(0, 30), values: p.values.map(function(v){ return Math.max(-12, Math.min(12, v)); }) }; });
+      .map(function(p){ return { name: p.name.trim().slice(0, 30), values: eqTo10(p.values) }; });
   }
   function applySettingsObject(ds){
     if(!ds || typeof ds !== 'object') return;
-    if(Array.isArray(ds.eq) && ds.eq.length === 5) settings.eq = ds.eq.map(function(v){ v = parseFloat(v); return isFinite(v) ? Math.max(-12, Math.min(12, v)) : 0; });
+    if(Array.isArray(ds.eq) && (ds.eq.length === 5 || ds.eq.length === 10)) settings.eq = eqTo10(ds.eq);
     if(typeof ds.eqPreset === 'string') settings.eqPreset = ds.eqPreset;
     var sp = parseFloat(ds.speed); if(isFinite(sp)) settings.speed = Math.max(0.5, Math.min(2, sp));
     settings.crossfade = !!ds.crossfade;
@@ -1911,6 +1961,8 @@
     if(typeof ds.fadePause === 'boolean') settings.fadePause = ds.fadePause;
     var bal = parseFloat(ds.balance); if(isFinite(bal)) settings.balance = Math.max(-1, Math.min(1, bal));
     settings.mono = !!ds.mono;
+    if(typeof ds.smartShuffle === 'boolean') settings.smartShuffle = ds.smartShuffle;
+    if(typeof ds.wakeLock === 'boolean') settings.wakeLock = ds.wakeLock;
     if(ds.fx) settings.fx = sanitizeFx(ds.fx);
     if(Array.isArray(ds.customPresets)) settings.customPresets = sanitizeCustomPresets(ds.customPresets);
     // Pack 6: apariencia y alarma, con valores por defecto sensatos
@@ -2360,12 +2412,33 @@
   }
   function isMediaFile(f){ return isAudioFile(f) || isVideoFile(f); }
 
+  // Pack 9: portada desde la carpeta. Si en el lote viene una imagen llamada
+  // cover, folder, portada, frontal o album (.jpg/.jpeg/.png/.webp, sin
+  // distinguir mayúsculas), se aplica como carátula a las canciones de SU
+  // MISMA carpeta que no tengan carátula propia, guardada por la misma vía
+  // que usa el editor de metadatos (coverBlob en el registro + coverUrl en
+  // memoria). La imagen nunca crea una pista ni sobrescribe una carátula
+  // existente, y el conteo aplicado se suma al resumen de agregar.
+  var FOLDER_COVER_RE = /^(cover|folder|portada|frontal|album)\.(jpe?g|png|webp)$/i;
+  function isFolderCoverFile(f){ return !!(f && FOLDER_COVER_RE.test(String(f.name || '').trim())); }
+  function folderDirOfFile(f){
+    var rel = (f && (f.webkitRelativePath || f._dropPath)) || '';
+    return rel ? String(rel).replace(/^\/+/, '').split('/').slice(0, -1).join('/') : '';
+  }
   var adding = false;
   function addFiles(fileList){
     var all = Array.prototype.slice.call(fileList || []);
+    var coverByDir = {};
+    all.forEach(function(f){
+      if(isFolderCoverFile(f)){
+        var d = folderDirOfFile(f);
+        if(!coverByDir[d]) coverByDir[d] = f;
+      }
+    });
     var files = all.filter(isMediaFile);
     if(!files.length){
-      if(all.length){
+      if(Object.keys(coverByDir).length) toast('La imagen de portada necesita venir junto a las canciones de su carpeta para poder aplicarse.');
+      else if(all.length){
         var sample = all.slice(0,3).map(function(f){ return (f && f.name) || 'sin-nombre'; }).join(', ');
         try{ console.log('[reproductor] archivos recibidos pero ninguno de audio o video:', all.map(function(f){ return {name:f.name, type:f.type, size:f.size}; })); }catch(e){}
         toast('Ningún archivo era de audio o video. Revisé '+all.length+' archivo(s): '+sample+'. Prueba con MP3, WAV, FLAC, M4A, OGG, MP4 o WebM.');
@@ -2385,10 +2458,26 @@
     });
     return chain.then(function(){
       adding = false;
+      // Portadas de carpeta: solo a canciones de esa carpeta sin carátula
+      // propia (las recién añadidas o las que ya estaban en la biblioteca).
+      var coversApplied = 0;
+      Object.keys(coverByDir).forEach(function(dir){
+        var blob = coverByDir[dir];
+        tracks.forEach(function(t){
+          if((t.folder || '') === dir && !t.coverUrl){
+            t.coverUrl = URL.createObjectURL(blob);
+            idbPatch(t.id, { coverBlob: blob });
+            coversApplied++;
+          }
+        });
+      });
       rebuildShuffle();
       render();
-      if(added===1) toast('1 canción añadida a tu biblioteca');
-      else if(added>1) toast(added+' canciones añadidas a tu biblioteca');
+      var addMsg = '';
+      if(added===1) addMsg = '1 canción añadida a tu biblioteca';
+      else if(added>1) addMsg = added+' canciones añadidas a tu biblioteca';
+      if(coversApplied) addMsg += (addMsg ? ' · ' : '') + coversApplied + (coversApplied===1 ? ' carátula aplicada' : ' carátulas aplicadas') + ' desde la carpeta';
+      if(addMsg) toast(addMsg);
       if(!currentId && tracks.length){
         var fp = firstPlayableId();
         if(fp) selectTrack(fp, false);
@@ -2471,7 +2560,7 @@
           year: (typeof r.year==='string') ? r.year : '',
           tags: Array.isArray(r.tags) ? r.tags.filter(function(x){ return typeof x==='string' && x.trim(); }).map(function(x){ return x.trim(); }) : [],
           memSpeed: (typeof r.memSpeed==='number' && isFinite(r.memSpeed) && r.memSpeed>=0.5 && r.memSpeed<=2) ? r.memSpeed : null,
-          memEq: (Array.isArray(r.memEq) && r.memEq.length===5 && r.memEq.every(function(v){ return typeof v==='number' && isFinite(v); })) ? r.memEq.map(function(v){ return Math.max(-12, Math.min(12, v)); }) : null,
+          memEq: (Array.isArray(r.memEq) && (r.memEq.length===5 || r.memEq.length===10) && r.memEq.every(function(v){ return typeof v==='number' && isFinite(v); })) ? eqTo10(r.memEq) : null,
           folder: (typeof r.folder==='string') ? r.folder : '',
           abLoop: (r.abLoop && typeof r.abLoop.a==='number' && typeof r.abLoop.b==='number' && r.abLoop.b>r.abLoop.a) ? {a:r.abLoop.a, b:r.abLoop.b} : null,
           bookmarks: Array.isArray(r.bookmarks) ? r.bookmarks.filter(function(b){ return b && typeof b.time==='number' && isFinite(b.time); }).map(function(b){ return { name:(typeof b.name==='string' && b.name) ? b.name : 'Marcador', time:b.time }; }) : [],
@@ -3488,7 +3577,33 @@
     if(balStereoGain){ try{ balStereoGain.gain.value = settings.mono ? 0 : 1; }catch(e){} }
     if(balMonoGain){ try{ balMonoGain.gain.value = settings.mono ? 1 : 0; }catch(e){} }
   }
-  var EQ_FREQS = [60, 250, 1000, 4000, 12000];
+  // Pack 9: ecualizador de 10 bandas octavales. La conversión 5→10 interpola
+  // sobre la curva en escala logarítmica de frecuencia: cada banda nueva toma
+  // el valor interpolado entre las dos bandas viejas que la rodean (y fuera
+  // del rango viejo, el valor de la banda vieja más cercana). Así, lo que el
+  // usuario ya tenía ajustado —EQ global, presets y memoria por canción—
+  // suena prácticamente igual, ahora con el doble de precisión.
+  var EQ_OLD_FREQS = [60, 250, 1000, 4000, 12000];
+  var EQ_FREQS = [31, 62, 125, 250, 500, 1000, 2000, 4000, 8000, 16000];
+  function clampDb(v){ v = parseFloat(v); return isFinite(v) ? Math.max(-12, Math.min(12, v)) : 0; }
+  function eqTo10(vals){
+    if(!Array.isArray(vals)) return [0,0,0,0,0,0,0,0,0,0];
+    if(vals.length === 10) return vals.map(clampDb);
+    if(vals.length !== 5) return [0,0,0,0,0,0,0,0,0,0];
+    var old = vals.map(clampDb);
+    return EQ_FREQS.map(function(f){
+      if(f <= EQ_OLD_FREQS[0]) return old[0];
+      if(f >= EQ_OLD_FREQS[EQ_OLD_FREQS.length - 1]) return old[old.length - 1];
+      for(var i = 0; i < EQ_OLD_FREQS.length - 1; i++){
+        var f0 = EQ_OLD_FREQS[i], f1 = EQ_OLD_FREQS[i + 1];
+        if(f >= f0 && f <= f1){
+          var t = Math.log(f / f0) / Math.log(f1 / f0);
+          return Math.round((old[i] + (old[i + 1] - old[i]) * t) * 10) / 10;
+        }
+      }
+      return old[old.length - 1];
+    });
+  }
   function ensureVisualizer(){
     if(audioCtx) return;
     try{
@@ -3496,7 +3611,7 @@
       if(!AC) return;
       // Reparación v2.1.3 (Android): contexto pensado para REPRODUCIR, no
       // para grabar. Con el búfer mínimo por defecto, varios Android se
-      // quedan sin margen con esta cadena (EQ de 5 bandas + efectos +
+      // quedan sin margen con esta cadena (EQ de 10 bandas + efectos +
       // convolver + analizador) y el audio sale con chasquidos y ruido;
       // 'playback' pide un búfer más holgado a cambio de unos ms de latencia.
       try{ audioCtx = new AC({ latencyHint: 'playback' }); }
@@ -3505,8 +3620,8 @@
       analyser.fftSize = 128;
       masterGain = audioCtx.createGain();
       masterGain.gain.value = 1;
-      // Cadena del ecualizador de 5 bandas
-      var types = ['lowshelf','peaking','peaking','peaking','highshelf'];
+      // Cadena del ecualizador de 10 bandas (Pack 9)
+      var types = ['lowshelf','peaking','peaking','peaking','peaking','peaking','peaking','peaking','peaking','highshelf'];
       eqFilters = EQ_FREQS.map(function(f, i){
         var flt = audioCtx.createBiquadFilter();
         flt.type = types[i]; flt.frequency.value = f; flt.Q.value = 0.9;
@@ -3847,6 +3962,42 @@
     }
     return playableTracks().map(function(t){ return t.id; });
   }
+  // Pack 9: aleatorio inteligente. Reparte la bolsa ya barajada para que no
+  // queden seguidas dos canciones del mismo artista ni del mismo álbum
+  // mientras haya alternativas: en cada paso se elige entre las que no
+  // repiten artista ni álbum con la anterior, dando prioridad al azar entre
+  // las del artista con más canciones aún en la bolsa (así el artista
+  // mayoritario no se queda atrincherado al final); si ya no queda
+  // alternativa se relaja primero el álbum y por último el artista. Nunca se
+  // pierde ni se duplica ninguna canción, y las de dislike ya vienen fuera
+  // de la bolsa (contextPlayableIds solo trae reproducibles).
+  function spreadSmartShuffle(ids){
+    function artistKey(t){ var a = normSearchText((t && t.artist) || ''); return a ? 'a:' + a : 't:' + (t ? t.id : ''); }
+    function albumKey(t){ var a = normSearchText((t && t.album) || ''); return a ? 'b:' + a : 't:' + (t ? t.id : ''); }
+    var pool = ids.slice(), out = [];
+    var lastArtist = null, lastAlbum = null;
+    while(pool.length){
+      var strict = [], relaxed = [];
+      pool.forEach(function(id){
+        var t = trackById(id);
+        var okA = artistKey(t) !== lastArtist, okB = albumKey(t) !== lastAlbum;
+        if(okA && okB) strict.push(id);
+        else if(okA) relaxed.push(id);
+      });
+      var cand = strict.length ? strict : (relaxed.length ? relaxed : pool);
+      var counts = {};
+      pool.forEach(function(id){ var k = artistKey(trackById(id)); counts[k] = (counts[k] || 0) + 1; });
+      var bestCount = -1;
+      cand.forEach(function(id){ var c = counts[artistKey(trackById(id))] || 0; if(c > bestCount) bestCount = c; });
+      var top = cand.filter(function(id){ return (counts[artistKey(trackById(id))] || 0) === bestCount; });
+      var pick = top[Math.floor(Math.random() * top.length)];
+      pool.splice(pool.indexOf(pick), 1);
+      out.push(pick);
+      var pt = trackById(pick);
+      lastArtist = artistKey(pt); lastAlbum = albumKey(pt);
+    }
+    return out;
+  }
   function rebuildShuffle(){
     // shuffleOrder guarda IDs del contexto actual, ya barajados
     shuffleOrder = contextPlayableIds();
@@ -3854,6 +4005,7 @@
       var j = Math.floor(Math.random()*(i+1));
       var tmp=shuffleOrder[i]; shuffleOrder[i]=shuffleOrder[j]; shuffleOrder[j]=tmp;
     }
+    if(settings.smartShuffle) shuffleOrder = spreadSmartShuffle(shuffleOrder);
   }
   function peekContextNext(dir){
     var list = contextPlayableIds();
@@ -4324,6 +4476,20 @@
     if(shuffle) rebuildShuffle();
     toast(shuffle ? 'Aleatorio activado' : 'Aleatorio desactivado');
   });
+  // Pack 9: aleatorio inteligente, interruptor junto al de aleatorio
+  function syncSmartShuffleUI(){
+    var b = document.getElementById('btnSmartShuffle');
+    if(!b) return;
+    b.classList.toggle('on', !!settings.smartShuffle);
+    b.setAttribute('aria-pressed', settings.smartShuffle ? 'true' : 'false');
+    document.getElementById('smartShuffleState').textContent = settings.smartShuffle ? 'Activado' : 'Apagado';
+  }
+  document.getElementById('btnSmartShuffle').addEventListener('click', function(){
+    settings.smartShuffle = !settings.smartShuffle;
+    syncSmartShuffleUI(); saveState();
+    if(shuffle) rebuildShuffle();
+    toast(settings.smartShuffle ? 'Aleatorio inteligente activado: artistas y álbumes se reparten para no sonar seguidos' : 'Aleatorio inteligente desactivado: el aleatorio vuelve a ser el de siempre');
+  });
   var btnRepeat = document.getElementById('btnRepeat');
   btnRepeat.addEventListener('click', function(){
     repeatMode = (repeatMode+1)%3;
@@ -4694,8 +4860,13 @@
   }
 
   // ---------- Panel de sonido: EQ, velocidad, crossfade, sleep timer ----------
-  var EQ_PRESETS = { flat:[0,0,0,0,0], bass:[6,4,1,0,1], treble:[-1,0,1,4,6], pop:[-1,2,4,2,0], rock:[5,2,-1,3,5], vocal:[-2,0,3,4,2] };
-  var EQ_LABELS = ['60 Hz','250 Hz','1 kHz','4 kHz','12 kHz'];
+  // Pack 9: los presets de fábrica se definen con su curva histórica de 5
+  // bandas y se convierten a 10 con la misma interpolación que convierte los
+  // datos del usuario, para que sigan sonando a lo mismo.
+  var EQ_PRESETS_5 = { flat:[0,0,0,0,0], bass:[6,4,1,0,1], treble:[-1,0,1,4,6], pop:[-1,2,4,2,0], rock:[5,2,-1,3,5], vocal:[-2,0,3,4,2] };
+  var EQ_PRESETS = {};
+  Object.keys(EQ_PRESETS_5).forEach(function(k){ EQ_PRESETS[k] = eqTo10(EQ_PRESETS_5[k]); });
+  var EQ_LABELS = ['31 Hz','62 Hz','125 Hz','250 Hz','500 Hz','1 kHz','2 kHz','4 kHz','8 kHz','16 kHz'];
   function fmtDb(v){ return (v>0?'+':'') + v + ' dB'; }
   function buildEqRows(){
     var wrap = document.getElementById('eqRows');
@@ -4727,7 +4898,7 @@
   }
   function syncEqUI(vals){
     vals = vals || settings.eq;
-    for(var i=0;i<5;i++){
+    for(var i=0;i<EQ_LABELS.length;i++){
       var inp = document.getElementById('eqBand'+i), out = document.getElementById('eqOut'+i);
       if(inp) inp.value = vals[i];
       if(out) out.textContent = fmtDb(vals[i]);
@@ -4763,6 +4934,8 @@
     if(typeof syncGaplessUI === 'function') syncGaplessUI();
     if(typeof syncFxUI === 'function') syncFxUI();
     if(typeof syncBalanceUI === 'function') syncBalanceUI();
+    if(typeof syncSmartShuffleUI === 'function') syncSmartShuffleUI();
+    if(typeof syncWakeUI === 'function') syncWakeUI();
     if(typeof applyBalance === 'function') applyBalance();
     if(typeof renderCustomPresets === 'function') renderCustomPresets();
     if(typeof applyFx === 'function') applyFx();
@@ -4892,6 +5065,248 @@
     setSleepTimer(v);
     if(v===-1) toast('La música se detendrá al terminar esta canción.');
     else if(v>0) toast('La música se apagará en '+v+' min.');
+  });
+
+  // ---------- Pack 9: playlist desde lista de texto y salud de la biblioteca ----------
+
+  // ----- Playlist desde una lista de texto -----
+  // Cada línea («Artista – Título», también «Título – Artista», con – o -, o
+  // solo el título) se busca SOLO en la biblioteca local, reutilizando la
+  // normalización tolerante de la búsqueda (searchDataOf/termMatchesTrack:
+  // acentos ignorados y errores menores). La puntuación premia la coincidencia
+  // más exacta: título exacto > título contenido > términos tolerantes, y lo
+  // mismo para el artista; con varias candidatas gana la de mayor puntaje.
+  function tlScoreFor(t, artistQ, titleQ){
+    var d = searchDataOf(t);
+    var titleN = normSearchText(titleQ || '');
+    var artistN = normSearchText(artistQ || '');
+    var score = 0;
+    if(titleN){
+      if(d.fields[0] === titleN) score += 100;
+      else if(d.fields[0] && (d.fields[0].indexOf(titleN) >= 0 || titleN.indexOf(d.fields[0]) >= 0)) score += 60;
+      else {
+        var terms = titleN.split(' ').filter(function(w){ return !!w; });
+        if(terms.length && terms.every(function(tm){ return termMatchesTrack(tm, d); })) score += 40;
+        else return -1;
+      }
+    }
+    if(artistN){
+      if(d.fields[1] === artistN) score += 50;
+      else if(d.fields[1] && (d.fields[1].indexOf(artistN) >= 0 || artistN.indexOf(d.fields[1]) >= 0)) score += 30;
+      else {
+        var at = artistN.split(' ').filter(function(w){ return !!w; });
+        if(at.length && at.every(function(tm){ return termMatchesTrack(tm, d); })) score += 15;
+        else score -= 30;
+      }
+    }
+    return score;
+  }
+  function matchTextLine(line){
+    var raw = String(line || '').trim();
+    if(!raw) return null;
+    var parts = raw.split(/\s*(?:–|—)\s*|\s+-\s+/).map(function(s){ return s.trim(); }).filter(function(s){ return !!s; });
+    var best = null, bestScore = 39; // mínimo: el título tiene que coincidir (≥40)
+    function consider(artistQ, titleQ){
+      tracks.forEach(function(t){
+        var s = tlScoreFor(t, artistQ, titleQ);
+        if(s > bestScore){ bestScore = s; best = t; }
+      });
+    }
+    if(parts.length >= 2){
+      var pa = parts[0], pb = parts.slice(1).join(' – ');
+      consider(pa, pb); // Artista – Título
+      consider(pb, pa); // Título – Artista
+    } else {
+      consider('', raw); // línea con solo el título
+    }
+    return best;
+  }
+  var tlModal = document.getElementById('tlModal');
+  function openTextListModal(){
+    var res = document.getElementById('tlResult');
+    res.style.display = 'none'; res.innerHTML = '';
+    tlModal.classList.add('on'); tlModal.setAttribute('aria-hidden', 'false');
+    var nm = document.getElementById('tlName'); if(nm) nm.focus();
+  }
+  function closeTextListModal(){ tlModal.classList.remove('on'); tlModal.setAttribute('aria-hidden', 'true'); }
+  document.getElementById('btnTextList').addEventListener('click', openTextListModal);
+  document.getElementById('tlModalCancel').addEventListener('click', closeTextListModal);
+  tlModal.addEventListener('click', function(ev){ if(ev.target === tlModal) closeTextListModal(); });
+  document.getElementById('tlModalCreate').addEventListener('click', function(){
+    var name = document.getElementById('tlName').value.trim() || 'Lista pegada';
+    var lines = document.getElementById('tlText').value.split(/\r?\n/).map(function(s){ return s.trim(); }).filter(function(s){ return !!s; });
+    var res = document.getElementById('tlResult');
+    res.style.display = ''; res.innerHTML = '';
+    if(!lines.length){ toast('Pega al menos una línea con una canción.'); return; }
+    if(!tracks.length){ toast('Tu biblioteca está vacía: primero añade canciones.'); return; }
+    var ids = [], missing = [];
+    lines.forEach(function(line){
+      var t = matchTextLine(line);
+      if(t){ if(ids.indexOf(t.id) < 0) ids.push(t.id); }
+      else missing.push(line);
+    });
+    if(!ids.length){
+      var p0 = document.createElement('p'); p0.className = 'sound-note';
+      p0.textContent = 'Ninguna de las ' + lines.length + (lines.length === 1 ? ' línea coincidió' : ' líneas coincidió') + ' con tu biblioteca. Revisa los nombres o usa el formato «Artista – Título».';
+      res.appendChild(p0);
+      return;
+    }
+    var pl = createPlaylist(name);
+    pl.trackIds = ids.slice();
+    selectedPlaylistId = pl.id;
+    saveState(); renderPack();
+    var p1 = document.createElement('p'); p1.className = 'sound-note';
+    p1.textContent = 'Entraron ' + ids.length + ' de ' + lines.length + (lines.length === 1 ? ' línea' : ' líneas') + ' en la playlist «' + name + '», que ya es una playlist normal en tu lista.';
+    res.appendChild(p1);
+    if(missing.length){
+      var p2 = document.createElement('p'); p2.className = 'sound-note';
+      p2.textContent = 'No se encontraron en tu biblioteca (' + missing.length + '):';
+      res.appendChild(p2);
+      var ul = document.createElement('ul');
+      ul.style.cssText = 'margin:0 0 6px; padding-left:18px; font-size:13px; color:var(--muted); line-height:1.55';
+      missing.forEach(function(m){ var li = document.createElement('li'); li.textContent = m; ul.appendChild(li); });
+      res.appendChild(ul);
+    }
+    toast('Playlist «' + name + '» creada: ' + ids.length + (ids.length === 1 ? ' canción' : ' canciones') + (missing.length ? ' · ' + missing.length + ' sin encontrar' : ''));
+  });
+
+  // ----- Salud de la biblioteca (revisión solo a demanda) -----
+  // Comprueba, en serie y con progreso cancelable, que cada archivo guardado
+  // cargue/decodifique y que su duración sea válida (la sonda diferida y la
+  // reproducción ya tuvieron su oportunidad: si sigue en 0 y ni decodificando
+  // se obtiene una, es inválida). Quitar canciones pasa por removeTrack, la
+  // seguridad existente de borrado diferido con «Deshacer».
+  var healthScan = { running: false, cancel: false, problems: [] };
+  var healthModal = document.getElementById('healthModal');
+  function openHealthModal(){ healthModal.classList.add('on'); healthModal.setAttribute('aria-hidden', 'false'); }
+  function closeHealthModal(){
+    if(healthScan.running) healthScan.cancel = true;
+    healthModal.classList.remove('on'); healthModal.setAttribute('aria-hidden', 'true');
+  }
+  document.getElementById('btnHealth').addEventListener('click', openHealthModal);
+  document.getElementById('healthModalClose').addEventListener('click', closeHealthModal);
+  healthModal.addEventListener('click', function(ev){ if(ev.target === healthModal) closeHealthModal(); });
+  document.getElementById('btnHealthCancel').addEventListener('click', function(){ healthScan.cancel = true; });
+  document.getElementById('btnHealthStart').addEventListener('click', runHealthScan);
+  function healthProbe(t){
+    if(t.kind === 'video'){
+      return new Promise(function(resolve){
+        var ve = document.createElement('video');
+        ve.preload = 'metadata'; ve.muted = true;
+        var done = false;
+        function fin(ok){
+          if(done) return; done = true;
+          var d = (ok && isFinite(ve.duration)) ? ve.duration : 0;
+          try{ ve.removeAttribute('src'); ve.load(); }catch(e){}
+          resolve({ ok: ok, dur: d });
+        }
+        ve.onloadedmetadata = function(){ fin(true); };
+        ve.onerror = function(){ fin(false); };
+        setTimeout(function(){ fin(false); }, 6000);
+        ve.src = t.url;
+      });
+    }
+    return fetch(t.url).then(function(r){ return r.arrayBuffer(); })
+      .then(function(buf){ return decodeAudio(buf); })
+      .then(function(ab){ return { ok: true, dur: (ab && isFinite(ab.duration)) ? ab.duration : 0 }; })
+      .catch(function(){ return { ok: false, dur: 0 }; });
+  }
+  function runHealthScan(){
+    if(healthScan.running) return;
+    if(!tracks.length){ toast('Tu biblioteca está vacía: no hay nada que revisar.'); return; }
+    healthScan.running = true; healthScan.cancel = false; healthScan.problems = [];
+    var list = tracks.slice();
+    var total = list.length, i = 0;
+    var bar = document.getElementById('healthBar'), st = document.getElementById('healthStatus');
+    document.getElementById('healthResults').innerHTML = '';
+    document.getElementById('btnHealthStart').style.display = 'none';
+    document.getElementById('btnHealthCancel').style.display = '';
+    document.getElementById('btnHealthRemoveSel').style.display = 'none';
+    document.getElementById('btnHealthRemoveAll').style.display = 'none';
+    function finish(cancelled){
+      healthScan.running = false;
+      document.getElementById('btnHealthCancel').style.display = 'none';
+      var bs = document.getElementById('btnHealthStart');
+      bs.style.display = ''; bs.textContent = 'Revisar de nuevo';
+      bar.style.width = '100%';
+      if(cancelled){
+        st.textContent = 'Revisión cancelada. Se revisaron ' + i + ' de ' + total + ' canciones.';
+      } else if(healthScan.problems.length){
+        st.textContent = 'Revisión terminada: ' + healthScan.problems.length + (healthScan.problems.length === 1 ? ' canción con problema' : ' canciones con problema') + ' de ' + total + '. Las demás están sanas y no se tocan.';
+      } else {
+        st.textContent = 'Revisión terminada: las ' + total + (total === 1 ? ' canción está sana.' : ' canciones están sanas.');
+      }
+      renderHealthResults();
+    }
+    function step(){
+      if(healthScan.cancel){ finish(true); return; }
+      if(i >= total){ finish(false); return; }
+      var t = list[i];
+      st.textContent = 'Revisando ' + (i + 1) + ' de ' + total + ': ' + t.title;
+      bar.style.width = Math.round((i / total) * 100) + '%';
+      healthProbe(t).then(function(r){
+        i++;
+        var reasons = [];
+        if(!r.ok) reasons.push('decode');
+        var durOk = !!((t.duration && isFinite(t.duration) && t.duration > 0) || (r.ok && r.dur > 0));
+        if(!durOk) reasons.push('duration');
+        if(reasons.length) healthScan.problems.push({ id: t.id, title: t.title, artist: t.artist || '', reasons: reasons });
+        step();
+      });
+    }
+    step();
+  }
+  function renderHealthResults(){
+    var res = document.getElementById('healthResults');
+    res.innerHTML = '';
+    var probs = healthScan.problems;
+    var show = probs.length > 0;
+    document.getElementById('btnHealthRemoveSel').style.display = show ? '' : 'none';
+    document.getElementById('btnHealthRemoveAll').style.display = show ? '' : 'none';
+    if(!show) return;
+    var groups = [
+      { label: 'No se pudieron cargar o decodificar', items: probs.filter(function(p){ return p.reasons.indexOf('decode') >= 0; }) },
+      { label: 'Duración inválida (0 o desconocida)', items: probs.filter(function(p){ return p.reasons.indexOf('decode') < 0 && p.reasons.indexOf('duration') >= 0; }) }
+    ];
+    groups.forEach(function(g){
+      if(!g.items.length) return;
+      var h = document.createElement('h4');
+      h.style.cssText = 'margin:14px 0 6px; font-size:13.5px';
+      h.textContent = g.label + ' (' + g.items.length + ')';
+      res.appendChild(h);
+      g.items.forEach(function(p){
+        var lab = document.createElement('label');
+        lab.style.cssText = 'display:flex; gap:9px; align-items:flex-start; padding:7px 9px; border:1px solid var(--line); border-radius:10px; margin-bottom:6px; font-size:13.5px; cursor:pointer';
+        var cb = document.createElement('input');
+        cb.type = 'checkbox'; cb.checked = true;
+        cb.setAttribute('data-health-id', p.id);
+        cb.style.cssText = 'width:auto; margin-top:2px; flex:0 0 auto; padding:0; border:none';
+        var sp = document.createElement('span');
+        sp.textContent = p.title + (p.artist ? ' — ' + p.artist : '') + (p.reasons.length > 1 ? ' · también sin duración válida' : '');
+        lab.appendChild(cb); lab.appendChild(sp);
+        res.appendChild(lab);
+      });
+    });
+  }
+  function removeHealthProblems(ids){
+    ids = ids.filter(function(v, ix){ return ids.indexOf(v) === ix; });
+    if(!ids.length){ toast('Marca al menos una canción problemática para quitarla.'); return; }
+    var n = 0;
+    ids.forEach(function(id){ if(trackById(id)){ removeTrack(id, true); n++; } });
+    if(!n) return;
+    healthScan.problems = healthScan.problems.filter(function(p){ return ids.indexOf(p.id) < 0; });
+    renderHealthResults();
+    document.getElementById('healthStatus').textContent = n + (n === 1 ? ' canción problemática quitada' : ' canciones problemáticas quitadas') + ' de la biblioteca. Tienes unos segundos para deshacerlo.';
+    toast(n + (n === 1 ? ' canción quitada' : ' canciones quitadas') + ' de la biblioteca');
+  }
+  document.getElementById('btnHealthRemoveAll').addEventListener('click', function(){
+    removeHealthProblems(healthScan.problems.map(function(p){ return p.id; }));
+  });
+  document.getElementById('btnHealthRemoveSel').addEventListener('click', function(){
+    var ids = [];
+    var cbs = healthModal.querySelectorAll('input[data-health-id]');
+    for(var i = 0; i < cbs.length; i++){ if(cbs[i].checked) ids.push(cbs[i].getAttribute('data-health-id')); }
+    removeHealthProblems(ids);
   });
 
   // ---------- Pack 2: editor, inteligentes, grupos, respaldo, volumen parejo ----------
@@ -5419,6 +5834,7 @@
         volume: settings.volume, normalize: settings.normalize, skipSilence: settings.skipSilence,
         gapless: settings.gapless, fadePause: settings.fadePause,
         balance: settings.balance, mono: settings.mono,
+        smartShuffle: settings.smartShuffle, wakeLock: settings.wakeLock,
         fx: { bassOn: settings.fx.bassOn, bassDb: settings.fx.bassDb, reverb: settings.fx.reverb, vocal: settings.fx.vocal },
         customPresets: settings.customPresets,
         theme: settings.theme, accent: settings.accent, vizStyle: settings.vizStyle,
@@ -5491,7 +5907,7 @@
         if(typeof td.year === 'string' && td.year){ t.year = td.year; patch.year = td.year; }
         if(Array.isArray(td.tags)){ t.tags = td.tags.filter(function(x){ return typeof x === 'string' && x.trim(); }).map(function(x){ return x.trim(); }).slice(0, 12); patch.tags = t.tags; }
         if(typeof td.memSpeed === 'number' && isFinite(td.memSpeed) && td.memSpeed >= 0.5 && td.memSpeed <= 2){ t.memSpeed = td.memSpeed; patch.memSpeed = td.memSpeed; }
-        if(Array.isArray(td.memEq) && td.memEq.length === 5 && td.memEq.every(function(v){ return typeof v === 'number' && isFinite(v); })){ t.memEq = td.memEq.map(function(v){ return Math.max(-12, Math.min(12, v)); }); patch.memEq = t.memEq; }
+        if(Array.isArray(td.memEq) && (td.memEq.length === 5 || td.memEq.length === 10) && td.memEq.every(function(v){ return typeof v === 'number' && isFinite(v); })){ t.memEq = eqTo10(td.memEq); patch.memEq = t.memEq; }
         if(typeof td.bpm === 'number' && isFinite(td.bpm) && td.bpm > 0){ t.bpm = Math.round(td.bpm); patch.bpm = t.bpm; }
         if(typeof td.bpmManual === 'boolean'){ t.bpmManual = td.bpmManual; patch.bpmManual = td.bpmManual; }
         if(typeof td.audioHash === 'string' && td.audioHash){ t.audioHash = td.audioHash; patch.audioHash = td.audioHash; }
@@ -6369,6 +6785,7 @@
       if(fs && fs.catch) fs.catch(function(){});
     }catch(e){}
     partyLoop();
+    refreshWakeLock();
   }
   function closeParty(){
     partyOpen = false;
@@ -6377,6 +6794,7 @@
     if(partyRAF) cancelAnimationFrame(partyRAF);
     partyRAF = null;
     try{ if(document.fullscreenElement) document.exitFullscreen(); }catch(e){}
+    refreshWakeLock();
   }
   document.getElementById('btnParty').addEventListener('click', openParty);
   document.getElementById('btnPartyClose').addEventListener('click', closeParty);
@@ -6821,6 +7239,7 @@
       if(fs && fs.catch) fs.catch(function(){});
     }catch(e){}
     carLoop();
+    refreshWakeLock();
   }
   function closeCar(){
     carOpen = false;
@@ -6829,6 +7248,7 @@
     if(carRAF) cancelAnimationFrame(carRAF);
     carRAF = null;
     try{ if(document.fullscreenElement) document.exitFullscreen(); }catch(e){}
+    refreshWakeLock();
   }
   document.getElementById('btnCar').addEventListener('click', openCar);
   document.getElementById('btnCarClose').addEventListener('click', closeCar);
@@ -6842,6 +7262,51 @@
     var t = currentTrack(); if(t) setRating(t.id, t.rating === 'dislike' ? null : 'dislike');
   });
   document.addEventListener('keydown', function(ev){ if(ev.key === 'Escape' && carOpen) closeCar(); });
+
+  // ----- Pack 9: mantener la pantalla encendida en Fiesta y Coche -----
+  // Wake Lock API: se pide solo mientras uno de los dos modos está activo y
+  // el interruptor está encendido; al salir del modo se libera, y si la app
+  // vuelve a primer plano dentro del modo se vuelve a pedir (el sistema lo
+  // suelta solo al ocultar la página). Sin soporte, el interruptor no aparece.
+  var wakeLockObj = null;
+  function wakeLockSupported(){ return 'wakeLock' in navigator; }
+  function syncWakeUI(){
+    var on = !!settings.wakeLock;
+    [['btnWakeParty', 'wakePartyState'], ['btnWakeCar', 'wakeCarState']].forEach(function(pair){
+      var b = document.getElementById(pair[0]);
+      if(!b) return;
+      if(!wakeLockSupported()){ b.style.display = 'none'; return; }
+      b.classList.toggle('on', on);
+      b.setAttribute('aria-pressed', on ? 'true' : 'false');
+      var st = document.getElementById(pair[1]);
+      if(st) st.textContent = on ? 'Activada' : 'Apagada';
+    });
+  }
+  function refreshWakeLock(){
+    var want = !!(settings.wakeLock && (partyOpen || carOpen));
+    if(want){
+      if(!wakeLockObj && wakeLockSupported()){
+        try{
+          navigator.wakeLock.request('screen').then(function(wl){
+            wakeLockObj = wl;
+            wl.addEventListener('release', function(){ if(wakeLockObj === wl) wakeLockObj = null; });
+          }).catch(function(){});
+        }catch(e){}
+      }
+    } else if(wakeLockObj){
+      var wlOld = wakeLockObj; wakeLockObj = null;
+      try{ var rp = wlOld.release(); if(rp && rp.catch) rp.catch(function(){}); }catch(e){}
+    }
+  }
+  function toggleWakeLock(){
+    settings.wakeLock = !settings.wakeLock;
+    saveState(); syncWakeUI(); refreshWakeLock();
+    toast(settings.wakeLock ? 'Pantalla encendida activada: no se apagará mientras este modo esté abierto' : 'Pantalla encendida desactivada: la pantalla podrá apagarse como siempre');
+  }
+  var btnWakeP = document.getElementById('btnWakeParty'); if(btnWakeP) btnWakeP.addEventListener('click', toggleWakeLock);
+  var btnWakeC = document.getElementById('btnWakeCar'); if(btnWakeC) btnWakeC.addEventListener('click', toggleWakeLock);
+  document.addEventListener('visibilitychange', function(){ if(document.visibilityState === 'visible') refreshWakeLock(); });
+  syncWakeUI();
 
   // ----- Gestos sobre la portada: deslizar para cambiar de canción -----
   function addSwipe(el, onNext, onPrev){
@@ -7733,7 +8198,7 @@
   // ---------- Pack de mejoras: actualización, reanudar, deshacer, tap tempo ----------
 
   // ----- 1. Actualización sin atascos -----
-  var APP_VERSION = '2.2.0';
+  var APP_VERSION = '2.3.0';
   document.getElementById('appVersionNote').textContent = APP_VERSION;
   function cmpVersion(a, b){
     var pa = a.split('.').map(function(x){ return parseInt(x, 10) || 0; });
