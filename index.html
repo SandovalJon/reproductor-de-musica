@@ -243,6 +243,18 @@
   .focus-note{max-width:56ch; color:#b9d4c8; font-size:13px; line-height:1.55; margin:0}
   .focus-actions{display:flex; flex-wrap:wrap; gap:10px; justify-content:center}
 
+  /* ===== Pack 14: restauración selectiva, sin repetir, EQ por género, duraciones, respaldo automático, fijar listas ===== */
+  .import-row{display:flex; gap:10px; align-items:flex-start; padding:10px 12px; border:1px solid var(--line); border-radius:10px; margin-top:8px; background:var(--surface-2); cursor:pointer; font-size:13.5px; line-height:1.45; text-align:left}
+  .import-row input{margin-top:2px; width:17px; height:17px; accent-color:var(--accent); flex:none; cursor:pointer}
+  .import-row .import-detail{display:block; color:var(--muted); font-size:12.5px; margin-top:2px}
+  .import-row.off{opacity:.55; cursor:default}
+  .import-row.off input{cursor:default}
+  .genre-eq-row{display:flex; flex-wrap:wrap; gap:8px; align-items:center; justify-content:space-between; padding:7px 2px; border-bottom:1px dashed var(--line)}
+  .genre-eq-row:last-child{border-bottom:none}
+  .genre-eq-row .ge-name{font-size:13.5px; font-weight:700}
+  .genre-eq-row .ge-count{color:var(--muted); font-weight:600; font-size:12px}
+  .queue-dur{font-weight:700}
+
   /* Library */
   .library{background:var(--surface); border:1px solid var(--line); border-radius:var(--radius-lg); box-shadow:var(--shadow); overflow:hidden; display:flex; flex-direction:column; min-height:520px}
   .lib-head{padding:18px 18px 0}
@@ -1023,6 +1035,14 @@
               <p class="sound-note">Guarda la ecualización actual con tu propio nombre, aplícala cuando quieras y bórrala si ya no la usas. Tus presets entran en el respaldo.</p>
             </div>
             <div class="sound-group">
+              <div class="sound-group-head"><h4>EQ automático por género</h4></div>
+              <div class="sound-inline">
+                <button class="toggle-pill" id="btnGenreEq" type="button" aria-pressed="false"><span class="dot"></span><span>EQ por género:&nbsp;</span><span id="genreEqState">Apagado</span></button>
+              </div>
+              <div id="genreEqList" style="margin-top:6px"></div>
+              <p class="sound-note">Asigna un preset a cada género de tu biblioteca y se aplica solo, en vivo, cuando suena una canción de ese género. La memoria de EQ por canción manda sobre el género; y si tocas el ecualizador a mano mientras una canción suena, tu ajuste manda en esa canción. Nada de esto sobrescribe presets guardados ni memorias por canción: es solo la aplicación en vivo.</p>
+            </div>
+            <div class="sound-group">
               <div class="sound-group-head"><h4>Velocidad</h4></div>
               <div class="sound-inline">
                 <input type="range" id="speedRange" min="0.5" max="2" step="0.05" value="1" aria-label="Velocidad de reproducción de 0.5× a 2×" />
@@ -1053,6 +1073,19 @@
                 <button class="toggle-pill" id="btnFadePause" type="button" aria-pressed="true"><span class="dot"></span><span>Fundido al pausar:&nbsp;</span><span id="fadePauseState">Activado</span></button>
               </div>
               <p class="sound-note">Sin huecos: la siguiente canción de la cola o la lista se precarga para que empiece de inmediato al terminar la actual, ideal en álbumes en vivo o temas pegados. Si el crossfade está activo, manda el crossfade y el modo sin huecos espera. El fundido al pausar hace que el sonido baje y suba suave al pausar y reanudar, sin cortes de golpe.</p>
+            </div>
+            <div class="sound-group">
+              <div class="sound-group-head"><h4>Sin repetir</h4></div>
+              <div class="sound-inline">
+                <label style="font-size:13px; font-weight:700" for="noRepeatSelect">No repetir lo escuchado en</label>
+                <select id="noRepeatSelect" class="speed-select">
+                  <option value="0">Apagado</option>
+                  <option value="1">1 día</option>
+                  <option value="7">7 días</option>
+                  <option value="30">30 días</option>
+                </select>
+              </div>
+              <p class="sound-note">Las canciones que sonaron dentro de ese plazo salen del aleatorio, el modo DJ, la radio, Descubrir y las listas inteligentes hasta que «descansen». Las que tocas a mano suenan igual que siempre. Y si el filtro dejara una lista sin ninguna canción disponible, se ignora en esa pasada para que nunca te quedes sin música.</p>
             </div>
             <div class="sound-group">
               <div class="sound-group-head"><h4>Efectos de sonido</h4></div>
@@ -1304,10 +1337,20 @@
           <button class="btn small primary" id="btnBackupNow" type="button">Exportar copia ahora</button>
           <button class="btn small" id="btnBackupDismiss" type="button">Ahora no</button>
         </div>
+        <div class="backup-row">
+          <button class="toggle-pill" id="btnAutoBackup" type="button" aria-pressed="false"><span class="dot"></span><span>Respaldo automático:&nbsp;</span><span id="autoBackupState">Apagado</span></button>
+          <label style="font-size:13px; font-weight:700" for="autoBackupDays">Cada</label>
+          <select id="autoBackupDays" class="speed-select">
+            <option value="7">7 días</option>
+            <option value="15">15 días</option>
+            <option value="30">30 días</option>
+          </select>
+          <span class="backup-note">Con la app abierta y vencido el plazo desde tu última copia, el respaldo JSON se descarga solo, una vez por apertura, y queda registrado como si lo hubieras exportado a mano. Solo funciona con la app abierta: una página web no puede despertarse sola con la app cerrada.</span>
+        </div>
         <div class="update-row">
           <button class="btn small" id="btnCheckUpdate" type="button">Actualizar app</button>
           <button class="btn small danger" id="btnForceUpdate" type="button">Forzar actualización</button>
-          <span class="backup-note" id="updateStatus">Versión de esta app: v<span id="appVersionNote">2.7.0</span>. «Actualizar app» consulta la versión publicada y te dice si ya estás al día antes de recargar. «Forzar actualización» limpia el service worker y las cachés de la app si una actualización se quedó atascada; tu biblioteca, playlists y ajustes (IndexedDB) nunca se tocan.</span>
+          <span class="backup-note" id="updateStatus">Versión de esta app: v<span id="appVersionNote">2.8.0</span>. «Actualizar app» consulta la versión publicada y te dice si ya estás al día antes de recargar. «Forzar actualización» limpia el service worker y las cachés de la app si una actualización se quedó atascada; tu biblioteca, playlists y ajustes (IndexedDB) nunca se tocan.</span>
         </div>
       </div>
 
@@ -1369,6 +1412,7 @@
           <button class="btn small primary" id="btnPlPlay" type="button">Reproducir</button>
           <button class="btn small" id="btnPlShuffle" type="button">Aleatoria</button>
           <button class="btn small" id="btnPlRename" type="button">Renombrar</button>
+          <button class="btn small" id="btnPlPin" type="button">Fijar</button>
           <button class="btn small" id="btnPlM3u" type="button">Exportar .m3u</button>
           <button class="btn small" id="btnPlZip" type="button">Exportar ZIP</button>
           <button class="btn small danger" id="btnPlDelete" type="button">Borrar playlist</button>
@@ -1384,6 +1428,7 @@
           <div>
             <h3>Cola de reproducción</h3>
             <p>Lo que sonará a continuación, en este orden. Arrastra cada fila desde el asa ⠿ para reordenarla (también con el dedo) y el nuevo orden se guarda. Toca una canción de la cola para saltar directo a ella.</p>
+            <p class="queue-dur" id="queueDurInfo" role="status"></p>
           </div>
         </div>
         <div class="smart-discover" id="djNextBox" style="display:none; margin:12px 18px 0">
@@ -1488,6 +1533,7 @@
           <button class="btn small primary" id="btnSmartPlay" type="button">Reproducir</button>
           <button class="btn small" id="btnSmartShuffle" type="button">Aleatoria</button>
           <button class="btn small" id="btnSmartM3u" type="button">Exportar .m3u</button>
+          <button class="btn small" id="btnSmartPin" type="button">Fijar</button>
           <button class="btn small" id="btnSmartEdit" type="button" style="display:none">Editar reglas</button>
           <button class="btn small danger" id="btnSmartDelete" type="button" style="display:none">Borrar inteligente</button>
         </div>
@@ -1789,6 +1835,19 @@
     <div class="modal-actions">
       <button class="btn small" id="plModalCancel" type="button">Cancelar</button>
       <button class="btn small primary" id="plModalSave" type="button">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="importModal" aria-hidden="true">
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="importModalTitle">
+    <h3 id="importModalTitle">Importar respaldo por secciones</h3>
+    <p>Marca lo que quieres traer de este archivo. Lo que no marques queda exactamente como está ahora en este dispositivo, y nada se aplica hasta que confirmes.</p>
+    <div id="importSections"></div>
+    <p class="sound-note" id="importModalNote"></p>
+    <div class="modal-actions">
+      <button class="btn small" id="importModalCancel" type="button">Cancelar</button>
+      <button class="btn small primary" id="importModalApply" type="button">Importar lo marcado</button>
     </div>
   </div>
 </div>
@@ -2212,7 +2271,7 @@
 
   // ---------- State ----------
   var tracks = []; // {id,name,title,artist,album,duration,size,type,addedAt,url,coverUrl,color,rating,stars}
-  var APP_VERSION = '2.7.0'; // al publicar cambios, subir este número y el CACHE de sw.js
+  var APP_VERSION = '2.8.0'; // al publicar cambios, subir este número y el CACHE de sw.js
   var currentId = null;
   var isPlaying = false;
   var shuffle = false;
@@ -2261,6 +2320,11 @@
     hpResume: false, // Pack 13: reanudar al reconectar (solo si pausó esta función)
     largeText: false, // Pack 13: texto grande en toda la app
     focus: { focusMin: 25, breakMin: 5, breakAction: 'pause', breakVol: 25 }, // Pack 13: modo Enfoque
+    noRepeatDays: 0, // Pack 14: «sin repetir» (0 = apagado; 1, 7 o 30 días)
+    genreEqOn: false, // Pack 14: EQ automático por género
+    genreEq: {}, // Pack 14: género -> preset ('rock', 'flat'… o 'custom:Nombre')
+    autoBackup: false, // Pack 14: respaldo automático al abrir si venció el plazo
+    autoBackupDays: 7, // Pack 14: cada cuántos días toca el respaldo automático (7 | 15 | 30)
     fx: { bassOn: false, bassDb: 6, reverb: false, vocal: false },
     customPresets: [],
     theme: 'auto', // Pack 6: 'auto' | 'light' | 'dark'
@@ -2325,6 +2389,12 @@
     if(typeof ds.hpResume === 'boolean') settings.hpResume = ds.hpResume;
     if(typeof ds.largeText === 'boolean') settings.largeText = ds.largeText;
     if(ds.focus) settings.focus = sanitizeFocus(ds.focus);
+    // Pack 14: «sin repetir», EQ por género y respaldo automático, con defaults defensivos
+    var nrd = parseInt(ds.noRepeatDays, 10); if(isFinite(nrd)) settings.noRepeatDays = (nrd === 1 || nrd === 7 || nrd === 30) ? nrd : 0;
+    if(typeof ds.genreEqOn === 'boolean') settings.genreEqOn = ds.genreEqOn;
+    if(ds.genreEq && typeof ds.genreEq === 'object') settings.genreEq = sanitizeGenreEq(ds.genreEq);
+    if(typeof ds.autoBackup === 'boolean') settings.autoBackup = ds.autoBackup;
+    var abd = parseInt(ds.autoBackupDays, 10); if(isFinite(abd)) settings.autoBackupDays = (abd === 15 || abd === 30) ? abd : 7;
   }
   function sanitizeFocus(f){
     var out = { focusMin: 25, breakMin: 5, breakAction: 'pause', breakVol: 25 };
@@ -2496,6 +2566,7 @@
       stateReady = true;
       applySettingsToUI();
       renderPack();
+      if(typeof maybeAutoBackup === 'function') maybeAutoBackup(); // Pack 14: una sola vez por apertura, si toca
       // Pack de mejoras: resolver borrados que quedaron pendientes al cerrar la
       // app (se restauran, nunca se pierde nada) y reanudar donde ibas.
       restorePendingFromDisk();
@@ -3514,6 +3585,7 @@
     if(typeof renderPack6 === 'function') renderPack6();
     if(typeof renderPack7 === 'function') renderPack7();
     if(typeof updateDiscoverCount === 'function') updateDiscoverCount();
+    if(typeof renderGenreEqList === 'function') renderGenreEqList(); // Pack 14
     if(typeof renderV2 === 'function') renderV2();
     if(view==='smart') renderSmart();
     if(view==='artists') renderGroups('artist');
@@ -3536,11 +3608,17 @@
   function renderPlaylists(){
     var bar = document.getElementById('plBar');
     bar.innerHTML='';
-    playlists.forEach(function(p){
+    // Pack 14: las playlists fijadas (capa del perfil) van arriba de la sección
+    var orderedPl = playlists.map(function(p, i){ return { p: p, i: i }; }).sort(function(a, b){
+      var pa = isPinned('pl:' + a.p.id) ? 0 : 1, pb = isPinned('pl:' + b.p.id) ? 0 : 1;
+      return pa - pb || a.i - b.i;
+    });
+    orderedPl.forEach(function(o){
+      var p = o.p;
       var chip = document.createElement('button');
       chip.className='chip' + (p.id===selectedPlaylistId ? ' active' : '');
       chip.type='button';
-      chip.textContent = p.name;
+      chip.textContent = (isPinned('pl:' + p.id) ? '📌 ' : '') + p.name;
       var cc = document.createElement('span'); cc.className='chip-count'; cc.textContent='('+p.trackIds.length+')';
       chip.appendChild(cc);
       chip.addEventListener('click', function(){ selectedPlaylistId = p.id; saveState(); renderPack(); });
@@ -3562,6 +3640,8 @@
     }
     head.style.display=''; acts.style.display='';
     document.getElementById('plName').textContent = pl.name;
+    var pinBtnP = document.getElementById('btnPlPin');
+    if(pinBtnP) pinBtnP.textContent = isPinned('pl:' + pl.id) ? 'Desfijar' : 'Fijar';
     var totalDur = pl.trackIds.reduce(function(s,id){ var t=trackById(id); return s + (t ? (t.duration||0) : 0); }, 0);
     document.getElementById('plInfo').textContent = pl.trackIds.length + (pl.trackIds.length===1 ? ' canción' : ' canciones') + (totalDur ? ' · '+fmtTime(totalDur) : '') + ' · Arrastra desde el asa ⠿ para reordenar; el orden se guarda. Las canciones con dislike se saltan, igual que en la biblioteca.';
     listEl.innerHTML='';
@@ -3677,6 +3757,7 @@
     });
     emptyEl.style.display = queue.length ? 'none' : '';
     acts.style.display = queue.length ? '' : 'none';
+    if(typeof updateQueueDur === 'function') updateQueueDur(); // Pack 14
   }
   document.getElementById('btnQueueClear').addEventListener('click', function(){
     queue = []; saveState(); renderPack(); toast('Cola vaciada');
@@ -4145,7 +4226,10 @@
   }
   function currentEqValues(){
     var t = currentTrack();
-    return (t && Array.isArray(t.memEq)) ? t.memEq : settings.eq;
+    if(t && Array.isArray(t.memEq)) return t.memEq; // la memoria por canción manda
+    var gv = genreEqValuesFor(t); // Pack 14: EQ automático por género, solo en vivo
+    if(gv) return gv;
+    return settings.eq;
   }
   function applyEq(){ applyEqValues(currentEqValues()); }
   function drawViz(){
@@ -4343,10 +4427,10 @@
   // Solo entran canciones reproducibles (sin dislike), igual que siempre.
   function contextPlayableIds(){
     if(playContext.type==='mood'){
-      return tracks.filter(function(t){ return t.mood===playContext.moodId && isAutoPlayable(t); }).map(function(t){ return t.id; });
+      return applyCooldownTracks(tracks.filter(function(t){ return t.mood===playContext.moodId && isAutoPlayable(t); })).map(function(t){ return t.id; });
     }
     if(playContext.type==='memory'){
-      return memoryMixIds.filter(function(id){ var t=trackById(id); return t && isAutoPlayable(t); });
+      return applyCooldownIds(memoryMixIds.filter(function(id){ var t=trackById(id); return t && isAutoPlayable(t); }));
     }
     if(playContext.type==='smart'){
       return computeSmart(playContext.smartId).filter(isAutoPlayable).map(function(t){ return t.id; });
@@ -4361,7 +4445,7 @@
       var pl = playlists.find(function(p){ return p.id===playContext.playlistId; });
       if(pl) return pl.trackIds.filter(function(id){ var t=trackById(id); return t && isPlayable(t); });
     }
-    return tracks.filter(isAutoPlayable).map(function(t){ return t.id; });
+    return applyCooldownIds(tracks.filter(isAutoPlayable).map(function(t){ return t.id; }));
   }
   // Pack 9: aleatorio inteligente. Reparte la bolsa ya barajada para que no
   // queden seguidas dos canciones del mismo artista ni del mismo álbum
@@ -4774,6 +4858,7 @@
       if(el.duration){
         setSeekUI(el.currentTime/el.duration);
         timeCurrent.textContent = fmtTime(el.currentTime);
+        if(typeof updateQueueDur === 'function') updateQueueDur(); // Pack 14: el «quedan» de la cola baja en vivo
       }
     });
     el.addEventListener('loadedmetadata', function(){
@@ -5333,6 +5418,7 @@
           settings.eq[i] = v;
           settings.eqPreset = 'custom';
           document.getElementById('eqPreset').value = 'custom';
+          if(ct) genreEqBypassId = ct.id; // Pack 14: el ajuste a mano manda sobre el EQ por género en esta canción
           saveState();
         }
         applyEq();
@@ -5386,6 +5472,9 @@
     if(typeof syncHpUI === 'function') syncHpUI(); // Pack 13
     if(typeof syncLargeTextUI === 'function') syncLargeTextUI(); // Pack 13
     if(typeof syncFocusUI === 'function') syncFocusUI(); // Pack 13
+    if(typeof syncNoRepeatUI === 'function') syncNoRepeatUI(); // Pack 14
+    if(typeof syncGenreEqUI === 'function') syncGenreEqUI(); // Pack 14
+    if(typeof syncAutoBackupUI === 'function') syncAutoBackupUI(); // Pack 14
     if(typeof applyPitch === 'function') applyPitch(); // Pack 11
     if(typeof syncSmartShuffleUI === 'function') syncSmartShuffleUI();
     if(typeof syncWakeUI === 'function') syncWakeUI();
@@ -5413,7 +5502,7 @@
     if(EQ_PRESETS[p]){
       var vals = EQ_PRESETS[p].slice();
       if(et){ et.memEq = vals; idbPatch(et.id, { memEq: vals.slice() }); }
-      else { settings.eq = vals; settings.eqPreset = p; }
+      else { settings.eq = vals; settings.eqPreset = p; genreEqBypassId = ct ? ct.id : null; }
       syncEqUI(vals); applyEqValues(vals);
     }
     if(!et){ settings.eqPreset = p; saveState(); }
@@ -6042,6 +6131,12 @@
     { id:'forgotten', name:'Olvidadas', desc:'Canciones con like o entre las más escuchadas que no suenan desde hace 90 días o más, ordenadas por más tiempo sin sonar.', emptyText:'Nada olvidado por aquí: tus favoritas han sonado en los últimos 90 días, o todavía no tienes favoritas con historial de escucha.' }
   ];
   function computeSmart(id){
+    // Pack 14: «Sin repetir» — TODAS las listas inteligentes/automáticas
+    // pasan por el descanso por días, con salvavidas (si el filtro dejara
+    // la lista vacía habiendo canciones, se ignora en esa pasada).
+    return applyCooldownTracks(computeSmartBase(id));
+  }
+  function computeSmartBase(id){
     // Pack 13: lo bloqueado (artista/álbum) queda fuera de TODAS las listas
     // inteligentes y automáticas, igual que fuera del aleatorio/DJ/radio.
     var nb = function(t){ return !isBlocked(t); };
@@ -6077,26 +6172,23 @@
   function renderSmart(){
     var bar = document.getElementById('smartBar');
     bar.innerHTML = '';
-    SMART_LISTS.forEach(function(s){
+    // Pack 14: las listas fijadas (capa del perfil) van arriba de la sección
+    var smartChips = [];
+    SMART_LISTS.forEach(function(s){ smartChips.push({ id: s.id, name: s.name }); });
+    customSmart.forEach(function(cs){ smartChips.push({ id: cs.id, name: '✦ ' + cs.name }); });
+    smartChips = smartChips.map(function(c, i){ return { c: c, i: i }; }).sort(function(a, b){
+      var pa = isPinned(a.c.id) ? 0 : 1, pb = isPinned(b.c.id) ? 0 : 1;
+      return pa - pb || a.i - b.i;
+    }).map(function(x){ return x.c; });
+    smartChips.forEach(function(cd){
       var chip = document.createElement('button');
-      chip.className = 'chip' + (s.id === selectedSmartId ? ' active' : '');
+      chip.className = 'chip' + (cd.id === selectedSmartId ? ' active' : '');
       chip.type = 'button';
-      chip.textContent = s.name;
+      chip.textContent = (isPinned(cd.id) ? '📌 ' : '') + cd.name;
       var cc = document.createElement('span'); cc.className = 'chip-count';
-      cc.textContent = '(' + computeSmart(s.id).length + ')';
+      cc.textContent = '(' + computeSmart(cd.id).length + ')';
       chip.appendChild(cc);
-      chip.addEventListener('click', function(){ selectedSmartId = s.id; renderSmart(); });
-      bar.appendChild(chip);
-    });
-    customSmart.forEach(function(cs){
-      var chip = document.createElement('button');
-      chip.className = 'chip' + (cs.id === selectedSmartId ? ' active' : '');
-      chip.type = 'button';
-      chip.textContent = '✦ ' + cs.name;
-      var cc = document.createElement('span'); cc.className = 'chip-count';
-      cc.textContent = '(' + computeSmart(cs.id).length + ')';
-      chip.appendChild(cc);
-      chip.addEventListener('click', function(){ selectedSmartId = cs.id; renderSmart(); });
+      chip.addEventListener('click', function(){ selectedSmartId = cd.id; renderSmart(); });
       bar.appendChild(chip);
     });
     var def = smartDefById(selectedSmartId);
@@ -6105,10 +6197,13 @@
     document.getElementById('smartHead').style.display = '';
     document.getElementById('smartActions').style.display = list.length ? '' : 'none';
     document.getElementById('smartName').textContent = def.name;
-    document.getElementById('smartInfo').textContent = def.desc + ' · ' + list.length + (list.length === 1 ? ' canción' : ' canciones') + ' · Se actualiza sola.';
+    var smartDur = list.reduce(function(s, t){ return s + ((t && typeof t.duration === 'number' && t.duration > 0) ? t.duration : 0); }, 0);
+    document.getElementById('smartInfo').textContent = def.desc + ' · ' + list.length + (list.length === 1 ? ' canción' : ' canciones') + (smartDur ? ' · Duración total ' + fmtTime(smartDur) : '') + ' · Se actualiza sola.';
     var isCustomSel = typeof def.id === 'string' && def.id.indexOf('cs:') === 0;
     document.getElementById('btnSmartEdit').style.display = isCustomSel ? '' : 'none';
     document.getElementById('btnSmartDelete').style.display = isCustomSel ? '' : 'none';
+    var pinBtnS = document.getElementById('btnSmartPin');
+    if(pinBtnS) pinBtnS.textContent = isPinned(def.id) ? 'Desfijar' : 'Fijar';
     var listEl = document.getElementById('smartTrackList');
     listEl.innerHTML = '';
     list.forEach(function(t){
@@ -6291,7 +6386,7 @@
     var pl = selectedPlaylist(); if(!pl) return;
     exportM3U(pl.name, pl.trackIds.map(function(id){ return trackById(id); }).filter(Boolean));
   });
-  function exportBackup(){
+  function exportBackup(auto){
     var data = {
       app: 'reproductor-de-musica',
       kind: 'respaldo',
@@ -6319,6 +6414,8 @@
         dynTheme: settings.dynTheme, outActive: settings.outActive, outProfiles: settings.outProfiles,
         hpPause: settings.hpPause, hpResume: settings.hpResume, largeText: settings.largeText,
         focus: { focusMin: settings.focus.focusMin, breakMin: settings.focus.breakMin, breakAction: settings.focus.breakAction, breakVol: settings.focus.breakVol },
+        noRepeatDays: settings.noRepeatDays, genreEqOn: settings.genreEqOn, genreEq: settings.genreEq,
+        autoBackup: settings.autoBackup, autoBackupDays: settings.autoBackupDays,
         fx: { bassOn: settings.fx.bassOn, bassDb: settings.fx.bassDb, reverb: settings.fx.reverb, vocal: settings.fx.vocal },
         customPresets: settings.customPresets,
         theme: settings.theme, accent: settings.accent, vizStyle: settings.vizStyle,
@@ -6366,8 +6463,14 @@
     idbMetaSet('backupInfo', backupInfo);
     if(typeof updateLastBackupNote === 'function') updateLastBackupNote();
     if(typeof checkBackupReminder === 'function') checkBackupReminder();
-    toast('Respaldo exportado: playlists, likes, historial y ajustes');
+    toast(auto === true ? 'Respaldo automático descargado: tocaba copia y quedó registrada como una manual.' : 'Respaldo exportado: playlists, likes, historial y ajustes');
   }
+  // Pack 14: la importación ahora es selectiva. importBackup solo lee y
+  // valida el archivo y abre el panel de secciones; applyImport aplica
+  // únicamente lo marcado (con todo marcado = el comportamiento de siempre,
+  // y los respaldos viejos v7–v10 importan igual: la sección que el archivo
+  // no trae aparece deshabilitada con su nota).
+  var pendingImport = null;
   function importBackup(file){
     readFileText(file).then(function(txt){
       var data = null;
@@ -6376,8 +6479,91 @@
         toast('Ese archivo no es un respaldo válido de este reproductor.');
         return;
       }
+      pendingImport = data;
+      showImportPanel(data);
+    }).catch(function(){ toast('No se pudo leer el archivo de respaldo.'); });
+  }
+  function importSectionsInfo(data){
+    var nTracks = Array.isArray(data.tracks) ? data.tracks.length : 0;
+    var nPl = Array.isArray(data.playlists) ? data.playlists.length : 0;
+    var nCs = Array.isArray(data.customSmart) ? data.customSmart.length : 0;
+    var nProf = (data.profiles && Array.isArray(data.profiles.list)) ? data.profiles.list.length : 0;
+    var nRated = 0;
+    (Array.isArray(data.tracks) ? data.tracks : []).forEach(function(td){
+      if(td && (td.rating === 'like' || td.rating === 'dislike' || (typeof td.stars === 'number' && td.stars > 0))) nRated++;
+    });
+    var nHist = Array.isArray(data.history) ? data.history.length : 0;
+    var nCounts = (data.counts && typeof data.counts === 'object') ? Object.keys(data.counts).length : 0;
+    return [
+      { key: 'library', label: 'Biblioteca', available: nTracks > 0,
+        detail: nTracks + (nTracks === 1 ? ' canción' : ' canciones') + ' con sus datos: títulos, género, año, BPM, ambientes, EQ y velocidad recordados, marcadores…',
+        missing: 'Este archivo no trae datos de canciones.' },
+      { key: 'playlists', label: 'Playlists', available: (nPl > 0 || nCs > 0 || Array.isArray(data.queue)),
+        detail: nPl + (nPl === 1 ? ' playlist' : ' playlists') + (nCs ? ' · ' + nCs + (nCs === 1 ? ' inteligente con reglas' : ' inteligentes con reglas') : '') + ' · y la cola guardada',
+        missing: 'Este archivo no trae playlists.' },
+      { key: 'likes', label: 'Likes, estrellas y perfiles', available: (nRated > 0 || nProf > 0),
+        detail: (nProf ? (nProf + (nProf === 1 ? ' perfil' : ' perfiles') + ' · ') : 'Sin perfiles (respaldo antiguo): se aplican por canción · ') + nRated + (nRated === 1 ? ' canción' : ' canciones') + ' con like, dislike o estrellas',
+        missing: 'Este archivo no trae likes, estrellas ni perfiles.' },
+      { key: 'history', label: 'Historial y estadísticas', available: (nHist > 0 || nCounts > 0 || Array.isArray(data.statsLog)),
+        detail: nHist + ' escuchas en el historial · contadores de ' + nCounts + (nCounts === 1 ? ' canción' : ' canciones'),
+        missing: 'Este archivo no trae historial ni estadísticas.' },
+      { key: 'settings', label: 'Ajustes', available: !!(data.settings && typeof data.settings === 'object'),
+        detail: 'Ecualizador, apariencia, sonido, alarma y demás ajustes guardados en el archivo',
+        missing: 'Este archivo no trae ajustes.' }
+    ];
+  }
+  function showImportPanel(data){
+    var wrap = document.getElementById('importSections');
+    if(!wrap){ applyImport(data, { library: true, playlists: true, likes: true, history: true, settings: true }); return; }
+    wrap.innerHTML = '';
+    importSectionsInfo(data).forEach(function(sec){
+      var label = document.createElement('label');
+      label.className = 'import-row' + (sec.available ? '' : ' off');
+      var cb = document.createElement('input');
+      cb.type = 'checkbox';
+      cb.checked = sec.available;
+      cb.disabled = !sec.available;
+      cb.dataset.section = sec.key;
+      var tx = document.createElement('span');
+      var strong = document.createElement('strong');
+      strong.textContent = sec.label;
+      var det = document.createElement('span');
+      det.className = 'import-detail';
+      det.textContent = sec.available ? sec.detail : sec.missing;
+      tx.appendChild(strong);
+      tx.appendChild(det);
+      label.appendChild(cb);
+      label.appendChild(tx);
+      wrap.appendChild(label);
+    });
+    document.getElementById('importModalNote').textContent = 'Archivo de respaldo' + (typeof data.version === 'number' ? ' versión ' + data.version : '') + (data.exportedAt ? ' · exportado el ' + String(data.exportedAt).slice(0, 10) : '') + '. Los respaldos antiguos (versiones 7 a 10) importan igual: la sección que no traigan aparece deshabilitada. Los archivos de audio nunca viajan en el respaldo.';
+    var m = document.getElementById('importModal');
+    m.classList.add('on');
+    m.setAttribute('aria-hidden', 'false');
+  }
+  function closeImportPanel(){
+    var m = document.getElementById('importModal');
+    if(!m) return;
+    m.classList.remove('on');
+    m.setAttribute('aria-hidden', 'true');
+  }
+  function applyImport(data, sel){
       var exists = function(id){ return tracks.some(function(t){ return t.id === id; }); };
-      (data.tracks || []).forEach(function(td){
+      // Pack 14: el bucle de canciones corre sobre una copia filtrada según
+      // las secciones marcadas: sin «Biblioteca» solo viajan likes/estrellas;
+      // sin «Likes» los rating/estrellas del archivo no se aplican.
+      var trackData = Array.isArray(data.tracks) ? data.tracks : [];
+      if(sel.library && !sel.likes){
+        trackData = trackData.map(function(td){
+          if(!td || typeof td !== 'object') return td;
+          var c = {};
+          Object.keys(td).forEach(function(k){ if(k !== 'rating' && k !== 'stars') c[k] = td[k]; });
+          return c;
+        });
+      } else if(!sel.library && sel.likes){
+        trackData = trackData.map(function(td){ return td ? { id: td.id, name: td.name, rating: td.rating, stars: td.stars } : td; });
+      }
+      if(sel.library || sel.likes) trackData.forEach(function(td){
         if(!td) return;
         var t = trackById(td.id) || tracks.find(function(x){ return x.name === td.name; });
         if(!t) return;
@@ -6422,6 +6608,7 @@
         t.color = colorFor(t.title + t.name);
         if(Object.keys(patch).length) idbPatch(t.id, patch);
       });
+      if(sel.playlists){
       if(Array.isArray(data.playlists)){
         playlists = data.playlists
           .filter(function(p){ return p && p.id && typeof p.name === 'string' && Array.isArray(p.trackIds); })
@@ -6433,6 +6620,8 @@
       }
       if(Array.isArray(data.customSmart)) customSmart = sanitizeCustomSmart(data.customSmart);
       if(Array.isArray(data.queue)) queue = data.queue.filter(exists);
+      }
+      if(sel.history){
       if(Array.isArray(data.history)) playHistory = data.history.filter(function(h){ return h && exists(h.id); }).slice(0, 100);
       if(data.counts && typeof data.counts === 'object'){
         var nc = {};
@@ -6446,11 +6635,14 @@
         var cleanLog = data.statsLog.filter(function(e){ return e && typeof e.sec === 'number' && isFinite(e.sec) && typeof e.at === 'number'; }).slice(-1500);
         if(cleanLog.length) statsLog = cleanLog;
       }
-      if(data.settings && typeof data.settings === 'object'){
+      }
+      if(sel.settings && data.settings && typeof data.settings === 'object'){
         applySettingsObject(data.settings);
       }
       // v2: perfiles del respaldo. Un respaldo v10 trae perfiles completos;
       // uno viejo (v5–v9) se importa asignándolo todo al perfil «Principal».
+      // Pack 14: todo este bloque pertenece a la sección «Likes y perfiles».
+      if(sel.likes){
       if(data.profiles && Array.isArray(data.profiles.list) && data.profiles.list.length){
         var cleanProfiles = data.profiles.list.filter(function(p){ return p && typeof p.id === 'string' && typeof p.name === 'string' && p.name.trim(); }).map(function(p){ return { id: p.id, name: p.name.trim().slice(0, 30) }; });
         if(cleanProfiles.length){
@@ -6465,16 +6657,37 @@
         activeProfileId = 'principal';
         profileStore['principal'] = snapshotProfileData();
       }
+      }
       syncProfileUI();
       applySettingsToUI();
       rebuildShuffle();
       saveState();
       render();
       refreshNorm();
-      toast('Respaldo importado: playlists, likes, historial y ajustes restaurados');
-    }).catch(function(){ toast('No se pudo leer el archivo de respaldo.'); });
+      var appliedNames = [];
+      if(sel.library) appliedNames.push('biblioteca');
+      if(sel.playlists) appliedNames.push('playlists');
+      if(sel.likes) appliedNames.push('likes y perfiles');
+      if(sel.history) appliedNames.push('historial y estadísticas');
+      if(sel.settings) appliedNames.push('ajustes');
+      toast('Respaldo importado (' + appliedNames.join(', ') + '). Lo no marcado quedó como estaba.');
   }
-  document.getElementById('btnExportBackup').addEventListener('click', exportBackup);
+  document.getElementById('importModalApply').addEventListener('click', function(){
+    if(!pendingImport){ closeImportPanel(); return; }
+    var sel = { library: false, playlists: false, likes: false, history: false, settings: false };
+    var any = false;
+    document.querySelectorAll('#importSections input[type="checkbox"]').forEach(function(cb){
+      if(cb.checked && !cb.disabled && Object.prototype.hasOwnProperty.call(sel, cb.dataset.section)){ sel[cb.dataset.section] = true; any = true; }
+    });
+    if(!any){ toast('Marca al menos una sección para importar, o cancela.'); return; }
+    var data = pendingImport;
+    pendingImport = null;
+    closeImportPanel();
+    applyImport(data, sel);
+  });
+  document.getElementById('importModalCancel').addEventListener('click', function(){ pendingImport = null; closeImportPanel(); });
+  document.getElementById('importModal').addEventListener('click', function(ev){ if(ev.target === this){ pendingImport = null; closeImportPanel(); } });
+  document.getElementById('btnExportBackup').addEventListener('click', function(){ exportBackup(false); });
   document.getElementById('btnImportBackup').addEventListener('click', function(){ backupInput.value = ''; backupInput.click(); });
   backupInput.addEventListener('change', function(){
     var f = backupInput.files && backupInput.files[0];
@@ -7339,7 +7552,7 @@
     if(t.isAudiobook && typeof seriesSpeed[seriesKeyOf(t)] === 'number') spd = seriesSpeed[seriesKeyOf(t)];
     try{ audioEl.playbackRate = spd; audioB.playbackRate = spd; videoEl.playbackRate = spd; }catch(e){}
     setSpeedUI(spd);
-    var eqv = Array.isArray(t.memEq) ? t.memEq : settings.eq;
+    var eqv = Array.isArray(t.memEq) ? t.memEq : (genreEqValuesFor(t) || settings.eq); // Pack 14: capa de género
     applyEqValues(eqv);
     syncEqUI(eqv);
     syncMemUI();
@@ -7926,7 +8139,7 @@
         var ct = currentTrack();
         var et = (ct && Array.isArray(ct.memEq)) ? ct : null;
         if(et){ et.memEq = vals; idbPatch(et.id, { memEq: vals.slice() }); }
-        else { settings.eq = vals; settings.eqPreset = 'custom'; document.getElementById('eqPreset').value = 'custom'; saveState(); }
+        else { settings.eq = vals; settings.eqPreset = 'custom'; document.getElementById('eqPreset').value = 'custom'; genreEqBypassId = ct ? ct.id : null; saveState(); }
         syncEqUI(vals); applyEqValues(vals);
         toast('Preset “'+p.name+'” aplicado');
       });
@@ -8809,7 +9022,7 @@
   // ---------- Pack de mejoras: actualización, reanudar, deshacer, tap tempo ----------
 
   // ----- 1. Actualización sin atascos -----
-  var APP_VERSION = '2.7.0';
+  var APP_VERSION = '2.8.0';
   document.getElementById('appVersionNote').textContent = APP_VERSION;
   function cmpVersion(a, b){
     var pa = a.split('.').map(function(x){ return parseInt(x, 10) || 0; });
@@ -9402,6 +9615,9 @@
     if(!pool.length) pool = playableTracks().map(function(t){ return t.id; });
     // Pack 13: el DJ nunca elige canciones de artistas/álbumes bloqueados
     pool = pool.filter(function(id){ var t = trackById(id); return id !== currentId && !(t && isBlocked(t)); });
+    // Pack 14: «Sin repetir» también manda en el DJ (con el mismo salvavidas)
+    var cdSet = cooldownIdSet();
+    if(cdSet){ var poolFresh = pool.filter(function(id){ return !cdSet[id]; }); if(poolFresh.length) pool = poolFresh; }
     var cur = currentTrack();
     var curBpm = (cur && typeof cur.bpm === 'number' && cur.bpm > 0) ? cur.bpm : null;
     var curKey = (cur && cur.musicalKey) ? parseCamelot(cur.musicalKey) : null;
@@ -9476,12 +9692,14 @@
     var ref = currentTrack() || seed;
     if(!ref) return null;
     var pool = playableTracks().filter(function(t){ return t.id !== currentId && !radioState.played[t.id] && !isBlocked(t); });
+    pool = radioCooldownPool(pool); // Pack 14: «Sin repetir» también manda en la radio
     if(!pool.length){
       // Ya sonó todo lo reproducible en esta radio: empieza un ciclo nuevo
       // sin repetir la que está sonando ahora mismo.
       radioState.played = {};
       if(currentId) radioState.played[currentId] = 1;
       pool = playableTracks().filter(function(t){ return t.id !== currentId && !isBlocked(t); });
+      pool = radioCooldownPool(pool);
       if(!pool.length) return null;
     }
     var refBpm = (typeof ref.bpm === 'number' && ref.bpm > 0) ? ref.bpm : null;
@@ -9940,6 +10158,7 @@
         artists: blockedArtists.map(function(b){ return { key: b.key, name: b.name }; }),
         albums: blockedAlbums.map(function(b){ return { key: b.key, name: b.name }; })
       },
+      pinned: pinnedLists.slice(), // Pack 14: listas fijadas del perfil ('pl:<id>' o el id de la inteligente)
       resume: lastResumeObj
     };
   }
@@ -9974,6 +10193,8 @@
     // Pack 13: capa de bloqueados del perfil; perfiles viejos sin el dato = sin bloqueos
     blockedArtists = sanitizeBlockedList(d.blocked && d.blocked.artists);
     blockedAlbums = sanitizeBlockedList(d.blocked && d.blocked.albums);
+    // Pack 14: listas fijadas del perfil; perfiles viejos sin el dato = nada fijado
+    pinnedLists = Array.isArray(d.pinned) ? d.pinned.filter(function(x){ return typeof x === 'string' && !!x; }).slice(0, 100) : [];
     lastResumeObj = d.resume || null;
     idbMetaSet('resumeState', lastResumeObj);
   }
@@ -12069,6 +12290,283 @@
   syncOutUI();
   syncDynThemeUI();
   updateForgottenCount();
+
+  // ================= Pack 14 =================
+  // 1) Restauración selectiva del respaldo (el panel vive junto a la
+  // importación) · 2) «Sin repetir» por días · 3) EQ automático por
+  // género · 4) Duración total y restante · 5) Respaldo automático ·
+  // 6) Fijar listas. Todo local, como siempre; IndexedDB sigue en v2 y
+  // el respaldo en v10: lo nuevo viaja en los ajustes y en la capa del
+  // perfil activo (las fijadas, como likes y bloqueos). Sin letras y
+  // sin micrófono.
+
+  // ----- 2) «Sin repetir» por días -----
+  // La ventana se calcula con la última reproducción guardada de cada
+  // canción (historial + registro de estadísticas, vía lastPlayedMap).
+  // Solo filtra rutas automáticas; lo que el usuario toca a mano nunca
+  // pasa por aquí. Salvavidas: si el filtro dejara una pasada sin
+  // ninguna canción disponible, se ignora en esa pasada.
+  function noRepeatCutoff(){
+    var d = parseInt(settings.noRepeatDays, 10) || 0;
+    return d > 0 ? Date.now() - d * 86400000 : 0;
+  }
+  function cooldownIdSet(){
+    var cut = noRepeatCutoff();
+    if(!cut) return null;
+    var lp = lastPlayedMap(), out = {};
+    Object.keys(lp).forEach(function(id){ if(lp[id] > cut) out[id] = 1; });
+    return out;
+  }
+  function applyCooldownTracks(list){
+    var set = cooldownIdSet();
+    if(!set || !list.length) return list;
+    var fresh = list.filter(function(t){ return !(t && set[t.id]); });
+    return fresh.length ? fresh : list;
+  }
+  function applyCooldownIds(ids){
+    var set = cooldownIdSet();
+    if(!set || !ids.length) return ids;
+    var fresh = ids.filter(function(id){ return !set[id]; });
+    return fresh.length ? fresh : ids;
+  }
+  function radioCooldownPool(pool){
+    var set = cooldownIdSet();
+    if(!set) return pool;
+    var fresh = pool.filter(function(t){ return !set[t.id]; });
+    return fresh.length ? fresh : pool;
+  }
+  function syncNoRepeatUI(){
+    var sel = document.getElementById('noRepeatSelect');
+    if(sel) sel.value = String(parseInt(settings.noRepeatDays, 10) || 0);
+  }
+  document.getElementById('noRepeatSelect').addEventListener('change', function(ev){
+    var v = parseInt(ev.target.value, 10) || 0;
+    settings.noRepeatDays = (v === 1 || v === 7 || v === 30) ? v : 0;
+    djCacheFor = '__none__'; djCacheId = null;
+    radioCacheFor = '__none__'; radioCacheId = null;
+    rebuildShuffle();
+    saveState();
+    if(view === 'smart') renderSmart();
+    toast(settings.noRepeatDays
+      ? ('«Sin repetir» activado: lo escuchado en ' + (settings.noRepeatDays === 1 ? 'el último día' : 'los últimos ' + settings.noRepeatDays + ' días') + ' sale del aleatorio, el DJ, la radio, Descubrir y las listas inteligentes hasta que descanse.')
+      : '«Sin repetir» apagado: el aleatorio y las listas vuelven a usar toda tu biblioteca.');
+  });
+
+  // ----- 3) EQ automático por género -----
+  var genreEqBypassId = null; // canción en la que el usuario ajustó el EQ a mano: manda su ajuste, no el género
+  function sanitizeGenreEq(g){
+    var out = {};
+    if(g && typeof g === 'object'){
+      Object.keys(g).forEach(function(k){
+        var v = g[k];
+        if(typeof k === 'string' && k.trim() && typeof v === 'string' && v) out[k.slice(0, 60)] = v.slice(0, 90);
+      });
+    }
+    return out;
+  }
+  function genreEqValuesFor(t){
+    if(!settings.genreEqOn || !t) return null;
+    if(genreEqBypassId && t.id === genreEqBypassId) return null;
+    var g = (t.genre || '').trim();
+    if(!g) return null;
+    var key = settings.genreEq[g];
+    if(!key || typeof key !== 'string') return null;
+    if(EQ_PRESETS[key]) return EQ_PRESETS[key];
+    if(key.indexOf('custom:') === 0){
+      var nm = key.slice(7);
+      for(var i = 0; i < settings.customPresets.length; i++){
+        if(settings.customPresets[i].name === nm) return settings.customPresets[i].values;
+      }
+    }
+    return null;
+  }
+  function libraryGenres(){
+    var seen = {}, out = [];
+    tracks.forEach(function(t){
+      var g = (t.genre || '').trim();
+      if(g && !seen[g]){ seen[g] = 1; out.push(g); }
+    });
+    out.sort(function(a, b){ return a.localeCompare(b, 'es'); });
+    return out;
+  }
+  var GENRE_EQ_FACTORY = [['flat', 'Plano'], ['bass', 'Graves'], ['treble', 'Agudos'], ['pop', 'Pop'], ['rock', 'Rock'], ['vocal', 'Vocal']];
+  function renderGenreEqList(){
+    var wrap = document.getElementById('genreEqList');
+    if(!wrap) return;
+    var genres = libraryGenres();
+    var sig = genres.join('\u0001') + '|' + settings.customPresets.map(function(p){ return p.name; }).join('\u0001') + '|' + JSON.stringify(settings.genreEq) + '|' + (settings.genreEqOn ? '1' : '0');
+    if(wrap.dataset.sig === sig) return;
+    wrap.dataset.sig = sig;
+    wrap.innerHTML = '';
+    wrap.style.opacity = settings.genreEqOn ? '' : '.55';
+    if(!genres.length){
+      var none = document.createElement('p');
+      none.className = 'sound-note';
+      none.textContent = 'Todavía no hay géneros en tu biblioteca: cuando tus canciones traigan género (o se lo pongas en «Editar datos»), aparecerán aquí para asignarles preset.';
+      wrap.appendChild(none);
+      return;
+    }
+    genres.forEach(function(g){
+      var row = document.createElement('div');
+      row.className = 'genre-eq-row';
+      var nm = document.createElement('span');
+      nm.className = 'ge-name';
+      nm.textContent = g;
+      var cnt = document.createElement('span');
+      cnt.className = 'ge-count';
+      var n = tracks.filter(function(t){ return (t.genre || '').trim() === g; }).length;
+      cnt.textContent = ' · ' + n + (n === 1 ? ' canción' : ' canciones');
+      nm.appendChild(cnt);
+      var sel = document.createElement('select');
+      sel.className = 'speed-select';
+      sel.setAttribute('aria-label', 'Preset de EQ para el género ' + g);
+      var o0 = document.createElement('option');
+      o0.value = ''; o0.textContent = 'Ninguno';
+      sel.appendChild(o0);
+      GENRE_EQ_FACTORY.forEach(function(pair){
+        var o = document.createElement('option');
+        o.value = pair[0]; o.textContent = pair[1];
+        sel.appendChild(o);
+      });
+      settings.customPresets.forEach(function(p){
+        var o = document.createElement('option');
+        o.value = 'custom:' + p.name; o.textContent = 'Mío: ' + p.name;
+        sel.appendChild(o);
+      });
+      sel.value = settings.genreEq[g] || '';
+      sel.addEventListener('change', function(){
+        if(sel.value) settings.genreEq[g] = sel.value;
+        else delete settings.genreEq[g];
+        saveState();
+        wrap.dataset.sig = '';
+        renderGenreEqList();
+        applyEq();
+        syncEqUI(currentEqValues());
+        toast(sel.value
+          ? ('Género «' + g + '»: su preset se aplicará en vivo cuando suene una canción de ese género (si el EQ por género está activado).')
+          : ('Género «' + g + '» sin preset asignado.'));
+      });
+      row.appendChild(nm);
+      row.appendChild(sel);
+      wrap.appendChild(row);
+    });
+  }
+  function syncGenreEqUI(){
+    var b = document.getElementById('btnGenreEq');
+    if(!b) return;
+    b.classList.toggle('on', !!settings.genreEqOn);
+    b.setAttribute('aria-pressed', settings.genreEqOn ? 'true' : 'false');
+    document.getElementById('genreEqState').textContent = settings.genreEqOn ? 'Activado' : 'Apagado';
+    var wrap = document.getElementById('genreEqList');
+    if(wrap) wrap.dataset.sig = '';
+    renderGenreEqList();
+  }
+  document.getElementById('btnGenreEq').addEventListener('click', function(){
+    settings.genreEqOn = !settings.genreEqOn;
+    syncGenreEqUI();
+    applyEq();
+    syncEqUI(currentEqValues());
+    saveState();
+    toast(settings.genreEqOn
+      ? 'EQ por género activado: cada género con preset asignado sonará con su ecualización, salvo que la canción recuerde la suya.'
+      : 'EQ por género apagado: manda el ecualizador general (y la memoria por canción, si la hay).');
+  });
+
+  // ----- 4) Duración total y restante de la cola -----
+  function queueTotalSec(){
+    var s = 0;
+    queue.forEach(function(id){
+      var t = trackById(id);
+      if(t && typeof t.duration === 'number' && t.duration > 0) s += t.duration;
+    });
+    return s;
+  }
+  function updateQueueDur(){
+    var el = document.getElementById('queueDurInfo');
+    if(!el) return;
+    if(!queue.length){ if(el.textContent) el.textContent = ''; return; }
+    var total = queueTotalSec();
+    var txt = 'Duración total de la cola: ' + (total ? fmtTime(total) : '—');
+    var cur = currentTrack();
+    if(cur){
+      var d = (audio && isFinite(audio.duration) && audio.duration) ? audio.duration : (cur.duration || 0);
+      var rem = Math.max(0, d - ((audio && audio.currentTime) || 0)) + total;
+      txt += ' · Quedan ' + fmtTime(rem) + ' contando lo que falta de la canción actual';
+    }
+    if(el.textContent !== txt) el.textContent = txt;
+  }
+
+  // ----- 5) Respaldo automático -----
+  var autoBackupTried = false;
+  function maybeAutoBackup(){
+    if(autoBackupTried) return;
+    autoBackupTried = true;
+    if(!settings.autoBackup || !tracks.length) return;
+    idbMetaGet('backupInfo').then(function(b){
+      var last = (b && typeof b.at === 'number') ? b.at : 0;
+      var days = (settings.autoBackupDays === 15 || settings.autoBackupDays === 30) ? settings.autoBackupDays : 7;
+      if(Date.now() - last >= days * 86400000) exportBackup(true);
+    });
+  }
+  function syncAutoBackupUI(){
+    var b = document.getElementById('btnAutoBackup');
+    if(!b) return;
+    b.classList.toggle('on', !!settings.autoBackup);
+    b.setAttribute('aria-pressed', settings.autoBackup ? 'true' : 'false');
+    document.getElementById('autoBackupState').textContent = settings.autoBackup ? 'Activado' : 'Apagado';
+    var sel = document.getElementById('autoBackupDays');
+    if(sel) sel.value = String(settings.autoBackupDays || 7);
+  }
+  document.getElementById('btnAutoBackup').addEventListener('click', function(){
+    settings.autoBackup = !settings.autoBackup;
+    syncAutoBackupUI();
+    saveState();
+    toast(settings.autoBackup
+      ? 'Respaldo automático activado: con la app abierta, cuando venza el plazo desde tu última copia, el respaldo se descargará solo.'
+      : 'Respaldo automático apagado: los respaldos quedan manuales, como antes.');
+  });
+  document.getElementById('autoBackupDays').addEventListener('change', function(ev){
+    var v = parseInt(ev.target.value, 10) || 7;
+    settings.autoBackupDays = (v === 15 || v === 30) ? v : 7;
+    saveState();
+    toast('El respaldo automático tocará cada ' + settings.autoBackupDays + ' días (con la app abierta).');
+  });
+
+  // ----- 6) Fijar listas -----
+  // Se guarda en la capa del perfil activo (snapshotProfileData /
+  // applyProfileData), igual que likes, estrellas y bloqueos: cada
+  // perfil fija las suyas sobre la misma biblioteca compartida.
+  var pinnedLists = []; // 'pl:<id>' para playlists; el id tal cual ('best', 'cs:…') para inteligentes
+  function isPinned(key){ return pinnedLists.indexOf(key) >= 0; }
+  function togglePin(key, label){
+    var now;
+    if(isPinned(key)){
+      pinnedLists = pinnedLists.filter(function(k){ return k !== key; });
+      now = false;
+    } else {
+      pinnedLists.push(key);
+      now = true;
+    }
+    saveState();
+    renderPack();
+    toast(now
+      ? ('«' + label + '» fijada: aparecerá arriba de su sección en este perfil.')
+      : ('«' + label + '» ya no está fijada en este perfil.'));
+  }
+  document.getElementById('btnPlPin').addEventListener('click', function(){
+    var pl = selectedPlaylist();
+    if(!pl) return;
+    togglePin('pl:' + pl.id, pl.name);
+  });
+  document.getElementById('btnSmartPin').addEventListener('click', function(){
+    var def = smartDefById(selectedSmartId);
+    if(!def) return;
+    togglePin(def.id, def.name);
+  });
+
+  syncNoRepeatUI();
+  syncGenreEqUI();
+  syncAutoBackupUI();
 
   // ---------- Init ----------
   var appVersionEl = document.getElementById('appVersion');
