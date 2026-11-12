@@ -194,6 +194,27 @@
   .kbd-row kbd{background:var(--surface-2); border:1px solid var(--line); border-bottom-width:2px; padding:2px 7px; border-radius:6px; font-family:inherit; font-size:12px; font-weight:700; white-space:nowrap}
   .link-btn{border:none; background:none; color:var(--accent); font:inherit; font-weight:700; cursor:pointer; padding:0; text-decoration:underline; text-underline-offset:2px}
 
+  /* ===== Pack 11: onda en la barra, grabar mezcla, auto-etiquetas, mini reproductor, volumen seguro, tono ===== */
+  .seek-wrap{position:relative; height:28px}
+  #waveCanvas{position:absolute; inset:0; width:100%; height:100%; display:none; pointer-events:none}
+  .seek-wrap.wave-on #waveCanvas{display:block}
+  .seek-wrap.wave-on #seek{position:relative; z-index:1}
+  .seek-wrap.wave-on #seek::-webkit-slider-runnable-track{background:transparent}
+  .seek-wrap.wave-on #seek::-moz-range-track{background:transparent}
+  .seek-wrap.wave-on #seek::-moz-range-progress{background:transparent}
+  #btnRecordMix.rec-on{border-color:#d43a2a; color:#d43a2a; font-variant-numeric:tabular-nums}
+  #btnRecordMix.rec-on .rec-dot{animation:recPulse 1.1s ease-in-out infinite}
+  @keyframes recPulse{0%,100%{opacity:1}50%{opacity:.25}}
+  @media (prefers-reduced-motion: reduce){ #btnRecordMix.rec-on .rec-dot{animation:none} }
+  .autotag-list{max-height:46vh; overflow:auto; border:1px solid var(--line); border-radius:12px; margin-top:6px}
+  .autotag-row{display:flex; gap:10px; align-items:flex-start; padding:10px 12px; border-bottom:1px solid var(--line); font-size:13px}
+  .autotag-row:last-child{border-bottom:none}
+  .autotag-row input[type="checkbox"]{width:17px; height:17px; margin-top:2px; accent-color:var(--accent); flex:none}
+  .autotag-row .at-file{color:var(--muted); font-size:12px; word-break:break-all}
+  .autotag-row .at-prop{line-height:1.5; word-break:break-word}
+  .autotag-row .at-prop b{font-weight:800}
+  .autotag-row .at-none{color:var(--muted)}
+
   /* Library */
   .library{background:var(--surface); border:1px solid var(--line); border-radius:var(--radius-lg); box-shadow:var(--shadow); overflow:hidden; display:flex; flex-direction:column; min-height:520px}
   .lib-head{padding:18px 18px 0}
@@ -819,6 +840,14 @@
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:15px;height:15px"><rect x="2" y="4" width="20" height="16" rx="2"/><rect x="12" y="12" width="7" height="5" rx="1" fill="currentColor" stroke="none"/></svg>
             Video flotante
           </button>
+          <button class="btn small" id="btnRecordMix" type="button" style="display:none" title="Grabar la mezcla que está sonando (con crossfades, DJ, EQ y efectos) y descargarla como un archivo de audio">
+            <svg class="rec-dot" viewBox="0 0 24 24" fill="#d43a2a" style="width:13px;height:13px"><circle cx="12" cy="12" r="8"/></svg>
+            <span id="recordMixLabel">Grabar mezcla</span>
+          </button>
+          <button class="btn small" id="btnMiniPlayer" type="button" style="display:none" title="Abrir un mini reproductor flotante que queda siempre encima de las demás ventanas (solo PC)">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:15px;height:15px"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M7 15.5v-7M11 15.5v-7M15.5 9.2v5.6M19 10.5v3"/></svg>
+            Mini reproductor
+          </button>
         </div>
         <div class="resume-bar" id="resumeBar" style="display:none" role="status">
           <span id="resumeText"></span>
@@ -848,7 +877,10 @@
 
         <div class="progress-block">
           <div class="time-row"><span id="timeCurrent">0:00</span><span id="timeTotal">0:00</span></div>
-          <input type="range" id="seek" min="0" max="1000" value="0" step="1" disabled aria-label="Progreso de la canción" />
+          <div class="seek-wrap" id="seekWrap">
+            <canvas id="waveCanvas" aria-hidden="true"></canvas>
+            <input type="range" id="seek" min="0" max="1000" value="0" step="1" disabled aria-label="Progreso de la canción" />
+          </div>
         </div>
 
         <div class="ab-row" id="abRow" style="display:none">
@@ -943,6 +975,10 @@
                 <input type="range" id="speedRange" min="0.5" max="2" step="0.05" value="1" aria-label="Velocidad de reproducción de 0.5× a 2×" />
                 <output id="speedOut" for="speedRange">1.00×</output>
               </div>
+              <div class="sound-inline" style="margin-top:8px">
+                <button class="toggle-pill" id="btnPitchKeep" type="button" aria-pressed="true"><span class="dot"></span><span>Corrección de tono:&nbsp;</span><span id="pitchKeepState">Activada</span></button>
+              </div>
+              <p class="sound-note">Con la corrección de tono activada, la voz suena natural a cualquier velocidad (útil en audiolibros y podcasts). Desactívala para el efecto vinilo: el tono sube y baja con la velocidad, como al acelerar un disco.</p>
             </div>
             <div class="sound-group">
               <div class="sound-group-head"><h4>Crossfade</h4></div>
@@ -991,6 +1027,21 @@
                 <button class="toggle-pill" id="btnMono" type="button" aria-pressed="false"><span class="dot"></span><span>Mono:&nbsp;</span><span id="monoState">Apagado</span></button>
               </div>
               <p class="sound-note">Balance: mueve el sonido entre el lado izquierdo y el derecho, por si un audífono suena más flojo o solo llevas uno puesto. Mono: suma los dos canales y los manda iguales a ambos lados, para no perderte nada de la mezcla con un solo audífono. Se guardan en este dispositivo y también viajan dentro del respaldo.</p>
+            </div>
+            <div class="sound-group">
+              <div class="sound-group-head"><h4>Volumen seguro</h4></div>
+              <div class="sound-inline">
+                <label style="font-size:13px; font-weight:700" for="volCapSelect">Tope máximo de volumen</label>
+                <select id="volCapSelect" class="speed-select">
+                  <option value="1">Sin límite (100%)</option>
+                  <option value="0.9">90%</option>
+                  <option value="0.8">80%</option>
+                  <option value="0.7">70%</option>
+                  <option value="0.6">60%</option>
+                  <option value="0.5">50%</option>
+                </select>
+              </div>
+              <p class="sound-note">El deslizador de volumen no podrá pasar de este tope, para cuidar tus oídos (o los de quien use el equipo). Si bajas el tope por debajo del volumen actual, el volumen baja al momento hasta el nuevo límite.</p>
             </div>
             <div class="sound-group">
               <div class="sound-group-head"><h4>Apariencia</h4></div>
@@ -1194,7 +1245,7 @@
         <div class="update-row">
           <button class="btn small" id="btnCheckUpdate" type="button">Actualizar app</button>
           <button class="btn small danger" id="btnForceUpdate" type="button">Forzar actualización</button>
-          <span class="backup-note" id="updateStatus">Versión de esta app: v<span id="appVersionNote">2.4.0</span>. «Actualizar app» consulta la versión publicada y te dice si ya estás al día antes de recargar. «Forzar actualización» limpia el service worker y las cachés de la app si una actualización se quedó atascada; tu biblioteca, playlists y ajustes (IndexedDB) nunca se tocan.</span>
+          <span class="backup-note" id="updateStatus">Versión de esta app: v<span id="appVersionNote">2.5.0</span>. «Actualizar app» consulta la versión publicada y te dice si ya estás al día antes de recargar. «Forzar actualización» limpia el service worker y las cachés de la app si una actualización se quedó atascada; tu biblioteca, playlists y ajustes (IndexedDB) nunca se tocan.</span>
         </div>
       </div>
 
@@ -1207,6 +1258,7 @@
         <div class="multi-actions">
           <button class="btn small" id="btnMultiAll" type="button">Marcar todas</button>
           <button class="btn small" id="btnMultiEdit" type="button">Editar datos</button>
+          <button class="btn small" id="btnMultiAutoTag" type="button">Auto-etiquetar</button>
           <button class="btn small" id="btnMultiPlaylist" type="button">A una playlist…</button>
           <button class="btn small" id="btnMultiQueue" type="button">A la cola</button>
           <button class="btn small danger" id="btnMultiRemove" type="button">Quitar de la biblioteca</button>
@@ -1648,6 +1700,10 @@
       <input type="text" id="editYear" maxlength="4" inputmode="numeric" autocomplete="off" placeholder="Ej.: 1999" />
     </div>
     <div class="field">
+      <label for="editTrackNo">Nº de pista</label>
+      <input type="text" id="editTrackNo" maxlength="3" inputmode="numeric" autocomplete="off" placeholder="Ej.: 3 (vacío = sin número)" />
+    </div>
+    <div class="field">
       <label for="editTags">Etiquetas (separadas por comas)</label>
       <input type="text" id="editTags" maxlength="200" autocomplete="off" placeholder="Ej.: entrenar, relajado, favoritos" />
       <p class="sound-note">Tus etiquetas propias para filtrar la biblioteca. Se guardan solo en este dispositivo, como todo lo demás.</p>
@@ -1751,6 +1807,19 @@
     <div class="modal-actions">
       <button class="btn small" id="batchModalCancel" type="button">Cancelar</button>
       <button class="btn small primary" id="batchModalSave" type="button">Aplicar cambios</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="autoTagModal" aria-hidden="true">
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="autoTagModalTitle">
+    <h3 id="autoTagModalTitle">Auto-etiquetar desde el nombre del archivo</h3>
+    <p>Esto es lo que se propone para cada canción seleccionada, leyendo su nombre de archivo (patrones como «Artista - Título», «01. Título» o «Artista – Álbum – 03 Título»). Solo se rellenan los datos que la canción aún no tiene; desmarca las que no quieras cambiar. No se aplica nada hasta que pulses «Aplicar etiquetas».</p>
+    <div class="autotag-list" id="autoTagList"></div>
+    <p class="sound-note" id="autoTagSummary" role="status"></p>
+    <div class="modal-actions">
+      <button class="btn small" id="autoTagCancel" type="button">Cancelar</button>
+      <button class="btn small primary" id="autoTagApply" type="button">Aplicar etiquetas</button>
     </div>
   </div>
 </div>
@@ -1982,7 +2051,7 @@
 
   // ---------- State ----------
   var tracks = []; // {id,name,title,artist,album,duration,size,type,addedAt,url,coverUrl,color,rating,stars}
-  var APP_VERSION = '2.4.0'; // al publicar cambios, subir este número y el CACHE de sw.js
+  var APP_VERSION = '2.5.0'; // al publicar cambios, subir este número y el CACHE de sw.js
   var currentId = null;
   var isPlaying = false;
   var shuffle = false;
@@ -2022,6 +2091,8 @@
     mono: false, // Pack 8: suma de ambos canales
     smartShuffle: false, // Pack 9: el aleatorio reparte artistas y álbumes para que no suenen seguidos
     wakeLock: false, // Pack 9: mantener la pantalla encendida dentro de Fiesta y Coche
+    volCap: 1, // Pack 11: tope máximo de volumen (1 = sin límite); el deslizador no puede pasarlo
+    pitchKeep: true, // Pack 11: corrección de tono con la velocidad (preservesPitch); apagado = efecto vinilo
     fx: { bassOn: false, bassDb: 6, reverb: false, vocal: false },
     customPresets: [],
     theme: 'auto', // Pack 6: 'auto' | 'light' | 'dark'
@@ -2062,6 +2133,8 @@
     settings.mono = !!ds.mono;
     if(typeof ds.smartShuffle === 'boolean') settings.smartShuffle = ds.smartShuffle;
     if(typeof ds.wakeLock === 'boolean') settings.wakeLock = ds.wakeLock;
+    var vc = parseFloat(ds.volCap); if(isFinite(vc)) settings.volCap = Math.max(0.3, Math.min(1, vc)); // Pack 11
+    if(typeof ds.pitchKeep === 'boolean') settings.pitchKeep = ds.pitchKeep; // Pack 11
     if(ds.fx) settings.fx = sanitizeFx(ds.fx);
     if(Array.isArray(ds.customPresets)) settings.customPresets = sanitizeCustomPresets(ds.customPresets);
     // Pack 6: apariencia y alarma, con valores por defecto sensatos
@@ -2622,7 +2695,8 @@
           genre:meta.genre||'', year:meta.year||'', tags:[], memSpeed:null, memEq:null,
           folder:folderPath, abLoop:null, bookmarks:[], silence:null, bpm:null, bpmManual:false, audioHash:null,
           kind:kind, energy:null, brightness:null, mood:null, musicalKey:null, keyName:null,
-          isAudiobook:false, abPos:0, chapters:(meta.chapters && meta.chapters.length) ? meta.chapters : null
+          isAudiobook:false, abPos:0, chapters:(meta.chapters && meta.chapters.length) ? meta.chapters : null,
+          peaks:null, trackNo:null // Pack 11: onda para la barra de progreso y nº de pista (auto-etiquetas)
         };
         tracks.unshift(track);
         probeDurationLater(track);
@@ -2634,7 +2708,7 @@
           genre:meta.genre||'', year:meta.year||'', tags:[], memSpeed:null, memEq:null,
           folder:folderPath, abLoop:null, bookmarks:[], silence:null, bpm:null, bpmManual:false, audioHash:null,
           kind:kind, energy:null, brightness:null, mood:null, musicalKey:null, keyName:null,
-          isAudiobook:false, abPos:0, chapters:track.chapters
+          isAudiobook:false, abPos:0, chapters:track.chapters, peaks:null, trackNo:null
         }).then(function(){ return track; });
       });
   }
@@ -2675,7 +2749,9 @@
           keyName: (typeof r.keyName==='string' && r.keyName) ? r.keyName : null,
           isAudiobook: !!r.isAudiobook,
           abPos: (typeof r.abPos==='number' && isFinite(r.abPos) && r.abPos > 0) ? r.abPos : 0,
-          chapters: Array.isArray(r.chapters) ? r.chapters.filter(function(c){ return c && typeof c.start==='number' && isFinite(c.start) && c.start >= 0; }).map(function(c){ return { title:(typeof c.title==='string' && c.title) ? c.title : 'Capítulo', start:c.start }; }).sort(function(a,b){ return a.start-b.start; }) : null
+          chapters: Array.isArray(r.chapters) ? r.chapters.filter(function(c){ return c && typeof c.start==='number' && isFinite(c.start) && c.start >= 0; }).map(function(c){ return { title:(typeof c.title==='string' && c.title) ? c.title : 'Capítulo', start:c.start }; }).sort(function(a,b){ return a.start-b.start; }) : null,
+          peaks: (Array.isArray(r.peaks) && r.peaks.length >= 16 && r.peaks.length <= 400 && r.peaks.every(function(v){ return typeof v==='number' && isFinite(v) && v >= 0 && v <= 1; })) ? r.peaks.slice() : null,
+          trackNo: (typeof r.trackNo==='number' && isFinite(r.trackNo) && r.trackNo > 0) ? Math.round(r.trackNo) : null
         });
       });
       // Fill missing durations in background
@@ -3064,6 +3140,8 @@
       coverInitial.textContent='♪';
       coverHint.textContent = tracks.length ? 'ELIGE UNA CANCIÓN' : 'AÑADE TU PRIMERA CANCIÓN';
       timeCurrent.textContent='0:00'; timeTotal.textContent='0:00';
+      if(typeof refreshWaveform === 'function') refreshWaveform(); // Pack 11
+      if(typeof syncMiniPlayer === 'function') syncMiniPlayer(); // Pack 11
       setSeekUI(0);
       playingBadge.classList.remove('on');
       document.title='Reproductor de Música';
@@ -3091,6 +3169,8 @@
     timeTotal.textContent = fmtTime(t.duration || audio.duration || 0);
     document.title = (isPlaying?'▶ ':'') + t.title + (t.artist ? ' — '+t.artist : '') + ' · Reproductor de Música';
     updateMediaSession(t);
+    if(typeof refreshWaveform === 'function') refreshWaveform(); // Pack 11: onda de la canción actual
+    if(typeof syncMiniPlayer === 'function') syncMiniPlayer(); // Pack 11: el mini reproductor sigue a la app
   }
 
   function render(){ renderStats(); renderList(); renderNow(); renderPack(); }
@@ -3644,6 +3724,7 @@
   var fxBassFilter=null, fxVocalFilter=null, fxWetGain=null; // Pack 5: efectos
   var balPan=null, balStereoGain=null, balMonoGain=null; // Pack 8: etapa de balance y mono
   var fxConvolver=null, fxReverbOn=false; // la rama del reverb solo se conecta al grafo si está encendida
+  var recDest=null; // Pack 11: destino de grabación de la mezcla (MediaStreamAudioDestinationNode tras el limitador)
   function makeImpulse(ctx, durSec, decay){
     var rate = ctx.sampleRate, len = Math.floor(rate*durSec);
     var buf = ctx.createBuffer(2, len, rate);
@@ -3794,6 +3875,11 @@
       masterGain.connect(balPan);
       balIn.connect(limiter);
       limiter.connect(audioCtx.destination);
+      // Pack 11: la grabación de la mezcla cuelga de la salida del limitador,
+      // así captura exactamente lo que suena (crossfades, DJ, EQ, efectos,
+      // balance y volumen parejo incluidos). El destino no emite sonido por
+      // sí mismo: solo alimenta al MediaRecorder cuando el usuario graba.
+      try{ recDest = audioCtx.createMediaStreamDestination(); limiter.connect(recDest); }catch(e){ recDest = null; }
       // Cada deck (audio principal y deck de crossfade) entra a la cadena con su propio gain
       [audioEl, audioB, videoEl].forEach(function(el){
         var src = audioCtx.createMediaElementSource(el);
@@ -3808,7 +3894,7 @@
         normGains[deckKeyOf(el)] = ng;
       });
       refreshNorm();
-    }catch(e){ audioCtx=null; analyser=null; eqFilters=[]; deckGains={}; normGains={}; masterGain=null; fxBassFilter=null; fxVocalFilter=null; fxWetGain=null; fxConvolver=null; fxReverbOn=false; balPan=null; balStereoGain=null; balMonoGain=null; }
+    }catch(e){ audioCtx=null; analyser=null; eqFilters=[]; deckGains={}; normGains={}; masterGain=null; fxBassFilter=null; fxVocalFilter=null; fxWetGain=null; fxConvolver=null; fxReverbOn=false; balPan=null; balStereoGain=null; balMonoGain=null; recDest=null; }
   }
   function deckKeyOf(el){ return el === audioEl ? 'a' : (el === audioB ? 'b' : 'v'); }
   // Reparación v2.1.4 (se traba con audífonos Bluetooth): el AudioContext
@@ -4463,6 +4549,7 @@
   function setSeekUI(ratio){
     seek.style.setProperty('--fill', (ratio*100)+'%');
     seek.value = Math.round(ratio*1000);
+    if(typeof drawWave === 'function') drawWave(ratio); // Pack 11: la parte escuchada de la onda se colorea
   }
   function setVolumeUI(){
     volumeEl.style.setProperty('--fill', (volumeEl.value)+'%');
@@ -4528,6 +4615,7 @@
     seeking = true;
     var ratio = seek.value/1000;
     seek.style.setProperty('--fill', (ratio*100)+'%');
+    if(typeof drawWave === 'function') drawWave(ratio); // Pack 11
     if(audio.duration) timeCurrent.textContent = fmtTime(ratio*audio.duration);
   });
   seek.addEventListener('change', function(){
@@ -4547,7 +4635,10 @@
   }
   function applyVolume(v){
     cancelSleepFade();
-    settings.volume = Math.max(0, Math.min(1, v));
+    // Pack 11: el tope de volumen seguro manda sobre cualquier entrada
+    // (deslizador, silencio/restaurar, atajos): nadie lo puede superar.
+    var cap = (typeof settings.volCap === 'number' && isFinite(settings.volCap)) ? settings.volCap : 1;
+    settings.volume = Math.max(0, Math.min(cap, v));
     applyAudioVolumes();
     volumeEl.value = Math.round(settings.volume*100);
     if(settings.volume>0) lastVolume = settings.volume;
@@ -5078,6 +5169,9 @@
     if(typeof syncGaplessUI === 'function') syncGaplessUI();
     if(typeof syncFxUI === 'function') syncFxUI();
     if(typeof syncBalanceUI === 'function') syncBalanceUI();
+    if(typeof syncVolCapUI === 'function') syncVolCapUI(); // Pack 11
+    if(typeof syncPitchUI === 'function') syncPitchUI(); // Pack 11
+    if(typeof applyPitch === 'function') applyPitch(); // Pack 11
     if(typeof syncSmartShuffleUI === 'function') syncSmartShuffleUI();
     if(typeof syncWakeUI === 'function') syncWakeUI();
     if(typeof applyBalance === 'function') applyBalance();
@@ -5547,7 +5641,13 @@
         var db = 20*Math.log10(0.16/rms);
         db = Math.max(-12, Math.min(12, Math.round(db*10)/10));
         t.normDb = db;
-        idbPatch(t.id, { normDb: db });
+        // Pack 11: el mismo audio decodificado da los picos de la onda que
+        // dibuja la barra de progreso; se guardan con la corrección de volumen.
+        var pk = peaksFromBuffer(ab);
+        var patchA = { normDb: db };
+        if(pk){ t.peaks = pk; patchA.peaks = pk; }
+        idbPatch(t.id, patchA);
+        if(pk && currentId === t.id && typeof refreshWaveform === 'function') refreshWaveform();
         return true;
       })
       .catch(function(){ return false; })
@@ -5608,6 +5708,7 @@
     document.getElementById('editAlbum').value = t.album || '';
     document.getElementById('editGenre').value = t.genre || '';
     document.getElementById('editYear').value = t.year || '';
+    document.getElementById('editTrackNo').value = (typeof t.trackNo === 'number' && t.trackNo) ? t.trackNo : ''; // Pack 11
     document.getElementById('editTags').value = (t.tags || []).join(', ');
     var prev = document.getElementById('editCoverPreview');
     if(t.coverUrl){ prev.src = t.coverUrl; prev.style.display = ''; }
@@ -5641,6 +5742,11 @@
     if(newGenre !== (t.genre || '')){ t.genre = newGenre; patch.genre = newGenre; }
     var newYear = document.getElementById('editYear').value.trim();
     if(newYear !== (t.year || '')){ t.year = newYear; patch.year = newYear; }
+    // Pack 11: nº de pista (lo propone el auto-etiquetado y aquí se corrige a mano)
+    var tnRaw = document.getElementById('editTrackNo').value.trim();
+    var tnVal = parseInt(tnRaw, 10);
+    var newTrackNo = (tnRaw !== '' && isFinite(tnVal) && tnVal > 0) ? Math.min(999, tnVal) : null;
+    if(newTrackNo !== (t.trackNo || null)){ t.trackNo = newTrackNo; patch.trackNo = newTrackNo; }
     var newTags = document.getElementById('editTags').value.split(',').map(function(x){ return x.trim(); }).filter(function(x){ return x; }).slice(0, 12);
     if(newTags.join('|') !== (t.tags || []).join('|')){ t.tags = newTags; patch.tags = newTags; }
     if(editCoverBlob !== undefined){
@@ -5985,6 +6091,7 @@
         gapless: settings.gapless, fadePause: settings.fadePause,
         balance: settings.balance, mono: settings.mono,
         smartShuffle: settings.smartShuffle, wakeLock: settings.wakeLock,
+        volCap: settings.volCap, pitchKeep: settings.pitchKeep,
         fx: { bassOn: settings.fx.bassOn, bassDb: settings.fx.bassDb, reverb: settings.fx.reverb, vocal: settings.fx.vocal },
         customPresets: settings.customPresets,
         theme: settings.theme, accent: settings.accent, vizStyle: settings.vizStyle,
@@ -6016,7 +6123,9 @@
           keyName: t.keyName || null,
           isAudiobook: !!t.isAudiobook,
           abPos: (typeof t.abPos === 'number' ? t.abPos : 0),
-          chapters: (Array.isArray(t.chapters) && t.chapters.length) ? t.chapters : null
+          chapters: (Array.isArray(t.chapters) && t.chapters.length) ? t.chapters : null,
+          peaks: (Array.isArray(t.peaks) ? t.peaks : null),
+          trackNo: (typeof t.trackNo === 'number' ? t.trackNo : null)
         };
       })
     };
@@ -6061,6 +6170,10 @@
         if(typeof td.bpm === 'number' && isFinite(td.bpm) && td.bpm > 0){ t.bpm = Math.round(td.bpm); patch.bpm = t.bpm; }
         if(typeof td.bpmManual === 'boolean'){ t.bpmManual = td.bpmManual; patch.bpmManual = td.bpmManual; }
         if(typeof td.audioHash === 'string' && td.audioHash){ t.audioHash = td.audioHash; patch.audioHash = td.audioHash; }
+        // Pack 11 (respaldo v10): onda de la barra y nº de pista; los respaldos viejos no los traen y no pasa nada
+        if(Array.isArray(td.peaks) && td.peaks.length >= 16 && td.peaks.length <= 400 && td.peaks.every(function(v){ return typeof v==='number' && isFinite(v) && v >= 0 && v <= 1; })){ t.peaks = td.peaks.slice(); patch.peaks = t.peaks; }
+        if(typeof td.trackNo === 'number' && isFinite(td.trackNo) && td.trackNo > 0){ t.trackNo = Math.round(td.trackNo); patch.trackNo = t.trackNo; }
+        else if(td.trackNo === null){ t.trackNo = null; patch.trackNo = null; }
         // v2 (respaldo v10): estrellas y campos nuevos por pista
         if(typeof td.stars === 'number' && isFinite(td.stars)){ t.stars = Math.max(0, Math.min(3, Math.round(td.stars))); patch.stars = t.stars; }
         if(td.kind === 'video' || td.kind === 'audio'){ t.kind = td.kind; patch.kind = td.kind; }
@@ -8457,7 +8570,7 @@
   // ---------- Pack de mejoras: actualización, reanudar, deshacer, tap tempo ----------
 
   // ----- 1. Actualización sin atascos -----
-  var APP_VERSION = '2.4.0';
+  var APP_VERSION = '2.5.0';
   document.getElementById('appVersionNote').textContent = APP_VERSION;
   function cmpVersion(a, b){
     var pa = a.split('.').map(function(x){ return parseInt(x, 10) || 0; });
@@ -10258,6 +10371,451 @@
     if(view === 'moods' && !moodAnalyzing) renderMoods();
   }
   syncProfileUI();
+
+  // ================= Pack 11 =================
+  // 1) Onda real en la barra de progreso · 2) Grabar la mezcla · 3) Auto-
+  // etiquetado desde el nombre del archivo · 4) Mini reproductor flotante
+  // (Document Picture-in-Picture) · 5) Volumen seguro · 6) Corrección de
+  // tono. Sin letras y sin micrófono: la grabación sale de la propia cadena
+  // de audio de la app, nunca de un micrófono ni de sonido externo.
+
+  // ----- 1) Forma de onda en la barra de progreso -----
+  // Los picos se calculan del audio decodificado (el mismo análisis que ya
+  // mide el volumen parejo y el ritmo) y se guardan por canción: 160 valores
+  // entre 0 y 1. Si la canción aún no tiene picos, la barra se comporta como
+  // siempre y los picos se calculan en segundo plano al sonar o elegirse.
+  var PEAKS_N = 160;
+  function peaksFromBuffer(ab){
+    if(!ab || !ab.length) return null;
+    var n = PEAKS_N, out = [];
+    var ch0 = ab.getChannelData(0);
+    var ch1 = ab.numberOfChannels > 1 ? ab.getChannelData(1) : null;
+    var len = ch0.length, per = len / n, max = 0, i, j;
+    for(i = 0; i < n; i++){
+      var s = Math.floor(i * per), e = Math.min(len, Math.floor((i + 1) * per));
+      var step = Math.max(1, Math.floor((e - s) / 48));
+      var m = 0;
+      for(j = s; j < e; j += step){
+        var v = ch0[j]; if(v < 0) v = -v;
+        if(ch1){ var v2 = ch1[j]; if(v2 < 0) v2 = -v2; if(v2 > v) v = v2; }
+        if(v > m) m = v;
+      }
+      out.push(m); if(m > max) max = m;
+    }
+    if(max <= 0) return null;
+    for(i = 0; i < n; i++) out[i] = Math.round((out[i] / max) * 1000) / 1000;
+    return out;
+  }
+  function ensurePeaks(t){
+    if(!t || Array.isArray(t.peaks) || t._peaksBusy) return;
+    t._peaksBusy = true;
+    fetch(t.url).then(function(r){ return r.arrayBuffer(); })
+      .then(function(buf){ return decodeAudio(buf); })
+      .then(function(ab){
+        var pk = peaksFromBuffer(ab);
+        if(pk){
+          t.peaks = pk;
+          idbPatch(t.id, { peaks: pk });
+          if(currentId === t.id) refreshWaveform();
+        }
+      })
+      .catch(function(){})
+      .then(function(){ t._peaksBusy = false; });
+  }
+  var waveOn = false, waveRatio = 0, waveColors = null;
+  function refreshWaveform(){
+    var wrap = document.getElementById('seekWrap');
+    if(!wrap) return;
+    var t = currentTrack();
+    if(t && Array.isArray(t.peaks) && t.peaks.length){
+      waveOn = true;
+      waveColors = null; // el acento pudo cambiar: se relee al dibujar
+      wrap.classList.add('wave-on');
+      var ratio = (audio && isFinite(audio.duration) && audio.duration > 0) ? (audio.currentTime / audio.duration) : (seek.value / 1000 || 0);
+      drawWave(ratio);
+    } else {
+      waveOn = false;
+      wrap.classList.remove('wave-on');
+      if(t) ensurePeaks(t);
+    }
+  }
+  function drawWave(ratio){
+    if(!waveOn) return;
+    waveRatio = Math.max(0, Math.min(1, ratio || 0));
+    var cv = document.getElementById('waveCanvas');
+    var wrap = document.getElementById('seekWrap');
+    var t = currentTrack();
+    if(!cv || !wrap || !t || !Array.isArray(t.peaks)) return;
+    var w = wrap.clientWidth, h = wrap.clientHeight || 28;
+    if(!w) return;
+    var dpr = window.devicePixelRatio || 1;
+    var W = Math.round(w * dpr), H = Math.round(h * dpr);
+    if(cv.width !== W || cv.height !== H){ cv.width = W; cv.height = H; }
+    if(!waveColors){
+      var cs = getComputedStyle(document.documentElement);
+      waveColors = {
+        accent: (cs.getPropertyValue('--accent') || '#E94E1B').trim() || '#E94E1B',
+        rest: (cs.getPropertyValue('--surface-3') || '#cccccc').trim() || '#cccccc'
+      };
+    }
+    var ctx = cv.getContext('2d');
+    if(!ctx) return;
+    ctx.clearRect(0, 0, W, H);
+    var peaks = t.peaks, n = peaks.length;
+    var bw = W / n, mid = H / 2, played = waveRatio * n;
+    for(var i = 0; i < n; i++){
+      var bh = Math.max(0.05, peaks[i]) * Math.max(2, H - 6 * dpr);
+      ctx.fillStyle = i < played ? waveColors.accent : waveColors.rest;
+      var wbar = Math.max(1, bw * 0.62);
+      ctx.fillRect(i * bw + (bw - wbar) / 2, mid - bh / 2, wbar, bh);
+    }
+  }
+  window.addEventListener('resize', function(){ if(waveOn) drawWave(waveRatio); });
+
+  // ----- 2) Graba tu mezcla -----
+  // MediaRecorder sobre el destino que cuelga del limitador final: captura
+  // lo que suena de verdad (crossfades, modo DJ, EQ, efectos, balance,
+  // volumen parejo) y al detener descarga un único archivo. Todo local.
+  var mixRec = null, mixChunks = [], mixRecTimer = null, mixRecStart = 0, mixRecMime = '';
+  function refreshRecordBtn(){
+    var b = document.getElementById('btnRecordMix');
+    if(b) b.style.display = (typeof MediaRecorder !== 'undefined') ? '' : 'none';
+  }
+  function fmtRecTime(ms){
+    var s = Math.floor(ms / 1000);
+    return Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0');
+  }
+  function startMixRec(){
+    ensureVisualizer();
+    if(audioCtx && audioCtx.state === 'suspended'){ var rp = audioCtx.resume(); if(rp && rp.catch) rp.catch(function(){}); }
+    if(!recDest || typeof MediaRecorder === 'undefined'){
+      toast('La cadena de audio aún no está lista: pon una canción a sonar y vuelve a intentarlo.');
+      return;
+    }
+    var candidates = ['audio/webm;codecs=opus', 'audio/webm', 'audio/ogg;codecs=opus', 'audio/mp4'];
+    var mime = '';
+    for(var i = 0; i < candidates.length; i++){
+      try{ if(MediaRecorder.isTypeSupported(candidates[i])){ mime = candidates[i]; break; } }catch(e){}
+    }
+    try{ mixRec = mime ? new MediaRecorder(recDest.stream, { mimeType: mime }) : new MediaRecorder(recDest.stream); }
+    catch(e){ mixRec = null; toast('Este navegador no pudo empezar la grabación de la mezcla.'); return; }
+    mixRecMime = mixRec.mimeType || mime || 'audio/webm';
+    mixChunks = [];
+    mixRec.ondataavailable = function(ev){ if(ev.data && ev.data.size) mixChunks.push(ev.data); };
+    mixRec.onstop = finishMixRec;
+    try{ mixRec.start(1000); }catch(e){ mixRec = null; toast('Este navegador no pudo empezar la grabación de la mezcla.'); return; }
+    mixRecStart = Date.now();
+    var b = document.getElementById('btnRecordMix');
+    if(b) b.classList.add('rec-on');
+    var lbl = document.getElementById('recordMixLabel');
+    if(lbl) lbl.textContent = 'Grabando 0:00 · Detener';
+    mixRecTimer = setInterval(function(){
+      var el = document.getElementById('recordMixLabel');
+      if(el) el.textContent = 'Grabando ' + fmtRecTime(Date.now() - mixRecStart) + ' · Detener';
+    }, 500);
+    toast('Grabando tu mezcla: todo lo que suene quedará en un solo archivo al detener la grabación.');
+  }
+  function finishMixRec(){
+    if(mixRecTimer){ clearInterval(mixRecTimer); mixRecTimer = null; }
+    var b = document.getElementById('btnRecordMix');
+    if(b) b.classList.remove('rec-on');
+    var lbl = document.getElementById('recordMixLabel');
+    if(lbl) lbl.textContent = 'Grabar mezcla';
+    var durMs = Date.now() - mixRecStart;
+    var blob = new Blob(mixChunks, { type: mixRecMime });
+    mixChunks = []; mixRec = null;
+    if(!blob.size){ toast('La grabación quedó vacía: no sonó nada mientras grababa.'); return; }
+    var ext = mixRecMime.indexOf('mp4') >= 0 ? 'm4a' : (mixRecMime.indexOf('ogg') >= 0 ? 'ogg' : 'webm');
+    var d = new Date();
+    var stamp = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0') + ' ' + String(d.getHours()).padStart(2, '0') + 'h' + String(d.getMinutes()).padStart(2, '0');
+    downloadFile('Mi mezcla ' + stamp + '.' + ext, blob);
+    toast('Mezcla descargada (' + fmtRecTime(durMs) + '): búscala en tu carpeta de descargas.');
+  }
+  document.getElementById('btnRecordMix').addEventListener('click', function(){
+    if(mixRec && mixRec.state !== 'inactive'){ try{ mixRec.stop(); }catch(e){} return; }
+    startMixRec();
+  });
+  refreshRecordBtn();
+
+  // ----- 3) Auto-etiquetado desde el nombre del archivo -----
+  // Lee patrones habituales («Artista - Título», «01. Título», «Artista –
+  // Álbum – 03 Título») y propone SOLO los datos que la canción aún no
+  // tiene. La vista previa manda: sin pulsar «Aplicar etiquetas» no se
+  // toca nada.
+  var autoTagModal = document.getElementById('autoTagModal');
+  var autoTagProposals = []; // {id, fields, chk}
+  function stripTagJunk(s){
+    return s.replace(/[\(\[][^\(\)\[\]]*[\)\]]/g, function(m){
+      return /\b(official|video|audio|lyric|lyrics|hd|hq|4k|remaster|remastered|explicit|visualizer|mv|clip)\b/i.test(m) ? ' ' : m;
+    }).replace(/\s+/g, ' ').trim();
+  }
+  function splitTrackNo(s){
+    var m = /^(\d{1,3})[\.\)\-]\s*(.+)$/.exec(s) || /^(\d{1,3})\s+(.+)$/.exec(s);
+    if(m){ var n = parseInt(m[1], 10); if(n > 0 && n < 1000) return { n: n, rest: m[2].trim() }; }
+    return { n: null, rest: s };
+  }
+  function parseFileNameTags(name){
+    var base = stripTagJunk(cleanName(name || ''));
+    if(!base) return null;
+    var parts = base.split(/\s[-–—]\s/).map(function(p){ return p.trim(); }).filter(function(p){ return p; });
+    if(!parts.length) return null;
+    var out = {};
+    if(parts.length >= 3){
+      out.artist = parts[0];
+      out.album = parts[1];
+      var sn = splitTrackNo(parts.slice(2).join(' - '));
+      if(sn.n) out.trackNo = sn.n;
+      out.title = sn.rest;
+    } else if(parts.length === 2){
+      var onlyNum = /^(\d{1,3})[\.\)]?$/.exec(parts[0]);
+      if(onlyNum){ out.trackNo = parseInt(onlyNum[1], 10); out.title = parts[1]; }
+      else {
+        out.artist = parts[0];
+        var sn2 = splitTrackNo(parts[1]);
+        if(sn2.n) out.trackNo = sn2.n;
+        out.title = sn2.rest;
+      }
+    } else {
+      var sn3 = splitTrackNo(parts[0]);
+      if(sn3.n) out.trackNo = sn3.n;
+      out.title = sn3.rest;
+    }
+    ['artist', 'album', 'title'].forEach(function(k){
+      if(out[k] !== undefined){ out[k] = out[k].trim(); if(!out[k]) delete out[k]; }
+    });
+    if(!out.title && !out.artist) return null;
+    return out;
+  }
+  function autoTagProposalFor(t){
+    var parsed = parseFileNameTags(t.name);
+    if(!parsed) return null;
+    var fields = {};
+    if(parsed.artist && !(t.artist || '').trim()) fields.artist = parsed.artist;
+    if(parsed.album && !(t.album || '').trim()) fields.album = parsed.album;
+    if(typeof parsed.trackNo === 'number' && !(typeof t.trackNo === 'number' && t.trackNo)) fields.trackNo = parsed.trackNo;
+    if(parsed.title){
+      // El título solo se propone si sigue siendo el nombre del archivo sin
+      // tratar (recién importada) o no hay título: nunca pisa uno ya puesto.
+      var titleIsFileName = !t.title || t.title === cleanName(t.name);
+      if(titleIsFileName && parsed.title !== t.title) fields.title = parsed.title;
+    }
+    return Object.keys(fields).length ? fields : null;
+  }
+  function openAutoTag(){
+    var ids = selectedIdList();
+    if(!ids.length){ toast('Primero marca al menos una canción.'); return; }
+    autoTagProposals = [];
+    var list = document.getElementById('autoTagList');
+    list.innerHTML = '';
+    var nProp = 0;
+    ids.forEach(function(id){
+      var t = trackById(id); if(!t) return;
+      var fields = autoTagProposalFor(t);
+      var row = document.createElement('label');
+      row.className = 'autotag-row';
+      var body = document.createElement('div');
+      var fileEl = document.createElement('div');
+      fileEl.className = 'at-file';
+      fileEl.textContent = t.name;
+      body.appendChild(fileEl);
+      var propEl = document.createElement('div');
+      propEl.className = 'at-prop';
+      if(fields){
+        var chk = document.createElement('input');
+        chk.type = 'checkbox';
+        chk.checked = true;
+        chk.setAttribute('aria-label', 'Aplicar la propuesta para ' + t.name);
+        row.appendChild(chk);
+        var bits = [];
+        if(fields.artist) bits.push('Artista: ' + fields.artist);
+        if(fields.title) bits.push('Título: ' + fields.title);
+        if(fields.album) bits.push('Álbum: ' + fields.album);
+        if(typeof fields.trackNo === 'number') bits.push('Nº de pista: ' + fields.trackNo);
+        propEl.textContent = bits.join(' · ');
+        autoTagProposals.push({ id: id, fields: fields, chk: chk });
+        nProp++;
+      } else {
+        var none = document.createElement('span');
+        none.className = 'at-none';
+        none.textContent = 'Sin propuesta: ya tiene sus datos o el nombre no sigue un patrón conocido.';
+        propEl.appendChild(none);
+      }
+      body.appendChild(propEl);
+      row.appendChild(body);
+      list.appendChild(row);
+    });
+    document.getElementById('autoTagSummary').textContent = nProp
+      ? ('Se proponen datos nuevos para ' + nProp + (nProp === 1 ? ' canción' : ' canciones') + ' de ' + ids.length + ' seleccionadas.')
+      : 'Nada que proponer en la selección: esas canciones ya tienen sus datos o sus nombres no siguen un patrón reconocible.';
+    document.getElementById('autoTagApply').disabled = !nProp;
+    autoTagModal.classList.add('on');
+    autoTagModal.setAttribute('aria-hidden', 'false');
+  }
+  function closeAutoTag(){
+    autoTagModal.classList.remove('on');
+    autoTagModal.setAttribute('aria-hidden', 'true');
+  }
+  function applyAutoTag(){
+    var n = 0;
+    autoTagProposals.forEach(function(p){
+      if(!p.chk || !p.chk.checked) return;
+      var t = trackById(p.id); if(!t) return;
+      Object.keys(p.fields).forEach(function(k){ t[k] = p.fields[k]; });
+      t._sf = null; // la búsqueda tolerante recalcula sus datos
+      t.color = colorFor(t.title + t.name);
+      idbPatch(t.id, p.fields);
+      n++;
+    });
+    closeAutoTag();
+    if(n){ render(); toast('Etiquetas aplicadas a ' + n + (n === 1 ? ' canción' : ' canciones') + ' desde el nombre del archivo.'); }
+    else toast('No se aplicó ninguna etiqueta: todas las propuestas estaban desmarcadas.');
+  }
+  document.getElementById('btnMultiAutoTag').addEventListener('click', openAutoTag);
+  document.getElementById('autoTagCancel').addEventListener('click', closeAutoTag);
+  document.getElementById('autoTagApply').addEventListener('click', applyAutoTag);
+  autoTagModal.addEventListener('click', function(ev){ if(ev.target === autoTagModal) closeAutoTag(); });
+
+  // ----- 4) Mini reproductor flotante (Document Picture-in-Picture) -----
+  // Ventana siempre encima con portada, título y anterior/play/siguiente.
+  // Los botones de la ventanita pulsan los controles reales de la app, así
+  // respeta cola, crossfade, DJ y todo lo demás sin duplicar lógica. El
+  // botón de la app ni aparece si el navegador no soporta Document PiP.
+  var miniWin = null;
+  var MINI_PLAY_SVG = '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5.5v13l11-6.5z"/></svg>';
+  var MINI_PAUSE_SVG = '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M7 5h3.5v14H7zM13.5 5H17v14h-3.5z"/></svg>';
+  var MINI_PREV_SVG = '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M6 5h2v14H6zM20 5v14L9.5 12z"/></svg>';
+  var MINI_NEXT_SVG = '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M16 5h2v14h-2zM4 5v14l10.5-7z"/></svg>';
+  function miniSupported(){
+    return 'documentPictureInPicture' in window && !!(window.documentPictureInPicture && typeof window.documentPictureInPicture.requestWindow === 'function');
+  }
+  function refreshMiniBtn(){
+    var b = document.getElementById('btnMiniPlayer');
+    if(b) b.style.display = miniSupported() ? '' : 'none';
+  }
+  function syncMiniPlayer(){
+    if(!miniWin || !miniWin.document) return;
+    var d = miniWin.document;
+    var titleEl = d.getElementById('miniTitle');
+    if(!titleEl) return;
+    var t = currentTrack();
+    var artistEl = d.getElementById('miniArtist');
+    var img = d.getElementById('miniCover');
+    var fb = d.getElementById('miniCoverFb');
+    var playIcon = d.getElementById('miniPlayIcon');
+    if(!t){
+      titleEl.textContent = 'Ninguna canción seleccionada';
+      if(artistEl) artistEl.textContent = tracks.length ? 'Elige una canción de la biblioteca' : '';
+      if(img) img.style.display = 'none';
+      if(fb){ fb.style.display = 'flex'; fb.textContent = '♪'; fb.style.background = ''; }
+    } else {
+      titleEl.textContent = t.title;
+      if(artistEl) artistEl.textContent = t.artist || t.name || '';
+      if(t.coverUrl && img){
+        img.src = t.coverUrl; img.style.display = 'block';
+        if(fb) fb.style.display = 'none';
+      } else {
+        if(img) img.style.display = 'none';
+        if(fb){
+          fb.style.display = 'flex';
+          fb.textContent = (t.title || '♪').trim().charAt(0).toUpperCase() || '♪';
+          fb.style.background = 'linear-gradient(145deg,' + t.color[0] + ',' + t.color[1] + ')';
+        }
+      }
+    }
+    if(playIcon) playIcon.innerHTML = isPlaying ? MINI_PAUSE_SVG : MINI_PLAY_SVG;
+  }
+  function openMiniPlayer(){
+    if(!miniSupported()){ toast('Este navegador no soporta el mini reproductor flotante (Document Picture-in-Picture).'); return; }
+    if(miniWin){ try{ miniWin.close(); }catch(e){} miniWin = null; return; }
+    window.documentPictureInPicture.requestWindow({ width: 360, height: 132 }).then(function(w){
+      miniWin = w;
+      var d = w.document;
+      var cs = getComputedStyle(document.body);
+      function cv(name, fallback){ var val = (cs.getPropertyValue(name) || '').trim(); return val || fallback; }
+      var style = d.createElement('style');
+      style.textContent =
+        '*{box-sizing:border-box}' +
+        'body{margin:0; font-family:system-ui,-apple-system,"Segoe UI",sans-serif; background:' + cv('--surface', '#241d16') + '; color:' + cv('--text', '#f7f1e8') + '}' +
+        '.mini{display:flex; align-items:center; gap:12px; padding:12px; height:100vh}' +
+        '.mcov{width:64px; height:64px; border-radius:12px; flex:none; overflow:hidden}' +
+        '.mcov img{width:100%; height:100%; object-fit:cover}' +
+        '#miniCoverFb{width:64px; height:64px; font-size:28px; font-weight:800; color:#fff; align-items:center; justify-content:center}' +
+        '.mmid{flex:1 1 auto; min-width:0}' +
+        '#miniTitle{font-weight:800; font-size:14.5px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis}' +
+        '#miniArtist{font-size:12.5px; opacity:.65; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; margin-top:2px}' +
+        '.mctl{display:flex; gap:6px; margin-top:8px; align-items:center}' +
+        '.mbtn{width:34px; height:34px; border-radius:50%; border:1px solid ' + cv('--line', '#4a4038') + '; background:transparent; color:inherit; cursor:pointer; display:flex; align-items:center; justify-content:center; padding:0}' +
+        '.mbtn svg{width:17px; height:17px; display:block}' +
+        '.mbtn.main{background:' + cv('--accent', '#E94E1B') + '; border-color:transparent; color:#fff; width:40px; height:40px}' +
+        '.mbtn.main svg{width:19px; height:19px}';
+      d.head.appendChild(style);
+      d.body.innerHTML =
+        '<div class="mini">' +
+          '<div class="mcov"><img id="miniCover" alt="" style="display:none" /><div id="miniCoverFb" style="display:flex">♪</div></div>' +
+          '<div class="mmid">' +
+            '<div id="miniTitle">—</div><div id="miniArtist"></div>' +
+            '<div class="mctl">' +
+              '<button class="mbtn" id="miniPrev" type="button" aria-label="Canción anterior">' + MINI_PREV_SVG + '</button>' +
+              '<button class="mbtn main" id="miniPlay" type="button" aria-label="Reproducir o pausar"><span id="miniPlayIcon">' + MINI_PLAY_SVG + '</span></button>' +
+              '<button class="mbtn" id="miniNext" type="button" aria-label="Canción siguiente">' + MINI_NEXT_SVG + '</button>' +
+            '</div>' +
+          '</div>' +
+        '</div>';
+      d.getElementById('miniPrev').addEventListener('click', function(){ document.getElementById('btnPrev').click(); });
+      d.getElementById('miniNext').addEventListener('click', function(){ document.getElementById('btnNext').click(); });
+      d.getElementById('miniPlay').addEventListener('click', function(){ document.getElementById('btnPlay').click(); });
+      w.addEventListener('pagehide', function(){ if(miniWin === w) miniWin = null; });
+      syncMiniPlayer();
+    }).catch(function(){ toast('Este navegador no pudo abrir el mini reproductor flotante.'); });
+  }
+  document.getElementById('btnMiniPlayer').addEventListener('click', openMiniPlayer);
+  refreshMiniBtn();
+
+  // ----- 5) Volumen seguro -----
+  // Tope máximo persistido en los ajustes: el deslizador lleva su máximo
+  // puesto al tope y applyVolume recorta cualquier entrada que lo supere.
+  function syncVolCapUI(){
+    var sel = document.getElementById('volCapSelect');
+    var cap = (typeof settings.volCap === 'number' && isFinite(settings.volCap)) ? settings.volCap : 1;
+    if(sel) sel.value = String(cap);
+    if(volumeEl) volumeEl.max = Math.round(cap * 100);
+  }
+  document.getElementById('volCapSelect').addEventListener('change', function(ev){
+    var v = parseFloat(ev.target.value);
+    if(!isFinite(v)) v = 1;
+    settings.volCap = Math.max(0.3, Math.min(1, v));
+    syncVolCapUI();
+    applyVolume(settings.volume); // si el tope bajó, el volumen baja al momento hasta él (y guarda)
+    toast(settings.volCap >= 1 ? 'Volumen seguro desactivado: ya no hay tope.' : 'Volumen seguro: el volumen no pasará del ' + Math.round(settings.volCap * 100) + '%.');
+  });
+
+  // ----- 6) Corrección de tono con la velocidad -----
+  // preservesPitch en los tres decks: activado, la voz suena natural a
+  // cualquier velocidad; desactivado, efecto vinilo (el tono sigue a la
+  // velocidad). Vale igual para música y para audiolibros/podcasts.
+  function applyPitch(){
+    var keep = settings.pitchKeep !== false;
+    [audioEl, audioB, videoEl].forEach(function(el){
+      try{ el.preservesPitch = keep; }catch(e){}
+      try{ el.mozPreservesPitch = keep; }catch(e){}
+      try{ el.webkitPreservesPitch = keep; }catch(e){}
+    });
+  }
+  function syncPitchUI(){
+    var b = document.getElementById('btnPitchKeep');
+    if(!b) return;
+    var on = settings.pitchKeep !== false;
+    b.classList.toggle('on', on);
+    b.setAttribute('aria-pressed', on ? 'true' : 'false');
+    document.getElementById('pitchKeepState').textContent = on ? 'Activada' : 'Desactivada';
+  }
+  document.getElementById('btnPitchKeep').addEventListener('click', function(){
+    settings.pitchKeep = !(settings.pitchKeep !== false);
+    syncPitchUI();
+    applyPitch();
+    saveState();
+    toast(settings.pitchKeep ? 'Corrección de tono activada: la voz sonará natural a cualquier velocidad.' : 'Corrección de tono desactivada: efecto vinilo, el tono sigue a la velocidad.');
+  });
 
   // ---------- Init ----------
   var appVersionEl = document.getElementById('appVersion');
