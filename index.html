@@ -223,6 +223,26 @@
   .out-btns{display:flex; flex-wrap:wrap; gap:8px}
   .tech-line{font-size:13.5px; line-height:1.55; color:var(--text); background:var(--surface-2); border:1px solid var(--line); border-radius:10px; padding:9px 12px; margin:0}
 
+  /* ===== Pack 13: pausa con audífonos, bloqueos, duplicados por nombre, mapa de escucha, enfoque, texto grande ===== */
+  body.large-text{zoom:1.18}
+  @supports not (zoom: 1.18){ body.large-text{font-size:19px} }
+  .bar-row.peak .bl{color:var(--accent); font-weight:800}
+  .bar-row.peak .bf{background:var(--accent)}
+  .blocked-row{display:flex; flex-wrap:wrap; gap:8px; align-items:center; justify-content:space-between; padding:9px 12px; border:1px solid var(--line); border-radius:10px; margin-top:8px; background:var(--surface-2); font-size:13.5px}
+  .blocked-row .b-kind{color:var(--muted); font-size:12px; font-weight:700; text-transform:uppercase; letter-spacing:.04em}
+  .focus{position:fixed; inset:0; z-index:130; display:none; flex-direction:column; align-items:center; justify-content:center; gap:14px; padding:26px 20px calc(24px + env(safe-area-inset-bottom)); color:#fff; text-align:center; background:#14201c; overflow:auto}
+  .focus.on{display:flex}
+  .focus-kicker{margin:0; font-size:13px; font-weight:800; letter-spacing:.14em; text-transform:uppercase; color:#9fd8c0}
+  .focus-clock{font-size:76px; font-weight:800; line-height:1; letter-spacing:-.02em; font-variant-numeric:tabular-nums}
+  .focus-phase{margin:0; font-size:19px; font-weight:700}
+  .focus-cycles{margin:0; color:#cfe8dc; font-size:14.5px}
+  .focus-config{display:flex; flex-wrap:wrap; gap:10px 14px; align-items:flex-end; justify-content:center; max-width:640px}
+  .focus-config label{display:flex; flex-direction:column; gap:5px; font-size:12.5px; font-weight:700; color:#cfe8dc; text-align:left}
+  .focus-config input, .focus-config select{padding:9px 11px; border:1px solid rgba(255,255,255,.35); border-radius:10px; background:rgba(255,255,255,.1); color:#fff; font-size:14px}
+  .focus-config select option{color:#111}
+  .focus-note{max-width:56ch; color:#b9d4c8; font-size:13px; line-height:1.55; margin:0}
+  .focus-actions{display:flex; flex-wrap:wrap; gap:10px; justify-content:center}
+
   /* Library */
   .library{background:var(--surface); border:1px solid var(--line); border-radius:var(--radius-lg); box-shadow:var(--shadow); overflow:hidden; display:flex; flex-direction:column; min-height:520px}
   .lib-head{padding:18px 18px 0}
@@ -834,6 +854,10 @@
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:15px;height:15px"><path d="M19 17h2c.6 0 1-.4 1-1v-3c0-.9-.7-1.7-1.5-1.9C18.7 10.6 16 10 16 10s-1.3-1.4-2.2-2.3c-.5-.4-1.1-.7-1.8-.7H5c-.6 0-1.1.4-1.4.9l-1.4 2.9A3.7 3.7 0 0 0 2 12v4c0 .6.4 1 1 1h2"/><circle cx="7" cy="17" r="2"/><path d="M9 17h6"/><circle cx="17" cy="17" r="2"/></svg>
             Modo coche
           </button>
+          <button class="btn small" id="btnFocus" type="button" title="Ciclos de concentración tipo Pomodoro: la música suena en el bloque de enfoque y se pausa o baja en el descanso">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:15px;height:15px"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2.5 2.5M9 2h6"/></svg>
+            Modo enfoque
+          </button>
           <button class="btn small" id="btnShareCurrent" type="button" disabled>
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:15px;height:15px"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="m8.6 13.5 6.8 4M15.4 6.5l-6.8 4"/></svg>
             Compartir
@@ -966,6 +990,16 @@
               <p class="sound-note">Cada salida guarda su propio ecualizador de 10 bandas, balance, mono y efectos: ajusta el sonido con un perfil activo y queda guardado en ese perfil al cambiar. Al conectar o desconectar audífonos, la app intenta cambiar sola al perfil que toca (mejor esfuerzo: depende de lo que el navegador alcance a detectar de la salida); si no lo detecta, cambias aquí a mano en un toque.</p>
             </div>
             <div class="sound-group">
+              <div class="sound-group-head"><h4>Audífonos</h4></div>
+              <div class="sound-inline">
+                <button class="toggle-pill" id="btnHpPause" type="button" aria-pressed="true"><span class="dot"></span><span>Pausar al desconectar audífonos:&nbsp;</span><span id="hpPauseState">Activado</span></button>
+              </div>
+              <div class="sound-inline" style="margin-top:8px">
+                <button class="toggle-pill" id="btnHpResume" type="button" aria-pressed="false"><span class="dot"></span><span>Reanudar al reconectar:&nbsp;</span><span id="hpResumeState">Apagado</span></button>
+              </div>
+              <p class="sound-note">Si se desconectan tus audífonos (Bluetooth o cable) mientras algo suena, la reproducción se pausa sola en vez de salir de golpe por la bocina. «Reanudar al reconectar» solo vuelve a sonar si la pausa la hizo esta función: si pausaste tú a mano, no se reanuda. Es de mejor esfuerzo: la app vigila la lista de salidas de audio que el navegador le deja ver y pausa cuando desaparece una que estaba presente; no todos los navegadores avisan igual, así que no se promete una detección perfecta.</p>
+            </div>
+            <div class="sound-group">
               <div class="sound-group-head">
                 <h4>Ecualizador · 10 bandas</h4>
                 <label class="sr-only" for="eqPreset">Preajuste de ecualizador</label>
@@ -1085,6 +1119,10 @@
                 <button class="toggle-pill" id="btnDynTheme" type="button" aria-pressed="false"><span class="dot"></span><span>Tema dinámico según la carátula:&nbsp;</span><span id="dynThemeState">Apagado</span></button>
               </div>
               <p class="sound-note">Mientras suena una canción con portada, los colores de acento de la app toman la paleta dominante de esa portada, extraída en tu propio dispositivo (canvas, sin subir nada). Si la canción no tiene portada, se queda tu tema de siempre. Tu fondo de foto personalizado no se toca.</p>
+              <div class="sound-inline" style="margin-top:12px">
+                <button class="toggle-pill" id="btnLargeText" type="button" aria-pressed="false"><span class="dot"></span><span>Texto grande:&nbsp;</span><span id="largeTextState">Apagado</span></button>
+              </div>
+              <p class="sound-note">Agranda la letra y los controles de toda la app con una escala global, sin cambiar el diseño: pensado para leer de lejos o para el modo coche. Se guarda en tus ajustes, como el resto de la apariencia.</p>
               <div class="sound-group-head" style="margin-top:16px"><h4>Fondo personalizado</h4></div>
               <div class="sound-inline">
                 <button class="btn small" id="btnBgPhoto" type="button">Elegir foto de fondo</button>
@@ -1269,7 +1307,7 @@
         <div class="update-row">
           <button class="btn small" id="btnCheckUpdate" type="button">Actualizar app</button>
           <button class="btn small danger" id="btnForceUpdate" type="button">Forzar actualización</button>
-          <span class="backup-note" id="updateStatus">Versión de esta app: v<span id="appVersionNote">2.6.0</span>. «Actualizar app» consulta la versión publicada y te dice si ya estás al día antes de recargar. «Forzar actualización» limpia el service worker y las cachés de la app si una actualización se quedó atascada; tu biblioteca, playlists y ajustes (IndexedDB) nunca se tocan.</span>
+          <span class="backup-note" id="updateStatus">Versión de esta app: v<span id="appVersionNote">2.7.0</span>. «Actualizar app» consulta la versión publicada y te dice si ya estás al día antes de recargar. «Forzar actualización» limpia el service worker y las cachés de la app si una actualización se quedó atascada; tu biblioteca, playlists y ajustes (IndexedDB) nunca se tocan.</span>
         </div>
       </div>
 
@@ -1488,6 +1526,7 @@
             <button class="btn small" id="btnArtistBack" type="button">← Volver</button>
             <button class="btn small primary" id="btnArtistPlay" type="button">Reproducir</button>
             <button class="btn small" id="btnArtistShuffle" type="button">Aleatoria</button>
+            <button class="btn small danger" id="btnArtistBlock" type="button">No reproducir este artista</button>
           </div>
           <div class="subview-head">
             <div>
@@ -1514,6 +1553,7 @@
             <button class="btn small" id="btnAlbumBack" type="button">← Volver</button>
             <button class="btn small primary" id="btnAlbumPlay" type="button">Reproducir</button>
             <button class="btn small" id="btnAlbumShuffle" type="button">Aleatoria</button>
+            <button class="btn small danger" id="btnAlbumBlock" type="button">No reproducir este álbum</button>
           </div>
           <div class="subview-head">
             <div>
@@ -1614,6 +1654,11 @@
         </div>
         <div class="stats-wrap" id="statsContent"></div>
         <div class="stats-wrap">
+          <h4>Mapa de tu escucha</h4>
+          <p class="sound-note" style="margin-top:0">Cuánto escuchas por hora del día y por día de la semana, calculado de tu historial guardado en este dispositivo. Tu hora y tu día fuertes van marcados.</p>
+          <div id="listenMapContent"></div>
+        </div>
+        <div class="stats-wrap">
           <h4>Logros</h4>
           <div class="badge-grid" id="badgeGrid"></div>
           <p class="sound-note" id="streakNote"></p>
@@ -1677,6 +1722,18 @@
         <p class="sound-note" style="margin:6px 18px 0">«Analizar audio» calcula una huella del sonido de cada canción, aquí en tu dispositivo y sin subir nada, para detectar la misma grabación aunque sus datos digan otra cosa. La huella se guarda con cada canción.</p>
         <div id="dupContent"></div>
         <div class="no-results" id="dupEmpty" style="display:none">No se encontraron duplicadas. Tu biblioteca está limpia.</div>
+        <div class="subview-head" style="margin-top:22px">
+          <div>
+            <h3>Duplicados por nombre</h3>
+            <p>Otra pasada distinta: agrupa canciones con el mismo artista y título aunque el archivo se llame diferente o traiga coletillas como «remaster» u «official video» (se ignoran acentos, mayúsculas y esos sufijos). Que las duraciones sean casi iguales (hasta unos 3 segundos de diferencia) refuerza la señal. En cada grupo se sugiere conservar la copia de mejor bitrate según su ficha técnica —y si falta el bitrate, la de mayor tamaño—; nunca se borra nada automáticamente.</p>
+          </div>
+        </div>
+        <div class="sound-inline" style="margin:12px 18px 0">
+          <button class="btn small" id="btnDupByName" type="button">Buscar duplicados por nombre</button>
+          <span class="sleep-status" id="dupNameStatus" role="status"></span>
+        </div>
+        <div id="dupNameContent"></div>
+        <div class="no-results" id="dupNameEmpty" style="display:none">No se encontraron duplicados por nombre. Ningún artista + título se repite en tu biblioteca.</div>
       </div>
 
       <!-- POR COMPLETAR (Pack 10) -->
@@ -2045,11 +2102,49 @@
   </div>
 </div>
 
+<div class="focus" id="focusOverlay" aria-hidden="true">
+  <button class="party-close" id="btnFocusClose" type="button" aria-label="Salir del modo enfoque">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
+  </button>
+  <p class="focus-kicker">Modo enfoque</p>
+  <p class="focus-phase" id="focusPhase">Listo para concentrarte</p>
+  <div class="focus-clock" id="focusClock">25:00</div>
+  <p class="focus-cycles" id="focusCycles">Ciclos completados: 0</p>
+  <p class="sound-note" id="focusNow" style="color:#cfe8dc"></p>
+  <div class="focus-config">
+    <label>Enfoque (min)
+      <input type="number" id="focusMinInput" min="5" max="120" step="1" value="25" />
+    </label>
+    <label>Descanso (min)
+      <input type="number" id="breakMinInput" min="1" max="60" step="1" value="5" />
+    </label>
+    <label>En el descanso, la música…
+      <select id="breakActionSelect">
+        <option value="pause">Se pausa suavemente</option>
+        <option value="volume">Baja el volumen</option>
+      </select>
+    </label>
+    <label id="breakVolField">Volumen del descanso (%)
+      <input type="number" id="breakVolInput" min="5" max="80" step="5" value="25" />
+    </label>
+  </div>
+  <div class="focus-actions">
+    <button class="btn primary" id="btnFocusToggle" type="button">Iniciar enfoque</button>
+    <button class="btn" id="btnFocusPlay" type="button">Reproducir / Pausar</button>
+  </div>
+  <p class="focus-note"><strong>Importante:</strong> como la reproducción programada, esto es una página web: los ciclos solo avanzan <strong>con la app abierta</strong>. Si cierras la app o el navegador la duerme, el temporizador se detiene hasta que vuelvas. Durante el enfoque la música suena normal; al llegar el descanso pasa lo que elegiste arriba, y al terminar el descanso la música vuelve sola como estaba.</p>
+</div>
+
 <div class="modal-overlay" id="profileModal" aria-hidden="true">
   <div class="modal" role="dialog" aria-modal="true" aria-labelledby="profileModalTitle">
     <h3 id="profileModalTitle">Perfiles</h3>
     <p class="sound-note">Cada perfil tiene sus playlists, inteligentes con reglas, likes, estrellas, historial, estadísticas, logros, cola y su «seguir donde ibas». La biblioteca de archivos es la misma para todos: no se duplica nada.</p>
     <div id="profileList"></div>
+    <div class="field">
+      <label>Bloqueados en este perfil</label>
+      <p class="sound-note" style="margin-top:0">Artistas y álbumes marcados con «No reproducir»: quedan fuera del aleatorio, el modo DJ, la radio, Descubrir y las listas inteligentes de este perfil, pero sus canciones siguen visibles en la biblioteca y puedes tocarlas a mano. Se guardan en la capa de este perfil, como los likes y las estrellas.</p>
+      <div id="blockedList"></div>
+    </div>
     <div class="field">
       <label for="profileNewName">Crear perfil nuevo</label>
       <div class="sound-inline">
@@ -2117,7 +2212,7 @@
 
   // ---------- State ----------
   var tracks = []; // {id,name,title,artist,album,duration,size,type,addedAt,url,coverUrl,color,rating,stars}
-  var APP_VERSION = '2.6.0'; // al publicar cambios, subir este número y el CACHE de sw.js
+  var APP_VERSION = '2.7.0'; // al publicar cambios, subir este número y el CACHE de sw.js
   var currentId = null;
   var isPlaying = false;
   var shuffle = false;
@@ -2162,6 +2257,10 @@
     dynTheme: false, // Pack 12: tema dinámico según la carátula (apagado por defecto)
     outActive: 'bocina', // Pack 12: perfil de sonido según la salida que está activo
     outProfiles: null, // Pack 12: { bocina, bluetooth, cable }, cada uno con su EQ/balance/mono/efectos
+    hpPause: true, // Pack 13: pausar al desconectar audífonos (activado por defecto)
+    hpResume: false, // Pack 13: reanudar al reconectar (solo si pausó esta función)
+    largeText: false, // Pack 13: texto grande en toda la app
+    focus: { focusMin: 25, breakMin: 5, breakAction: 'pause', breakVol: 25 }, // Pack 13: modo Enfoque
     fx: { bassOn: false, bassDb: 6, reverb: false, vocal: false },
     customPresets: [],
     theme: 'auto', // Pack 6: 'auto' | 'light' | 'dark'
@@ -2221,11 +2320,27 @@
     if(ds.outActive === 'bocina' || ds.outActive === 'bluetooth' || ds.outActive === 'cable') settings.outActive = ds.outActive;
     else settings.outActive = 'bocina';
     if(hadOutProfiles) loadOutProfileIntoLive(settings.outActive);
+    // Pack 13: audífonos, texto grande y modo Enfoque, con defaults defensivos
+    if(typeof ds.hpPause === 'boolean') settings.hpPause = ds.hpPause;
+    if(typeof ds.hpResume === 'boolean') settings.hpResume = ds.hpResume;
+    if(typeof ds.largeText === 'boolean') settings.largeText = ds.largeText;
+    if(ds.focus) settings.focus = sanitizeFocus(ds.focus);
+  }
+  function sanitizeFocus(f){
+    var out = { focusMin: 25, breakMin: 5, breakAction: 'pause', breakVol: 25 };
+    if(f && typeof f === 'object'){
+      var fm = parseInt(f.focusMin, 10); if(isFinite(fm)) out.focusMin = Math.max(5, Math.min(120, fm));
+      var bm = parseInt(f.breakMin, 10); if(isFinite(bm)) out.breakMin = Math.max(1, Math.min(60, bm));
+      if(f.breakAction === 'volume' || f.breakAction === 'pause') out.breakAction = f.breakAction;
+      var bv = parseInt(f.breakVol, 10); if(isFinite(bv)) out.breakVol = Math.max(5, Math.min(80, bv));
+    }
+    return out;
   }
   var sleepEndsAt = 0; // timestamp, 0 = sin temporizador por minutos
   var sleepAfterTrack = false;
   var sleepInterval = null;
   var sleepFade = 1;        // Pack mejoras 2: factor temporal (0..1) del fundido de apagado; nunca sobrescribe settings.volume
+  var focusFade = 1;        // Pack 13: factor temporal (0..1) del descanso del modo Enfoque; tampoco toca settings.volume
   var sleepFadeTimer = null;
   var sleepFadeForceStop = false;
   var fading = false;
@@ -3674,6 +3789,16 @@
     var SVG_SHARE = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="m8.6 13.5 6.8 4M15.4 6.5l-6.8 4"/></svg>';
     item('Compartir', SVG_SHARE, function(){ shareTrack(t); });
     item('Editar datos', SVG_EDIT, function(){ openEditor(id); });
+    // Pack 13: bloquear artista o álbum completo desde el menú de la canción
+    var SVG_BLOCK = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M5.5 5.5l13 13"/></svg>';
+    if(t.artist && t.artist.trim()){
+      if(isArtistBlocked(t.artist)) item('Dejar de bloquear a este artista', SVG_BLOCK, function(){ unblockArtist(t.artist); });
+      else item('No reproducir este artista', SVG_BLOCK, function(){ blockArtist(t.artist); });
+    }
+    if(t.album && t.album.trim()){
+      if(isAlbumBlocked(t)) item('Dejar de bloquear este álbum', SVG_BLOCK, function(){ unblockAlbum(t); });
+      else item('No reproducir este álbum', SVG_BLOCK, function(){ blockAlbum(t); });
+    }
     var sep = document.createElement('div'); sep.className='menu-sep'; menuEl.appendChild(sep);
     var sub = document.createElement('div'); sub.className='menu-title'; sub.textContent='Añadir a una playlist';
     menuEl.appendChild(sub);
@@ -4218,13 +4343,13 @@
   // Solo entran canciones reproducibles (sin dislike), igual que siempre.
   function contextPlayableIds(){
     if(playContext.type==='mood'){
-      return tracks.filter(function(t){ return t.mood===playContext.moodId && isPlayable(t); }).map(function(t){ return t.id; });
+      return tracks.filter(function(t){ return t.mood===playContext.moodId && isAutoPlayable(t); }).map(function(t){ return t.id; });
     }
     if(playContext.type==='memory'){
-      return memoryMixIds.filter(function(id){ var t=trackById(id); return t && isPlayable(t); });
+      return memoryMixIds.filter(function(id){ var t=trackById(id); return t && isAutoPlayable(t); });
     }
     if(playContext.type==='smart'){
-      return computeSmart(playContext.smartId).filter(isPlayable).map(function(t){ return t.id; });
+      return computeSmart(playContext.smartId).filter(isAutoPlayable).map(function(t){ return t.id; });
     }
     if(playContext.type==='folder'){
       return tracks.filter(function(t){ return (t.folder||'')===playContext.folderKey; }).filter(isPlayable).map(function(t){ return t.id; });
@@ -4236,7 +4361,7 @@
       var pl = playlists.find(function(p){ return p.id===playContext.playlistId; });
       if(pl) return pl.trackIds.filter(function(id){ var t=trackById(id); return t && isPlayable(t); });
     }
-    return playableTracks().map(function(t){ return t.id; });
+    return tracks.filter(isAutoPlayable).map(function(t){ return t.id; });
   }
   // Pack 9: aleatorio inteligente. Reparte la bolsa ya barajada para que no
   // queden seguidas dos canciones del mismo artista ni del mismo álbum
@@ -4711,7 +4836,7 @@
   // Pack de mejoras 2: el volumen que suena es el del usuario multiplicado
   // por el factor del fundido de apagado (sleepFade). Así el fundido nunca
   // sobrescribe el volumen guardado: al cancelarlo, todo vuelve intacto.
-  function effVolume(){ return settings.volume * sleepFade; }
+  function effVolume(){ return settings.volume * sleepFade * focusFade; }
   function applyAudioVolumes(){
     var v = effVolume();
     audioEl.volume = v;
@@ -5258,6 +5383,9 @@
     if(typeof syncPitchUI === 'function') syncPitchUI(); // Pack 11
     if(typeof syncOutUI === 'function') syncOutUI(); // Pack 12
     if(typeof syncDynThemeUI === 'function') syncDynThemeUI(); // Pack 12
+    if(typeof syncHpUI === 'function') syncHpUI(); // Pack 13
+    if(typeof syncLargeTextUI === 'function') syncLargeTextUI(); // Pack 13
+    if(typeof syncFocusUI === 'function') syncFocusUI(); // Pack 13
     if(typeof applyPitch === 'function') applyPitch(); // Pack 11
     if(typeof syncSmartShuffleUI === 'function') syncSmartShuffleUI();
     if(typeof syncWakeUI === 'function') syncWakeUI();
@@ -5914,10 +6042,13 @@
     { id:'forgotten', name:'Olvidadas', desc:'Canciones con like o entre las más escuchadas que no suenan desde hace 90 días o más, ordenadas por más tiempo sin sonar.', emptyText:'Nada olvidado por aquí: tus favoritas han sonado en los últimos 90 días, o todavía no tienes favoritas con historial de escucha.' }
   ];
   function computeSmart(id){
+    // Pack 13: lo bloqueado (artista/álbum) queda fuera de TODAS las listas
+    // inteligentes y automáticas, igual que fuera del aleatorio/DJ/radio.
+    var nb = function(t){ return !isBlocked(t); };
     if(typeof id === 'string' && id.indexOf('cs:') === 0){
       var csd = null;
       for(var ci = 0; ci < customSmart.length; ci++){ if(customSmart[ci].id === id) csd = customSmart[ci]; }
-      return csd ? computeCustomSmart(csd) : [];
+      return (csd ? computeCustomSmart(csd) : []).filter(nb);
     }
     if(id === 'discover'){
       var fresh = tracks.filter(function(t){ return !(playCounts[t.id] > 0); });
@@ -5932,16 +6063,16 @@
         if((i + 1) % 3 === 0 && bi < bestP.length) outD.push(bestP[bi++]);
       });
       while(bi < bestP.length) outD.push(bestP[bi++]);
-      return outD.slice(0, 60);
+      return outD.filter(nb).slice(0, 60);
     }
-    if(id === 'calm') return tracks.filter(function(t){ return typeof t.bpm === 'number' && t.bpm > 0 && t.bpm < 100; }).sort(function(a, b){ return a.bpm - b.bpm; });
-    if(id === 'intense') return tracks.filter(function(t){ return typeof t.bpm === 'number' && t.bpm >= 120; }).sort(function(a, b){ return b.bpm - a.bpm; });
-    if(id === 'best') return tracks.filter(function(t){ return t.rating === 'like' || (typeof t.stars === 'number' && t.stars >= 3); });
+    if(id === 'calm') return tracks.filter(function(t){ return typeof t.bpm === 'number' && t.bpm > 0 && t.bpm < 100; }).sort(function(a, b){ return a.bpm - b.bpm; }).filter(nb);
+    if(id === 'intense') return tracks.filter(function(t){ return typeof t.bpm === 'number' && t.bpm >= 120; }).sort(function(a, b){ return b.bpm - a.bpm; }).filter(nb);
+    if(id === 'best') return tracks.filter(function(t){ return t.rating === 'like' || (typeof t.stars === 'number' && t.stars >= 3); }).filter(nb);
     if(id === 'most') return tracks.filter(function(t){ return (playCounts[t.id] || 0) > 0; })
-      .sort(function(a,b){ return (playCounts[b.id] || 0) - (playCounts[a.id] || 0); }).slice(0, 50);
-    if(id === 'never') return tracks.filter(function(t){ return !(playCounts[t.id] > 0); });
-    if(id === 'forgotten') return computeForgotten(); // Pack 12
-    return tracks.slice().sort(function(a,b){ return (b.addedAt || 0) - (a.addedAt || 0); }).slice(0, 50);
+      .sort(function(a,b){ return (playCounts[b.id] || 0) - (playCounts[a.id] || 0); }).slice(0, 50).filter(nb);
+    if(id === 'never') return tracks.filter(function(t){ return !(playCounts[t.id] > 0); }).filter(nb);
+    if(id === 'forgotten') return computeForgotten().filter(nb); // Pack 12 + Pack 13
+    return tracks.slice().sort(function(a,b){ return (b.addedAt || 0) - (a.addedAt || 0); }).slice(0, 50).filter(nb);
   }
   function renderSmart(){
     var bar = document.getElementById('smartBar');
@@ -5996,7 +6127,7 @@
     updateDiscoverCount();
   }
   function playSmart(shufflePlay){
-    var list = computeSmart(selectedSmartId).filter(isPlayable);
+    var list = computeSmart(selectedSmartId).filter(isAutoPlayable);
     if(!list.length){ toast('Esta lista inteligente no tiene canciones reproducibles por ahora.'); return; }
     playContext = { type:'smart', smartId: selectedSmartId };
     if(shufflePlay && !shuffle){
@@ -6108,6 +6239,7 @@
     var subSel = groupSub(kind, sel);
     document.getElementById(kind + 'GroupInfo').textContent =
       (subSel ? subSel + ' · ' : '') + g2.length + (g2.length === 1 ? ' canción' : ' canciones') + (dur2 ? ' · ' + fmtTime(dur2) : '');
+    if(typeof syncGroupBlockBtns === 'function') syncGroupBlockBtns(kind); // Pack 13
     var listEl = document.getElementById(kind + 'GroupList');
     listEl.innerHTML = '';
     g2.forEach(function(t){
@@ -6185,6 +6317,8 @@
         smartShuffle: settings.smartShuffle, wakeLock: settings.wakeLock,
         volCap: settings.volCap, pitchKeep: settings.pitchKeep,
         dynTheme: settings.dynTheme, outActive: settings.outActive, outProfiles: settings.outProfiles,
+        hpPause: settings.hpPause, hpResume: settings.hpResume, largeText: settings.largeText,
+        focus: { focusMin: settings.focus.focusMin, breakMin: settings.focus.breakMin, breakAction: settings.focus.breakAction, breakVol: settings.focus.breakVol },
         fx: { bassOn: settings.fx.bassOn, bassDb: settings.fx.bassDb, reverb: settings.fx.reverb, vocal: settings.fx.vocal },
         customPresets: settings.customPresets,
         theme: settings.theme, accent: settings.accent, vizStyle: settings.vizStyle,
@@ -6457,6 +6591,7 @@
     var wrap = document.getElementById('statsContent');
     if(!wrap) return;
     wrap.innerHTML = '';
+    if(typeof renderListenMap === 'function') renderListenMap(); // Pack 13: mapa de tu escucha
     var totalSec = statsLog.reduce(function(s, e){ return s + (e.sec || 0); }, 0);
     var distinct = {}, days = {};
     statsLog.forEach(function(e){
@@ -8674,7 +8809,7 @@
   // ---------- Pack de mejoras: actualización, reanudar, deshacer, tap tempo ----------
 
   // ----- 1. Actualización sin atascos -----
-  var APP_VERSION = '2.6.0';
+  var APP_VERSION = '2.7.0';
   document.getElementById('appVersionNote').textContent = APP_VERSION;
   function cmpVersion(a, b){
     var pa = a.split('.').map(function(x){ return parseInt(x, 10) || 0; });
@@ -9265,7 +9400,8 @@
     if(currentId && djCacheFor === currentId) return djCacheId;
     var pool = contextPlayableIds();
     if(!pool.length) pool = playableTracks().map(function(t){ return t.id; });
-    pool = pool.filter(function(id){ return id !== currentId; });
+    // Pack 13: el DJ nunca elige canciones de artistas/álbumes bloqueados
+    pool = pool.filter(function(id){ var t = trackById(id); return id !== currentId && !(t && isBlocked(t)); });
     var cur = currentTrack();
     var curBpm = (cur && typeof cur.bpm === 'number' && cur.bpm > 0) ? cur.bpm : null;
     var curKey = (cur && cur.musicalKey) ? parseCamelot(cur.musicalKey) : null;
@@ -9339,13 +9475,13 @@
     var seed = trackById(radioState.seedId);
     var ref = currentTrack() || seed;
     if(!ref) return null;
-    var pool = playableTracks().filter(function(t){ return t.id !== currentId && !radioState.played[t.id]; });
+    var pool = playableTracks().filter(function(t){ return t.id !== currentId && !radioState.played[t.id] && !isBlocked(t); });
     if(!pool.length){
       // Ya sonó todo lo reproducible en esta radio: empieza un ciclo nuevo
       // sin repetir la que está sonando ahora mismo.
       radioState.played = {};
       if(currentId) radioState.played[currentId] = 1;
-      pool = playableTracks().filter(function(t){ return t.id !== currentId; });
+      pool = playableTracks().filter(function(t){ return t.id !== currentId && !isBlocked(t); });
       if(!pool.length) return null;
     }
     var refBpm = (typeof ref.bpm === 'number' && ref.bpm > 0) ? ref.bpm : null;
@@ -9800,6 +9936,10 @@
       selectedPlaylistId: selectedPlaylistId,
       playContext: pcCopy,
       ratings: collectRatings(),
+      blocked: { // Pack 13: bloqueos del perfil (artistas y álbumes), como los likes
+        artists: blockedArtists.map(function(b){ return { key: b.key, name: b.name }; }),
+        albums: blockedAlbums.map(function(b){ return { key: b.key, name: b.name }; })
+      },
       resume: lastResumeObj
     };
   }
@@ -9831,6 +9971,9 @@
       var ns = (r && typeof r.stars === 'number') ? Math.max(0, Math.min(3, Math.round(r.stars))) : null;
       if(nr !== t.rating || ns !== t.stars){ t.rating = nr; t.stars = ns; idbPatch(t.id, { rating: nr, stars: ns }); }
     });
+    // Pack 13: capa de bloqueados del perfil; perfiles viejos sin el dato = sin bloqueos
+    blockedArtists = sanitizeBlockedList(d.blocked && d.blocked.artists);
+    blockedAlbums = sanitizeBlockedList(d.blocked && d.blocked.albums);
     lastResumeObj = d.resume || null;
     idbMetaSet('resumeState', lastResumeObj);
   }
@@ -9929,6 +10072,7 @@
   }
   document.getElementById('btnProfiles').addEventListener('click', function(){
     renderProfileList();
+    if(typeof renderBlockedList === 'function') renderBlockedList(); // Pack 13
     profileModal.classList.add('on'); profileModal.setAttribute('aria-hidden', 'false');
   });
   document.getElementById('profileModalClose').addEventListener('click', function(){
@@ -11357,6 +11501,570 @@
       }
     }, { passive: true });
   })();
+
+  // ================= Pack 13 =================
+  // 1) Pausa inteligente con audífonos · 2) Bloquear artista o álbum
+  // completo · 3) Duplicados por nombre · 4) Mapa de tu escucha ·
+  // 5) Modo Enfoque (Pomodoro) · 6) Texto grande. Todo local, como
+  // siempre; IndexedDB sigue en v2 y el respaldo en v10: lo nuevo viaja
+  // en los ajustes y en la capa del perfil activo. Sin letras y sin
+  // micrófono.
+
+  // ----- 2) Bloquear artista o álbum completo -----
+  // Se guarda en la capa del perfil activo (snapshotProfileData /
+  // applyProfileData), igual que likes y estrellas: cada perfil bloquea
+  // lo suyo sobre la misma biblioteca compartida.
+  var blockedArtists = []; // [{key, name}] con key = artista normalizado
+  var blockedAlbums = [];  // [{key, name}] con key = álbum|artista normalizados
+  function sanitizeBlockedList(list){
+    if(!Array.isArray(list)) return [];
+    var seen = {}, out = [];
+    list.forEach(function(b){
+      var key = null, name = null;
+      if(typeof b === 'string'){ key = b; name = b; }
+      else if(b && typeof b === 'object'){ key = b.key; name = b.name || b.key; }
+      if(typeof key !== 'string' || !key || seen[key]) return;
+      seen[key] = 1;
+      out.push({ key: key, name: String(name || key).slice(0, 80) });
+    });
+    return out.slice(0, 200);
+  }
+  function albumBlockKeyOf(album, artist){ return normStr(album) + '\u0001' + normStr(artist); }
+  function isArtistBlocked(name){
+    var k = normStr(name);
+    return !!k && blockedArtists.some(function(b){ return b.key === k; });
+  }
+  function isAlbumBlocked(t){
+    if(!t || !normStr(t.album)) return false;
+    var k = albumBlockKeyOf(t.album, t.artist);
+    return blockedAlbums.some(function(b){ return b.key === k; });
+  }
+  function isBlocked(t){
+    if(!t) return false;
+    if(t.artist && isArtistBlocked(t.artist)) return true;
+    return isAlbumBlocked(t);
+  }
+  // Reproducible en contextos automáticos: sin dislike y sin bloqueo.
+  // La reproducción manual (tocar la canción, su playlist, su grupo) sigue
+  // usando isPlayable: lo bloqueado se ve y se puede tocar a mano.
+  function isAutoPlayable(t){ return isPlayable(t) && !isBlocked(t); }
+  function afterBlockChange(){
+    djCacheFor = '__none__'; djCacheId = null;
+    radioCacheFor = '__none__'; radioCacheId = null;
+    rebuildShuffle();
+    saveState();
+    render();
+    if(view === 'smart') renderSmart();
+    if(view === 'artists') renderGroups('artist');
+    if(view === 'albums') renderGroups('album');
+    renderBlockedList();
+  }
+  function blockArtist(name){
+    var disp = (name || '').trim();
+    if(!disp){ toast('Esta canción no trae artista: no hay nada que bloquear.'); return; }
+    if(isArtistBlocked(disp)){ toast('«' + disp + '» ya está bloqueado en este perfil.'); return; }
+    blockedArtists.push({ key: normStr(disp), name: disp.slice(0, 80) });
+    afterBlockChange();
+    toast('«' + disp + '» ya no sonará en aleatorio, DJ, radio, Descubrir ni listas inteligentes de este perfil. Puedes desbloquearlo en Perfiles o desde su vista de artista.');
+  }
+  function unblockArtist(name){
+    var k = normStr(name);
+    var before = blockedArtists.length;
+    blockedArtists = blockedArtists.filter(function(b){ return b.key !== k; });
+    if(blockedArtists.length === before) return;
+    afterBlockChange();
+    toast('«' + (name || '') + '» vuelve a sonar con normalidad en este perfil.');
+  }
+  function blockAlbum(t){
+    if(!t || !(t.album || '').trim()){ toast('Esta canción no trae álbum: no hay nada que bloquear.'); return; }
+    if(isAlbumBlocked(t)){ toast('Este álbum ya está bloqueado en este perfil.'); return; }
+    blockedAlbums.push({ key: albumBlockKeyOf(t.album, t.artist), name: (t.album.trim() + (t.artist ? ' — ' + t.artist.trim() : '')).slice(0, 80) });
+    afterBlockChange();
+    toast('El álbum «' + t.album + '» ya no sonará en aleatorio, DJ, radio, Descubrir ni listas inteligentes de este perfil. Puedes desbloquearlo en Perfiles o desde su vista de álbum.');
+  }
+  function unblockAlbum(t){
+    if(!t) return;
+    var k = albumBlockKeyOf(t.album, t.artist);
+    var before = blockedAlbums.length;
+    blockedAlbums = blockedAlbums.filter(function(b){ return b.key !== k; });
+    if(blockedAlbums.length === before) return;
+    afterBlockChange();
+    toast('El álbum «' + (t.album || '') + '» vuelve a sonar con normalidad en este perfil.');
+  }
+  function syncGroupBlockBtns(kind){
+    if(kind === 'artist'){
+      var bA = document.getElementById('btnArtistBlock');
+      if(!bA) return;
+      var selA = groupSel.artist;
+      bA.style.display = selA ? '' : 'none';
+      if(!selA) return;
+      var blockedA = isArtistBlocked(selA);
+      bA.textContent = blockedA ? 'Dejar de bloquear a este artista' : 'No reproducir este artista';
+      bA.classList.toggle('danger', !blockedA);
+    }
+    if(kind === 'album'){
+      var bB = document.getElementById('btnAlbumBlock');
+      if(!bB) return;
+      var selB = groupSel.album;
+      bB.style.display = selB ? '' : 'none';
+      if(!selB) return;
+      var rep = groupTracks('album', selB)[0];
+      var blockedB = rep ? isAlbumBlocked(rep) : false;
+      bB.textContent = blockedB ? 'Dejar de bloquear este álbum' : 'No reproducir este álbum';
+      bB.classList.toggle('danger', !blockedB);
+    }
+  }
+  document.getElementById('btnArtistBlock').addEventListener('click', function(){
+    var sel = groupSel.artist;
+    if(!sel) return;
+    if(isArtistBlocked(sel)) unblockArtist(sel); else blockArtist(sel);
+  });
+  document.getElementById('btnAlbumBlock').addEventListener('click', function(){
+    var sel = groupSel.album;
+    if(!sel) return;
+    var rep = groupTracks('album', sel)[0];
+    if(!rep) return;
+    if(isAlbumBlocked(rep)) unblockAlbum(rep); else blockAlbum(rep);
+  });
+  function renderBlockedList(){
+    var wrap = document.getElementById('blockedList');
+    if(!wrap) return;
+    wrap.innerHTML = '';
+    if(!blockedArtists.length && !blockedAlbums.length){
+      var p = document.createElement('p');
+      p.className = 'sound-note';
+      p.textContent = 'Nada bloqueado en este perfil. Bloquea desde la vista de un artista o álbum, o desde el menú (⋯) de una canción.';
+      wrap.appendChild(p);
+      return;
+    }
+    blockedArtists.forEach(function(b){
+      var row = document.createElement('div'); row.className = 'blocked-row';
+      var left = document.createElement('span');
+      var kind = document.createElement('span'); kind.className = 'b-kind'; kind.textContent = 'Artista · ';
+      var nm = document.createElement('strong'); nm.textContent = b.name;
+      left.appendChild(kind); left.appendChild(nm);
+      var btn = document.createElement('button'); btn.className = 'btn small'; btn.type = 'button'; btn.textContent = 'Desbloquear';
+      btn.addEventListener('click', function(){ unblockArtist(b.name); });
+      row.appendChild(left); row.appendChild(btn);
+      wrap.appendChild(row);
+    });
+    blockedAlbums.forEach(function(b){
+      var row = document.createElement('div'); row.className = 'blocked-row';
+      var left = document.createElement('span');
+      var kind = document.createElement('span'); kind.className = 'b-kind'; kind.textContent = 'Álbum · ';
+      var nm = document.createElement('strong'); nm.textContent = b.name;
+      left.appendChild(kind); left.appendChild(nm);
+      var btn = document.createElement('button'); btn.className = 'btn small'; btn.type = 'button'; btn.textContent = 'Desbloquear';
+      btn.addEventListener('click', function(){
+        blockedAlbums = blockedAlbums.filter(function(x){ return x.key !== b.key; });
+        afterBlockChange();
+        toast('Álbum desbloqueado en este perfil.');
+      });
+      row.appendChild(left); row.appendChild(btn);
+      wrap.appendChild(row);
+    });
+  }
+
+  // ----- 1) Pausa inteligente con audífonos -----
+  // Mejor esfuerzo: se vigila la lista de salidas de audio que el
+  // navegador deja ver (enumerateDevices) y se compara en cada
+  // devicechange con la foto anterior. Si desaparece una salida que
+  // estaba presente mientras algo suena, se pausa. Convive con los
+  // listeners de devicechange que ya existían (reapertura Bluetooth y
+  // perfiles por salida), que no se tocan.
+  var hpPausedByUs = false; // true solo si la pausa la hizo ESTA función
+  var hpGuard = false;      // true mientras la pausa/reanudación es nuestra: los eventos play/pause no deben limpiar la marca
+  var hpKnown = null;       // deviceId de las salidas vistas en la última foto
+  function syncHpUI(){
+    var bp = document.getElementById('btnHpPause');
+    if(bp){
+      bp.classList.toggle('on', !!settings.hpPause);
+      bp.setAttribute('aria-pressed', settings.hpPause ? 'true' : 'false');
+      document.getElementById('hpPauseState').textContent = settings.hpPause ? 'Activado' : 'Apagado';
+    }
+    var br = document.getElementById('btnHpResume');
+    if(br){
+      br.classList.toggle('on', !!settings.hpResume);
+      br.setAttribute('aria-pressed', settings.hpResume ? 'true' : 'false');
+      document.getElementById('hpResumeState').textContent = settings.hpResume ? 'Activado' : 'Apagado';
+    }
+  }
+  document.getElementById('btnHpPause').addEventListener('click', function(){
+    settings.hpPause = !settings.hpPause;
+    if(!settings.hpPause) hpPausedByUs = false;
+    syncHpUI(); saveState();
+    toast(settings.hpPause ? 'Pausa al desconectar audífonos: activada.' : 'Pausa al desconectar audífonos: apagada.');
+  });
+  document.getElementById('btnHpResume').addEventListener('click', function(){
+    settings.hpResume = !settings.hpResume;
+    syncHpUI(); saveState();
+    toast(settings.hpResume ? 'Reanudar al reconectar: activado (solo si la pausa la hizo esta función).' : 'Reanudar al reconectar: apagado.');
+  });
+  function hpOutputIds(){
+    if(!(navigator.mediaDevices && navigator.mediaDevices.enumerateDevices)) return Promise.resolve(null);
+    try{
+      return navigator.mediaDevices.enumerateDevices().then(function(devs){
+        return (devs || []).filter(function(d){ return d && d.kind === 'audiooutput' && d.deviceId; }).map(function(d){ return d.deviceId; });
+      }).catch(function(){ return null; });
+    }catch(e){ return Promise.resolve(null); }
+  }
+  hpOutputIds().then(function(ids){ if(ids) hpKnown = ids; });
+  if(navigator.mediaDevices && navigator.mediaDevices.addEventListener){
+    var hpTimer = null;
+    navigator.mediaDevices.addEventListener('devicechange', function(){
+      if(hpTimer) clearTimeout(hpTimer);
+      hpTimer = setTimeout(function(){
+        hpTimer = null;
+        hpOutputIds().then(function(ids){
+          if(!ids) return;
+          var prev = hpKnown;
+          hpKnown = ids;
+          if(!prev) return; // sin foto anterior no se puede saber qué desapareció
+          var removed = prev.filter(function(id){ return id !== 'default' && ids.indexOf(id) < 0; });
+          var added = ids.filter(function(id){ return id !== 'default' && prev.indexOf(id) < 0; });
+          if(removed.length && settings.hpPause && isPlaying && !hpPausedByUs){
+            hpPausedByUs = true;
+            hpGuard = true;
+            pauseWithFade();
+            setTimeout(function(){ hpGuard = false; }, 500);
+            toast('Audífonos desconectados: pausé la reproducción para que no salga de golpe por la bocina.');
+          } else if(added.length && hpPausedByUs && settings.hpResume && !isPlaying){
+            hpPausedByUs = false;
+            hpGuard = true;
+            playWithFade();
+            setTimeout(function(){ hpGuard = false; }, 500);
+            toast('Audífonos reconectados: sigo donde ibas.');
+          }
+        });
+      }, 600);
+    });
+  }
+  // Si el usuario pausa o reanuda a mano, la pausa deja de ser «nuestra»:
+  // jamás se reanuda solo tras una pausa manual.
+  [audioEl, audioB].forEach(function(el){
+    el.addEventListener('play', function(){ if(!hpGuard) hpPausedByUs = false; });
+    el.addEventListener('pause', function(){ if(!hpGuard) hpPausedByUs = false; });
+  });
+
+  // ----- 3) Duplicados por nombre -----
+  // Segunda pasada, distinta de la de huella/tamaño: mismo artista +
+  // título normalizados, ignorando acentos, mayúsculas y coletillas
+  // típicas («remaster», «official video»…). La duración parecida
+  // (≤ ~3 s) es señal de apoyo cuando ambas se conocen.
+  function cleanTitleForDup(s){
+    var x = normStr(s);
+    x = x.replace(/\(([^)]*)\)/g, function(m, inner){
+      return /(remaster|official|oficial|video|audio|visualizer|\bhd\b|\b4k\b|\bmv\b)/.test(inner) ? ' ' : m;
+    });
+    x = x.replace(/\[[^\]]*\]/g, ' ');
+    x = x.replace(/\s*-\s*[^-]*\b(remaster|official|oficial)\b[^-]*$/, ' ');
+    x = x.replace(/\s*-\s*(official|oficial)\s+(video|audio)\s*$/, ' ');
+    x = x.replace(/\b(feat\.?|ft\.)\s+.*$/, ' ');
+    return x.replace(/\s+/g, ' ').trim();
+  }
+  function dupNameKey(t){ return normStr(t.artist) + '|' + cleanTitleForDup(t.title); }
+  function estBitrate(t){ return (t && t.size > 0 && (t.duration || 0) > 0) ? Math.round(t.size * 8 / t.duration / 1000) : 0; }
+  function dupNameGroups(){
+    var byKey = {}, order = [];
+    tracks.forEach(function(t){
+      if(!cleanTitleForDup(t.title)) return;
+      var k = dupNameKey(t);
+      if(!byKey[k]){ byKey[k] = []; order.push(k); }
+      byKey[k].push(t);
+    });
+    var groups = [];
+    order.forEach(function(k){
+      var arr = byKey[k];
+      if(arr.length < 2) return;
+      // La que se conserva: mejor bitrate (ficha técnica); si falta, la
+      // de mayor tamaño; a igual todo, la más escuchada y la más antigua.
+      var sorted = arr.slice().sort(function(a, b){
+        var ba = estBitrate(a), bb = estBitrate(b);
+        if(bb !== ba) return bb - ba;
+        if((b.size || 0) !== (a.size || 0)) return (b.size || 0) - (a.size || 0);
+        var ca = playCounts[a.id] || 0, cb = playCounts[b.id] || 0;
+        if(cb !== ca) return cb - ca;
+        return (a.addedAt || 0) - (b.addedAt || 0);
+      });
+      var known = sorted.filter(function(t){ return (t.duration || 0) > 0; });
+      var spread = null;
+      if(known.length >= 2){
+        var ds = known.map(function(t){ return t.duration; });
+        spread = Math.max.apply(null, ds) - Math.min.apply(null, ds);
+      }
+      groups.push({ tracks: sorted, spread: spread });
+    });
+    return groups;
+  }
+  function renderDupNameView(){
+    var content = document.getElementById('dupNameContent');
+    var emptyEl = document.getElementById('dupNameEmpty');
+    var st = document.getElementById('dupNameStatus');
+    if(!content) return;
+    content.innerHTML = '';
+    var groups = dupNameGroups();
+    emptyEl.style.display = groups.length ? 'none' : '';
+    if(st) st.textContent = groups.length ? (groups.length + (groups.length === 1 ? ' grupo' : ' grupos') + ' con el mismo artista + título.') : '';
+    groups.forEach(function(g){
+      var box = document.createElement('div'); box.className = 'dup-group';
+      var head = document.createElement('div'); head.className = 'dup-group-head';
+      var left = document.createElement('div');
+      var strong = document.createElement('strong'); strong.textContent = g.tracks[0].title;
+      var span = document.createElement('span');
+      var note = g.spread === null ? ' · sin duraciones comparables'
+        : (g.spread <= 3 ? ' · duraciones casi iguales (señal fuerte)' : ' · ojo: las duraciones difieren más de 3 s, podrían ser versiones distintas');
+      span.textContent = ' · ' + (g.tracks[0].artist || 'Artista desconocido') + ' · ' + g.tracks.length + ' copias' + note;
+      left.appendChild(strong); left.appendChild(span);
+      head.appendChild(left);
+      if(g.tracks.length > 2){
+        var btnAll = document.createElement('button');
+        btnAll.className = 'btn small danger'; btnAll.type = 'button';
+        btnAll.textContent = 'Quitar todas las copias';
+        btnAll.addEventListener('click', function(){
+          var copies = g.tracks.slice(1).map(function(t){ return t.id; });
+          copies.forEach(function(id){ removeTrack(id); });
+          toast('Copias quitadas. Se conservó la de mejor calidad de «' + g.tracks[0].title + '»');
+          renderDupNameView();
+        });
+        head.appendChild(btnAll);
+      }
+      box.appendChild(head);
+      var ul = document.createElement('ul'); ul.className = 'track-list';
+      g.tracks.forEach(function(t, idx){
+        if(idx === 0){
+          var br = estBitrate(t);
+          ul.appendChild(simpleRow(t, { when: 'Se conserva' + (br ? ' · mejor bitrate (≈' + br + ' kbps)' : ' · la de mayor tamaño') }));
+        } else {
+          ul.appendChild(simpleRow(t, {
+            buttons: [
+              { title: 'Quitar esta copia de la biblioteca', svg: SVG_X, fn: function(){ removeTrack(t.id); renderDupNameView(); } }
+            ]
+          }));
+        }
+      });
+      box.appendChild(ul);
+      content.appendChild(box);
+    });
+  }
+  document.getElementById('btnDupByName').addEventListener('click', function(){
+    renderDupNameView();
+    if(!tracks.length){
+      var st = document.getElementById('dupNameStatus');
+      if(st) st.textContent = 'Añade canciones primero: esta búsqueda compara artista y título de tu biblioteca.';
+    }
+  });
+
+  // ----- 4) Mapa de tu escucha -----
+  function renderListenMap(){
+    var wrap = document.getElementById('listenMapContent');
+    if(!wrap) return;
+    wrap.innerHTML = '';
+    if(!statsLog.length || statsLog.length < 5){
+      var p = document.createElement('p');
+      p.className = 'empty-note';
+      p.textContent = 'Todavía no hay suficiente historial para dibujar tu mapa. En cuanto acumules unas cuantas reproducciones medidas, aquí verás cuánto escuchas por hora del día y por día de la semana, con tu hora y tu día fuertes marcados.';
+      wrap.appendChild(p);
+      return;
+    }
+    var hours = [], days = [];
+    for(var i = 0; i < 24; i++) hours.push(0);
+    for(var j = 0; j < 7; j++) days.push(0);
+    statsLog.forEach(function(e){
+      if(!e || typeof e.at !== 'number') return;
+      var d = new Date(e.at);
+      hours[d.getHours()] += e.sec || 0;
+      days[(d.getDay() + 6) % 7] += e.sec || 0; // lunes primero
+    });
+    var peakH = 0, peakD = 0;
+    hours.forEach(function(s, h){ if(s > hours[peakH]) peakH = h; });
+    days.forEach(function(s, d){ if(s > days[peakD]) peakD = d; });
+    var dayNames = ['lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado', 'domingo'];
+    var sum = document.createElement('p');
+    sum.className = 'sound-note';
+    sum.style.marginTop = '0';
+    var hh = (peakH < 10 ? '0' : '') + peakH + ':00';
+    sum.innerHTML = 'Tu hora fuerte: <strong></strong> · Tu día fuerte: <strong></strong>';
+    sum.querySelectorAll('strong')[0].textContent = 'las ' + hh;
+    sum.querySelectorAll('strong')[1].textContent = 'el ' + dayNames[peakD];
+    wrap.appendChild(sum);
+    function heatSection(title, rows, peakIdx, peakWord){
+      var h = document.createElement('h4'); h.textContent = title; wrap.appendChild(h);
+      var max = Math.max.apply(null, rows.map(function(r){ return r.sec; }).concat([1]));
+      rows.forEach(function(r, idx){
+        var row = document.createElement('div');
+        row.className = 'bar-row' + (idx === peakIdx && r.sec > 0 ? ' peak' : '');
+        var bl = document.createElement('span'); bl.className = 'bl';
+        bl.textContent = r.label + (idx === peakIdx && r.sec > 0 ? ' · ' + peakWord : '');
+        bl.title = bl.textContent;
+        var bt = document.createElement('div'); bt.className = 'bt';
+        var bf = document.createElement('div'); bf.className = 'bf'; bf.style.width = Math.max(2, Math.round(r.sec / max * 100)) + '%';
+        bt.appendChild(bf);
+        var bv = document.createElement('span'); bv.className = 'bv'; bv.textContent = fmtMins(r.sec);
+        row.appendChild(bl); row.appendChild(bt); row.appendChild(bv);
+        wrap.appendChild(row);
+      });
+    }
+    heatSection('Por hora del día', hours.map(function(s, h){ return { label: (h < 10 ? '0' : '') + h + ':00', sec: s }; }), peakH, 'tu hora fuerte');
+    heatSection('Por día de la semana', days.map(function(s, d){ return { label: dayNames[d].charAt(0).toUpperCase() + dayNames[d].slice(1), sec: s }; }), peakD, 'tu día fuerte');
+  }
+
+  // ----- 5) Modo Enfoque -----
+  var focusState = { running: false, phase: 'focus', endsAt: 0, cycles: 0, timer: null, pausedByFocus: false };
+  var focusEl = document.getElementById('focusOverlay');
+  function focusClockText(sec){
+    sec = Math.max(0, sec);
+    var m = Math.floor(sec / 60), s = sec % 60;
+    return (m < 10 ? '0' : '') + m + ':' + (s < 10 ? '0' : '') + s;
+  }
+  function syncFocusUI(){
+    var f = settings.focus;
+    if(!focusState.running){
+      document.getElementById('focusMinInput').value = f.focusMin;
+      document.getElementById('breakMinInput').value = f.breakMin;
+      document.getElementById('breakActionSelect').value = f.breakAction;
+      document.getElementById('breakVolInput').value = f.breakVol;
+      document.getElementById('focusClock').textContent = focusClockText(f.focusMin * 60);
+      document.getElementById('focusPhase').textContent = 'Listo para concentrarte';
+    }
+    document.getElementById('breakVolField').style.display = document.getElementById('breakActionSelect').value === 'volume' ? '' : 'none';
+    document.getElementById('focusCycles').textContent = 'Ciclos completados: ' + focusState.cycles;
+    document.getElementById('btnFocusToggle').textContent = focusState.running ? 'Detener' : 'Iniciar enfoque';
+    var t = currentTrack();
+    document.getElementById('focusNow').textContent = t ? ('Ahora suena: «' + t.title + '»' + (t.artist ? ' · ' + t.artist : '')) : 'Sin canción sonando: elige una y el ciclo la acompaña.';
+  }
+  function focusApplyBreak(){
+    if(settings.focus.breakAction === 'pause'){
+      if(isPlaying){ focusState.pausedByFocus = true; pauseWithFade(); }
+      else focusState.pausedByFocus = false;
+    } else {
+      focusState.pausedByFocus = false;
+      focusFade = settings.focus.breakVol / 100;
+      applyAudioVolumes();
+    }
+  }
+  function focusUndoBreak(){
+    if(settings.focus.breakAction === 'pause'){
+      if(focusState.pausedByFocus && !isPlaying) playWithFade();
+      focusState.pausedByFocus = false;
+    } else {
+      focusFade = 1;
+      applyAudioVolumes();
+    }
+  }
+  function focusAdvance(){
+    if(focusState.phase === 'focus'){
+      focusState.cycles++;
+      focusState.phase = 'break';
+      focusState.endsAt = Date.now() + settings.focus.breakMin * 60000;
+      focusApplyBreak();
+      toast('Bloque de enfoque completado (' + focusState.cycles + (focusState.cycles === 1 ? ' ciclo' : ' ciclos') + '). Descanso: ' + (settings.focus.breakAction === 'pause' ? 'pausé la música suavemente.' : 'bajé el volumen.'));
+    } else {
+      focusState.phase = 'focus';
+      focusState.endsAt = Date.now() + settings.focus.focusMin * 60000;
+      focusUndoBreak();
+      toast('Descanso terminado: de vuelta al enfoque, la música vuelve como estaba.');
+    }
+    syncFocusUI();
+  }
+  function focusTick(){
+    if(!focusState.running) return;
+    var left = Math.round((focusState.endsAt - Date.now()) / 1000);
+    if(left <= 0){ focusAdvance(); left = Math.round((focusState.endsAt - Date.now()) / 1000); }
+    document.getElementById('focusClock').textContent = focusClockText(left);
+    document.getElementById('focusPhase').textContent = focusState.phase === 'focus'
+      ? 'Enfoque · tu música suena normal'
+      : ('Descanso · ' + (settings.focus.breakAction === 'pause' ? 'música en pausa suave' : 'música bajita'));
+    var t = currentTrack();
+    document.getElementById('focusNow').textContent = t ? ('Ahora suena: «' + t.title + '»' + (t.artist ? ' · ' + t.artist : '')) : '';
+    document.getElementById('focusCycles').textContent = 'Ciclos completados: ' + focusState.cycles;
+  }
+  function startFocus(){
+    settings.focus = sanitizeFocus({
+      focusMin: parseInt(document.getElementById('focusMinInput').value, 10),
+      breakMin: parseInt(document.getElementById('breakMinInput').value, 10),
+      breakAction: document.getElementById('breakActionSelect').value,
+      breakVol: parseInt(document.getElementById('breakVolInput').value, 10)
+    });
+    saveState();
+    focusState.running = true;
+    focusState.phase = 'focus';
+    focusState.pausedByFocus = false;
+    focusState.endsAt = Date.now() + settings.focus.focusMin * 60000;
+    if(focusState.timer) clearInterval(focusState.timer);
+    focusState.timer = setInterval(focusTick, 500);
+    syncFocusUI(); focusTick();
+    toast('Modo enfoque iniciado: ' + settings.focus.focusMin + ' min de enfoque y ' + settings.focus.breakMin + ' min de descanso por ciclo, solo con la app abierta.');
+  }
+  function stopFocus(){
+    if(focusState.timer){ clearInterval(focusState.timer); focusState.timer = null; }
+    var wasBreak = focusState.running && focusState.phase === 'break';
+    focusState.running = false;
+    focusState.phase = 'focus';
+    if(wasBreak && settings.focus.breakAction === 'volume'){ focusFade = 1; applyAudioVolumes(); }
+    // Si el descanso había pausado la música, se queda pausada: detener el
+    // modo no debe sorprenderte reanudando sonido sin que lo pidas.
+    focusState.pausedByFocus = false;
+    syncFocusUI();
+    toast('Modo enfoque detenido. Ciclos completados: ' + focusState.cycles + '.');
+  }
+  document.getElementById('btnFocus').addEventListener('click', function(){
+    focusEl.classList.add('on');
+    focusEl.setAttribute('aria-hidden', 'false');
+    syncFocusUI();
+    if(focusState.running) focusTick();
+  });
+  document.getElementById('btnFocusClose').addEventListener('click', function(){
+    focusEl.classList.remove('on');
+    focusEl.setAttribute('aria-hidden', 'true');
+  });
+  document.addEventListener('keydown', function(ev){
+    if(ev.key === 'Escape' && focusEl.classList.contains('on')){
+      focusEl.classList.remove('on');
+      focusEl.setAttribute('aria-hidden', 'true');
+    }
+  });
+  document.getElementById('btnFocusToggle').addEventListener('click', function(){
+    if(focusState.running) stopFocus(); else startFocus();
+  });
+  document.getElementById('btnFocusPlay').addEventListener('click', function(){ togglePlay(); setTimeout(syncFocusUI, 60); });
+  document.getElementById('breakActionSelect').addEventListener('change', function(){
+    document.getElementById('breakVolField').style.display = this.value === 'volume' ? '' : 'none';
+  });
+  ['focusMinInput', 'breakMinInput', 'breakVolInput'].forEach(function(id){
+    document.getElementById(id).addEventListener('change', function(){
+      if(focusState.running) return;
+      settings.focus = sanitizeFocus({
+        focusMin: parseInt(document.getElementById('focusMinInput').value, 10),
+        breakMin: parseInt(document.getElementById('breakMinInput').value, 10),
+        breakAction: document.getElementById('breakActionSelect').value,
+        breakVol: parseInt(document.getElementById('breakVolInput').value, 10)
+      });
+      saveState(); syncFocusUI();
+    });
+  });
+
+  // ----- 6) Texto grande -----
+  function applyLargeText(){
+    document.body.classList.toggle('large-text', !!settings.largeText);
+  }
+  function syncLargeTextUI(){
+    applyLargeText();
+    var b = document.getElementById('btnLargeText');
+    if(!b) return;
+    b.classList.toggle('on', !!settings.largeText);
+    b.setAttribute('aria-pressed', settings.largeText ? 'true' : 'false');
+    document.getElementById('largeTextState').textContent = settings.largeText ? 'Activado' : 'Apagado';
+  }
+  document.getElementById('btnLargeText').addEventListener('click', function(){
+    settings.largeText = !settings.largeText;
+    syncLargeTextUI(); saveState();
+    toast(settings.largeText ? 'Texto grande activado en toda la app.' : 'Texto grande apagado: vuelve el tamaño de siempre.');
+  });
+
+  syncHpUI();
+  syncLargeTextUI();
+  syncFocusUI();
+  renderBlockedList();
 
   syncOutUI();
   syncDynThemeUI();
