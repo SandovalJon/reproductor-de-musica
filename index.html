@@ -184,6 +184,15 @@
   }
   .kbd-hint{margin-top:12px; font-size:12px; color:var(--muted-2); line-height:1.5; text-align:center}
   .kbd-hint kbd{background:var(--surface-2); border:1px solid var(--line); border-bottom-width:2px; padding:1px 5px; border-radius:5px; font-family:inherit; font-size:11px}
+  /* ===== Pack 10: géneros, atajos, por completar, mezclar ahora, programada ===== */
+  .miss-tags{display:flex; flex-wrap:wrap; gap:4px; margin-top:5px}
+  .miss-tag{font-size:11px; font-weight:800; letter-spacing:.02em; color:var(--accent-dark); background:var(--accent-soft); border-radius:999px; padding:2px 8px; white-space:nowrap}
+  .kbd-list{display:flex; flex-direction:column; gap:2px; margin:4px 0 2px}
+  .kbd-row{display:flex; align-items:center; justify-content:space-between; gap:14px; padding:7px 2px; border-bottom:1px solid var(--line); font-size:13.5px}
+  .kbd-row:last-child{border-bottom:none}
+  .kbd-row .keys{flex:none; text-align:right}
+  .kbd-row kbd{background:var(--surface-2); border:1px solid var(--line); border-bottom-width:2px; padding:2px 7px; border-radius:6px; font-family:inherit; font-size:12px; font-weight:700; white-space:nowrap}
+  .link-btn{border:none; background:none; color:var(--accent); font:inherit; font-weight:700; cursor:pointer; padding:0; text-decoration:underline; text-underline-offset:2px}
 
   /* Library */
   .library{background:var(--surface); border:1px solid var(--line); border-radius:var(--radius-lg); box-shadow:var(--shadow); overflow:hidden; display:flex; flex-direction:column; min-height:520px}
@@ -873,8 +882,9 @@
             <span id="repeatOne" style="display:none; position:absolute; top:2px; right:2px; background:var(--accent); color:#fff; font-size:9px; font-weight:800; width:15px; height:15px; border-radius:50%; place-items:center">1</span>
           </button>
         </div>
-        <div style="display:flex; justify-content:center; margin-top:10px">
+        <div style="display:flex; justify-content:center; gap:8px; flex-wrap:wrap; margin-top:10px">
           <button class="toggle-pill" id="btnSmartShuffle" type="button" aria-pressed="false"><span class="dot"></span><span>Aleatorio inteligente:&nbsp;</span><span id="smartShuffleState">Apagado</span></button>
+          <button class="toggle-pill" id="btnMixNow" type="button" title="Funde ahora mismo la canción que suena con la siguiente, aunque el crossfade automático esté apagado"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px"><path d="M16 3h5v5"/><path d="M4 20 21 3"/><path d="M21 16v5h-5"/><path d="m15 15 6 6"/><path d="M4 4l5 5"/></svg><span>Mezclar ahora</span></button>
         </div>
 
         <div class="secondary-row">
@@ -941,7 +951,11 @@
                 <input type="range" id="crossfadeRange" min="2" max="12" step="1" value="6" aria-label="Segundos de crossfade" />
                 <output id="crossfadeOut" for="crossfadeRange">6 s</output>
               </div>
-              <p class="sound-note">Fundido suave: la siguiente canción entra mientras la actual se va apagando.</p>
+              <div class="sound-inline" style="margin-top:8px">
+                <button class="btn small" id="btnMixNow2" type="button">Mezclar ahora</button>
+                <span class="sleep-status" id="mixNowStatus" role="status"></span>
+              </div>
+              <p class="sound-note">Fundido suave: la siguiente canción entra mientras la actual se va apagando. «Mezclar ahora» dispara ese fundido en el momento, sin esperar al final de la canción; si el crossfade automático está apagado, hace una transición suave puntual de 3 s igualmente. Respeta la cola, la radio, el modo DJ y el temporizador de dormir igual que el avance normal.</p>
             </div>
             <div class="sound-group">
               <div class="sound-group-head"><h4>Sin huecos y fundido al pausar</h4></div>
@@ -1057,13 +1071,23 @@
                 <span class="sleep-status" id="sleepSongsStatus" role="status"></span>
               </div>
               <p class="sound-note">Al terminar, el volumen baja suavemente hasta apagarse: en los últimos segundos del temporizador, o durante el final de la última canción en el modo por canciones. Tu volumen guardado no se toca: al volver a reproducir, sonará al nivel de siempre.</p>
-              <div class="sound-group-head" style="margin-top:16px"><h4>Alarma musical</h4></div>
+              <div class="sound-group-head" style="margin-top:16px"><h4>Reproducción programada · Despertador musical</h4></div>
               <div class="sound-inline">
                 <button class="toggle-pill" id="btnAlarmOn" type="button" aria-pressed="false"><span class="dot"></span><span id="alarmState">Desactivada</span></button>
-                <input type="time" id="alarmTime" value="08:00" aria-label="Hora de la alarma" style="padding:8px 10px; border:1px solid var(--line); border-radius:999px; background:var(--surface-2); color:var(--text); font-size:13px" />
+                <input type="time" id="alarmTime" value="08:00" aria-label="Hora de la reproducción programada" style="padding:8px 10px; border:1px solid var(--line); border-radius:999px; background:var(--surface-2); color:var(--text); font-size:13px" />
+                <label class="sr-only" for="alarmSource">Qué suena a esa hora</label>
+                <select id="alarmSource" class="speed-select" aria-label="Qué suena a la hora programada">
+                  <option value="playlist">Una playlist</option>
+                  <option value="queue">La cola actual</option>
+                  <option value="resume">Seguir donde ibas</option>
+                </select>
                 <select id="alarmPlaylist" class="speed-select" aria-label="Playlist de la alarma"></select>
               </div>
-              <p class="sound-note" id="alarmStatus">A la hora elegida, con la app abierta, empezará a sonar la playlist y verás un aviso. Se repite cada día mientras esté activada.</p>
+              <div class="sound-inline" style="margin-top:10px">
+                <button class="toggle-pill" id="btnAlarmWake" type="button" aria-pressed="false"><span class="dot"></span><span>Mantener pantalla encendida hasta que suene:&nbsp;</span><span id="alarmWakeState">No</span></button>
+              </div>
+              <p class="sound-note" id="alarmStatus">A la hora elegida empezará a sonar lo que elijas arriba y verás un aviso. Se repite cada día mientras esté activada.</p>
+              <p class="sound-note"><strong>Importante:</strong> esto es una página web, no una alarma del sistema: solo puede cumplirse <strong>con la app abierta</strong> (idealmente en primer plano y con la pantalla encendida). Si cierras la app o el navegador la duerme, la música no sonará a esa hora. La programación se guarda solo en este dispositivo.</p>
             </div>
           </div>
         </div>
@@ -1095,7 +1119,7 @@
           </div>
         </div>
 
-        <p class="kbd-hint"><kbd>Espacio</kbd> reproducir / pausar · <kbd>←</kbd><kbd>→</kbd> ±10 s · <kbd>↑</kbd><kbd>↓</kbd> volumen<br>En el celular, desliza sobre la portada hacia los lados para cambiar de canción.</p>
+        <p class="kbd-hint"><kbd>Espacio</kbd> reproducir / pausar · <kbd>←</kbd><kbd>→</kbd> ±10 s · <kbd>↑</kbd><kbd>↓</kbd> volumen · <kbd>N</kbd> siguiente · <kbd>P</kbd> anterior · <kbd>M</kbd> silencio · <kbd>L</kbd> like · <kbd>D</kbd> dislike<br><button class="link-btn" id="btnKbdHelp" type="button">Ver todos los atajos de teclado (tecla ?)</button><br>En el celular, desliza sobre la portada hacia los lados para cambiar de canción.</p>
       </div>
     </section>
 
@@ -1146,10 +1170,12 @@
           <button class="view-tab" type="button" role="tab" aria-selected="false" data-view="moods">Ambientes</button>
           <button class="view-tab" type="button" role="tab" aria-selected="false" data-view="artists">Artistas</button>
           <button class="view-tab" type="button" role="tab" aria-selected="false" data-view="albums">Álbumes</button>
+          <button class="view-tab" type="button" role="tab" aria-selected="false" data-view="genres">Géneros</button>
           <button class="view-tab" type="button" role="tab" aria-selected="false" data-view="folders">Carpetas</button>
           <button class="view-tab" type="button" role="tab" aria-selected="false" data-view="stats">Estadísticas</button>
           <button class="view-tab" type="button" role="tab" aria-selected="false" data-view="summary">Tu resumen</button>
           <button class="view-tab" type="button" role="tab" aria-selected="false" data-view="dup">Duplicadas <span class="tab-count" id="tabCountDup" style="display:none"></span></button>
+          <button class="view-tab" type="button" role="tab" aria-selected="false" data-view="incomplete">Por completar <span class="tab-count" id="tabCountIncomplete" style="display:none"></span></button>
           <button class="view-tab" type="button" role="tab" aria-selected="false" data-view="queue">Cola <span class="tab-count" id="tabCountQueue" style="display:none"></span></button>
           <button class="view-tab" type="button" role="tab" aria-selected="false" data-view="history">Historial <span class="tab-count" id="tabCountHistory" style="display:none"></span></button>
         </div>
@@ -1168,7 +1194,7 @@
         <div class="update-row">
           <button class="btn small" id="btnCheckUpdate" type="button">Actualizar app</button>
           <button class="btn small danger" id="btnForceUpdate" type="button">Forzar actualización</button>
-          <span class="backup-note" id="updateStatus">Versión de esta app: v<span id="appVersionNote">2.3.0</span>. «Actualizar app» consulta la versión publicada y te dice si ya estás al día antes de recargar. «Forzar actualización» limpia el service worker y las cachés de la app si una actualización se quedó atascada; tu biblioteca, playlists y ajustes (IndexedDB) nunca se tocan.</span>
+          <span class="backup-note" id="updateStatus">Versión de esta app: v<span id="appVersionNote">2.4.0</span>. «Actualizar app» consulta la versión publicada y te dice si ya estás al día antes de recargar. «Forzar actualización» limpia el service worker y las cachés de la app si una actualización se quedó atascada; tu biblioteca, playlists y ajustes (IndexedDB) nunca se tocan.</span>
         </div>
       </div>
 
@@ -1413,6 +1439,32 @@
         </div>
       </div>
 
+      <!-- GÉNEROS (Pack 10) -->
+      <div class="subview" id="viewGenres" style="display:none">
+        <div class="subview-head" id="genreGridHead">
+          <div>
+            <h3>Géneros</h3>
+            <p>Tu biblioteca agrupada por género, con mosaico de portadas. Toca un género para ver sus canciones; las que aún no tienen género quedan en «Sin género», listas para completarlas desde «Por completar».</p>
+          </div>
+        </div>
+        <div class="cover-grid" id="genreGrid"></div>
+        <div class="no-results" id="genresEmpty" style="display:none">Añade canciones para ver aquí tus géneros.</div>
+        <div id="genreDetail" style="display:none">
+          <div class="subview-actions">
+            <button class="btn small" id="btnGenreBack" type="button">← Volver</button>
+            <button class="btn small primary" id="btnGenrePlay" type="button">Reproducir</button>
+            <button class="btn small" id="btnGenreShuffle" type="button">Aleatoria</button>
+          </div>
+          <div class="subview-head">
+            <div>
+              <h3 id="genreGroupName"></h3>
+              <p id="genreGroupInfo"></p>
+            </div>
+          </div>
+          <ul class="track-list" id="genreGroupList"></ul>
+        </div>
+      </div>
+
       <!-- CARPETAS -->
       <div class="subview" id="viewFolders" style="display:none">
         <div class="subview-head" id="folderGridHead">
@@ -1512,6 +1564,30 @@
         <p class="sound-note" style="margin:6px 18px 0">«Analizar audio» calcula una huella del sonido de cada canción, aquí en tu dispositivo y sin subir nada, para detectar la misma grabación aunque sus datos digan otra cosa. La huella se guarda con cada canción.</p>
         <div id="dupContent"></div>
         <div class="no-results" id="dupEmpty" style="display:none">No se encontraron duplicadas. Tu biblioteca está limpia.</div>
+      </div>
+
+      <!-- POR COMPLETAR (Pack 10) -->
+      <div class="subview" id="viewIncomplete" style="display:none">
+        <div class="subview-head">
+          <div>
+            <h3>Por completar</h3>
+            <p>Tu lista de trabajo: canciones a las que les falta portada, BPM, género o año. Filtra por lo que falta, pulsa «Seleccionar varias», márcalas y complétalas con «Editar datos» (género y año en lote) o analiza su ritmo. Cada fila dice exactamente qué le falta.</p>
+          </div>
+        </div>
+        <div class="filter-chips" id="incompleteFilters" role="group" aria-label="Filtrar por lo que falta" style="margin:12px 18px 0">
+          <button class="chip active" type="button" data-ifilter="all">Todas <span class="chip-count" id="incCountAll"></span></button>
+          <button class="chip" type="button" data-ifilter="cover">Sin portada <span class="chip-count" id="incCountCover"></span></button>
+          <button class="chip" type="button" data-ifilter="bpm">Sin BPM <span class="chip-count" id="incCountBpm"></span></button>
+          <button class="chip" type="button" data-ifilter="genre">Sin género <span class="chip-count" id="incCountGenre"></span></button>
+          <button class="chip" type="button" data-ifilter="year">Sin año <span class="chip-count" id="incCountYear"></span></button>
+        </div>
+        <div class="subview-actions">
+          <button class="btn small" id="btnIncompleteMulti" type="button">Seleccionar varias</button>
+          <button class="btn small" id="btnIncompleteBpm" type="button">Analizar ritmo (BPM) de la biblioteca</button>
+          <span class="sleep-status" id="incompleteStatus" role="status"></span>
+        </div>
+        <ul class="track-list" id="incompleteList"></ul>
+        <div class="no-results" id="incompleteEmpty" style="display:none">Nada por completar aquí: todas las canciones tienen portada, BPM, género y año. 🎉</div>
       </div>
 
       <div class="lib-foot" id="libFoot" style="display:none">
@@ -1675,6 +1751,29 @@
     <div class="modal-actions">
       <button class="btn small" id="batchModalCancel" type="button">Cancelar</button>
       <button class="btn small primary" id="batchModalSave" type="button">Aplicar cambios</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="kbdModal" aria-hidden="true">
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="kbdModalTitle">
+    <h3 id="kbdModalTitle">Atajos de teclado</h3>
+    <p>Funcionan en toda la app cuando no estás escribiendo en un campo de texto, y nunca pisan los atajos del navegador (Ctrl, Alt o ⌘ quedan libres).</p>
+    <div class="kbd-list">
+      <div class="kbd-row"><span>Reproducir / pausar</span><span class="keys"><kbd>Espacio</kbd></span></div>
+      <div class="kbd-row"><span>Canción siguiente</span><span class="keys"><kbd>N</kbd></span></div>
+      <div class="kbd-row"><span>Canción anterior</span><span class="keys"><kbd>P</kbd></span></div>
+      <div class="kbd-row"><span>Adelantar 10 segundos</span><span class="keys"><kbd>→</kbd></span></div>
+      <div class="kbd-row"><span>Retroceder 10 segundos</span><span class="keys"><kbd>←</kbd></span></div>
+      <div class="kbd-row"><span>Subir volumen</span><span class="keys"><kbd>↑</kbd></span></div>
+      <div class="kbd-row"><span>Bajar volumen</span><span class="keys"><kbd>↓</kbd></span></div>
+      <div class="kbd-row"><span>Silencio / recuperar volumen</span><span class="keys"><kbd>M</kbd></span></div>
+      <div class="kbd-row"><span>Like a la canción actual</span><span class="keys"><kbd>L</kbd></span></div>
+      <div class="kbd-row"><span>Dislike a la canción actual</span><span class="keys"><kbd>D</kbd></span></div>
+      <div class="kbd-row"><span>Esta ayuda de atajos</span><span class="keys"><kbd>?</kbd></span></div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn small primary" id="kbdModalClose" type="button">Cerrar</button>
     </div>
   </div>
 </div>
@@ -1883,7 +1982,7 @@
 
   // ---------- State ----------
   var tracks = []; // {id,name,title,artist,album,duration,size,type,addedAt,url,coverUrl,color,rating,stars}
-  var APP_VERSION = '2.3.0'; // al publicar cambios, subir este número y el CACHE de sw.js
+  var APP_VERSION = '2.4.0'; // al publicar cambios, subir este número y el CACHE de sw.js
   var currentId = null;
   var isPlaying = false;
   var shuffle = false;
@@ -1928,7 +2027,7 @@
     theme: 'auto', // Pack 6: 'auto' | 'light' | 'dark'
     accent: 'naranja', // Pack 6: id de color de acento
     vizStyle: 'bars', // Pack 6: 'bars' | 'wave' | 'circle'
-    alarm: { on: false, time: '08:00', playlistId: '' } // Pack 6: alarma musical
+    alarm: { on: false, time: '08:00', playlistId: '', source: 'playlist', wake: false } // Pack 6: alarma musical · Pack 10: fuente (playlist/cola/reanudar) y pantalla encendida
   };
   // Pack 5: valida y fusiona un objeto de ajustes (estado guardado o respaldo) sin perder lo existente
   function sanitizeFx(fx){
@@ -3008,7 +3107,8 @@
     if(rf) rf.style.display = isLib ? '' : 'none';
     var af = document.getElementById('advFilters');
     if(af) af.style.display = isLib ? '' : 'none';
-    if(!isLib && multiMode) exitMulti();
+    // Pack 10: la multiselección también vive en «Por completar» (su lista de trabajo usa el mismo editor en lote)
+    if(!isLib && v!=='incomplete' && multiMode) exitMulti();
     dropzone.style.display = isLib ? '' : 'none';
     var sn = document.getElementById('savedNote');
     if(sn) sn.style.display = (isLib && tracks.length) ? 'flex' : 'none';
@@ -3019,10 +3119,12 @@
     document.getElementById('viewMoods').style.display = v==='moods' ? '' : 'none';
     document.getElementById('viewArtists').style.display = v==='artists' ? '' : 'none';
     document.getElementById('viewAlbums').style.display = v==='albums' ? '' : 'none';
+    document.getElementById('viewGenres').style.display = v==='genres' ? '' : 'none';
     document.getElementById('viewFolders').style.display = v==='folders' ? '' : 'none';
     document.getElementById('viewStats').style.display = v==='stats' ? '' : 'none';
     document.getElementById('viewSummary').style.display = v==='summary' ? '' : 'none';
     document.getElementById('viewDup').style.display = v==='dup' ? '' : 'none';
+    document.getElementById('viewIncomplete').style.display = v==='incomplete' ? '' : 'none';
     if(!isLib){ emptyState.style.display='none'; trackListEl.style.display='none'; noResults.style.display='none'; var pn=document.getElementById('playlistNote'); if(pn) pn.classList.remove('show'); }
     else { renderStats(); renderList(); }
     renderPack();
@@ -3136,6 +3238,9 @@
     if(view==='smart') renderSmart();
     if(view==='artists') renderGroups('artist');
     if(view==='albums') renderGroups('album');
+    if(view==='genres') renderGroups('genre'); // Pack 10
+    if(view==='incomplete') renderIncomplete(); // Pack 10
+    updateIncompleteTab();
   }
 
   // ---------- Playlists personalizadas ----------
@@ -4728,14 +4833,53 @@
   }
 
   // ---------- Keyboard ----------
+  // Pack 10: atajos completos en PC. Nunca actúan si el foco está en un
+  // campo de texto/select/área editable, ni con modificadores del navegador
+  // (Ctrl, Alt, ⌘): esos atajos son del sistema y no se pisan.
+  var kbdModal = document.getElementById('kbdModal');
+  function openKbdHelp(){
+    kbdModal.classList.add('on');
+    kbdModal.setAttribute('aria-hidden', 'false');
+    var c = document.getElementById('kbdModalClose'); if(c) c.focus();
+  }
+  function closeKbdHelp(){
+    kbdModal.classList.remove('on');
+    kbdModal.setAttribute('aria-hidden', 'true');
+  }
+  document.getElementById('btnKbdHelp').addEventListener('click', openKbdHelp);
+  document.getElementById('kbdModalClose').addEventListener('click', closeKbdHelp);
+  kbdModal.addEventListener('click', function(ev){ if(ev.target === kbdModal) closeKbdHelp(); });
   document.addEventListener('keydown', function(ev){
+    if(ev.ctrlKey || ev.metaKey || ev.altKey) return; // atajos del navegador/sistema: intocables
     var tag = (ev.target && ev.target.tagName) || '';
     if(tag==='INPUT' || tag==='TEXTAREA' || tag==='SELECT') return;
+    if(ev.target && ev.target.isContentEditable) return;
+    if(kbdModal.classList.contains('on')){
+      if(ev.key==='Escape' || ev.key==='?'){ ev.preventDefault(); closeKbdHelp(); }
+      return; // con la ayuda abierta, las demás teclas no tocan la reproducción
+    }
     if(ev.code==='Space'){ ev.preventDefault(); togglePlay(); }
     else if(ev.key==='ArrowRight'){ audio.currentTime = Math.min((audio.duration||0), audio.currentTime+10); }
     else if(ev.key==='ArrowLeft'){ audio.currentTime = Math.max(0, audio.currentTime-10); }
     else if(ev.key==='ArrowUp'){ ev.preventDefault(); applyVolume(Math.min(1, settings.volume+0.05)); }
     else if(ev.key==='ArrowDown'){ ev.preventDefault(); applyVolume(Math.max(0, settings.volume-0.05)); }
+    else if(ev.key==='?'){ ev.preventDefault(); openKbdHelp(); }
+    else if(!ev.repeat && (ev.key==='n' || ev.key==='N')){ next(false); if(isPlaying) play(); }
+    else if(!ev.repeat && (ev.key==='p' || ev.key==='P')){ prev(); if(isPlaying) play(); }
+    else if(!ev.repeat && (ev.key==='m' || ev.key==='M')){
+      if(settings.volume>0){ applyVolume(0); toast('Silencio (tecla M para recuperar el volumen)'); }
+      else { applyVolume(lastVolume||1); toast('Volumen restaurado'); }
+    }
+    else if(!ev.repeat && (ev.key==='l' || ev.key==='L')){
+      var tl = currentTrack();
+      if(!tl){ toast('No hay ninguna canción seleccionada para dar like.'); return; }
+      setRating(tl.id, tl.rating==='like' ? null : 'like');
+    }
+    else if(!ev.repeat && (ev.key==='d' || ev.key==='D')){
+      var td = currentTrack();
+      if(!td){ toast('No hay ninguna canción seleccionada para dar dislike.'); return; }
+      setRating(td.id, td.rating==='dislike' ? null : 'dislike');
+    }
   });
 
   // ---------- Media Session ----------
@@ -5313,7 +5457,7 @@
   var backupInput = document.getElementById('backupInput');
   var coverInput = document.getElementById('coverInput');
   var selectedSmartId = 'best';
-  var groupSel = { artist:null, album:null };
+  var groupSel = { artist:null, album:null, genre:null }; // Pack 10: genre
 
   function idbPatch(id, fields){
     return openDB().then(function(db){
@@ -5692,15 +5836,18 @@
 
   // ----- Vista por artista y álbum -----
   function groupKeyOf(kind, t){
-    return kind === 'artist' ? (t.artist || '') : ((t.album || '') + '\u0001' + (t.artist || ''));
+    if(kind === 'artist') return t.artist || '';
+    if(kind === 'genre') return (t.genre || '').trim(); // Pack 10: vista de Géneros
+    return (t.album || '') + '\u0001' + (t.artist || '');
   }
   function groupDisplay(kind, key){
     if(kind === 'artist') return key || 'Artista desconocido';
+    if(kind === 'genre') return key || 'Sin género'; // Pack 10
     var parts = key.split('\u0001');
     return parts[0] || 'Álbum desconocido';
   }
   function groupSub(kind, key){
-    if(kind === 'artist') return '';
+    if(kind === 'artist' || kind === 'genre') return '';
     var parts = key.split('\u0001');
     return parts[1] || 'Artista desconocido';
   }
@@ -5709,10 +5856,11 @@
   }
   function renderGroups(kind){
     var isArtist = kind === 'artist';
-    var grid = document.getElementById(isArtist ? 'artistGrid' : 'albumGrid');
-    var gridHead = document.getElementById(isArtist ? 'artistGridHead' : 'albumGridHead');
-    var detail = document.getElementById(isArtist ? 'artistDetail' : 'albumDetail');
-    var emptyEl = document.getElementById(isArtist ? 'artistsEmpty' : 'albumsEmpty');
+    // Pack 10: kind también puede ser 'genre' (ids genreGrid/genreDetail/…)
+    var grid = document.getElementById(kind + 'Grid');
+    var gridHead = document.getElementById(kind + 'GridHead');
+    var detail = document.getElementById(kind + 'Detail');
+    var emptyEl = document.getElementById(kind === 'artist' ? 'artistsEmpty' : (kind === 'genre' ? 'genresEmpty' : 'albumsEmpty'));
     var sel = groupSel[kind];
     if(sel == null){
       detail.style.display = 'none';
@@ -5743,7 +5891,8 @@
         var nm = document.createElement('div'); nm.className = 'gc-name'; nm.textContent = groupDisplay(kind, k);
         var sb = document.createElement('div'); sb.className = 'gc-sub';
         var dur = g.reduce(function(s, t){ return s + (t.duration || 0); }, 0);
-        sb.textContent = (isArtist ? '' : groupSub(kind, k) + ' · ') + g.length + (g.length === 1 ? ' canción' : ' canciones') + (dur ? ' · ' + fmtTime(dur) : '');
+        var subK = groupSub(kind, k);
+        sb.textContent = (subK ? subK + ' · ' : '') + g.length + (g.length === 1 ? ' canción' : ' canciones') + (dur ? ' · ' + fmtTime(dur) : '');
         card.appendChild(cov); card.appendChild(nm); card.appendChild(sb);
         card.addEventListener('click', function(){ groupSel[kind] = k; renderGroups(kind); });
         grid.appendChild(card);
@@ -5755,12 +5904,13 @@
     gridHead.style.display = 'none';
     emptyEl.style.display = 'none';
     detail.style.display = '';
-    document.getElementById(isArtist ? 'artistGroupName' : 'albumGroupName').textContent = groupDisplay(kind, sel);
+    document.getElementById(kind + 'GroupName').textContent = groupDisplay(kind, sel);
     var g2 = groupTracks(kind, sel);
     var dur2 = g2.reduce(function(s, t){ return s + (t.duration || 0); }, 0);
-    document.getElementById(isArtist ? 'artistGroupInfo' : 'albumGroupInfo').textContent =
-      (isArtist ? '' : groupSub(kind, sel) + ' · ') + g2.length + (g2.length === 1 ? ' canción' : ' canciones') + (dur2 ? ' · ' + fmtTime(dur2) : '');
-    var listEl = document.getElementById(isArtist ? 'artistGroupList' : 'albumGroupList');
+    var subSel = groupSub(kind, sel);
+    document.getElementById(kind + 'GroupInfo').textContent =
+      (subSel ? subSel + ' · ' : '') + g2.length + (g2.length === 1 ? ' canción' : ' canciones') + (dur2 ? ' · ' + fmtTime(dur2) : '');
+    var listEl = document.getElementById(kind + 'GroupList');
     listEl.innerHTML = '';
     g2.forEach(function(t){
       listEl.appendChild(simpleRow(t, {
@@ -5788,7 +5938,7 @@
     selectTrack(firstId, true);
     toast((shufflePlay ? 'Reproduciendo en aleatorio: ' : 'Reproduciendo: ') + groupDisplay(kind, sel));
   }
-  [['artist', 'Artist'], ['album', 'Album']].forEach(function(pair){
+  [['artist', 'Artist'], ['album', 'Album'], ['genre', 'Genre']].forEach(function(pair){
     var kind = pair[0], cap = pair[1];
     document.getElementById('btn' + cap + 'Back').addEventListener('click', function(){ groupSel[kind] = null; renderGroups(kind); });
     document.getElementById('btn' + cap + 'Play').addEventListener('click', function(){ playGroup(kind, false); });
@@ -5838,7 +5988,7 @@
         fx: { bassOn: settings.fx.bassOn, bassDb: settings.fx.bassDb, reverb: settings.fx.reverb, vocal: settings.fx.vocal },
         customPresets: settings.customPresets,
         theme: settings.theme, accent: settings.accent, vizStyle: settings.vizStyle,
-        alarm: { on: settings.alarm.on, time: settings.alarm.time, playlistId: settings.alarm.playlistId }
+        alarm: { on: settings.alarm.on, time: settings.alarm.time, playlistId: settings.alarm.playlistId, source: settings.alarm.source, wake: settings.alarm.wake }
       },
       tracks: tracks.map(function(t){
         return {
@@ -6940,12 +7090,15 @@
     document.getElementById('multiCount').textContent = n === 1 ? '1 canción seleccionada' : n + ' canciones seleccionadas';
     var tb = document.getElementById('btnMultiToggle');
     if(tb) tb.textContent = multiMode ? 'Cancelar selección' : 'Seleccionar varias';
+    var bim = document.getElementById('btnIncompleteMulti'); // Pack 10
+    if(bim) bim.textContent = multiMode ? 'Cancelar selección' : 'Seleccionar varias';
   }
   function enterMulti(){
     multiMode = true;
     selectedIds = {};
     updateMultiUI();
     renderList();
+    if(view==='incomplete') renderIncomplete(); // Pack 10
   }
   function exitMulti(){
     if(!multiMode) return;
@@ -6953,12 +7106,14 @@
     selectedIds = {};
     updateMultiUI();
     if(view === 'library') renderList();
+    if(view === 'incomplete') renderIncomplete(); // Pack 10
   }
   function toggleSelect(id){
     if(selectedIds[id]) delete selectedIds[id];
     else selectedIds[id] = 1;
     updateMultiUI();
     renderList();
+    if(view==='incomplete') renderIncomplete(); // Pack 10: la selección también se pinta en «Por completar»
   }
   function selectedIdList(){
     return tracks.filter(function(t){ return selectedIds[t.id]; }).map(function(t){ return t.id; });
@@ -6968,9 +7123,12 @@
   });
   document.getElementById('btnMultiDone').addEventListener('click', exitMulti);
   document.getElementById('btnMultiAll').addEventListener('click', function(){
-    visibleTracks().forEach(function(t){ selectedIds[t.id] = 1; });
+    // Pack 10: en «Por completar», «Marcar todas» marca las de esa lista de trabajo
+    var pool = (view==='incomplete') ? incompleteTracks() : visibleTracks();
+    pool.forEach(function(t){ selectedIds[t.id] = 1; });
     updateMultiUI();
     renderList();
+    if(view==='incomplete') renderIncomplete();
   });
   document.getElementById('btnMultiQueue').addEventListener('click', function(){
     var ids = selectedIdList();
@@ -7644,11 +7802,14 @@
     return ACCENTS[0];
   }
   function sanitizeAlarm(al){
-    var out = { on:false, time:'08:00', playlistId:'' };
+    var out = { on:false, time:'08:00', playlistId:'', source:'playlist', wake:false };
     if(al && typeof al === 'object'){
       out.on = !!al.on;
       if(typeof al.time === 'string' && /^([01]\d|2[0-3]):[0-5]\d$/.test(al.time)) out.time = al.time;
       if(typeof al.playlistId === 'string') out.playlistId = al.playlistId;
+      // Pack 10: los respaldos/estados viejos no traen source/wake: quedan los valores seguros por defecto
+      if(al.source === 'playlist' || al.source === 'queue' || al.source === 'resume') out.source = al.source;
+      out.wake = !!al.wake;
     }
     return out;
   }
@@ -7968,8 +8129,37 @@
     toast('La música se detendrá tras ' + sleepSongsLeft + (sleepSongsLeft === 1 ? ' canción.' : ' canciones.'));
   });
 
-  // ----- Alarma musical -----
+  // ----- Reproducción programada / despertador musical (Pack 6 + Pack 10) -----
   var alarmUiSig = null, alarmFiredKey = '';
+  // Pack 10: Wake Lock propio de la programación (independiente del de
+  // Fiesta/Coche): mantiene la pantalla encendida mientras la programación
+  // está activada y aún no ha sonado hoy, para que la app siga despierta.
+  var alarmWakeLockObj = null, alarmWakeDoneKey = '';
+  function refreshAlarmWakeLock(){
+    var al = settings.alarm;
+    var key = new Date().toDateString() + ' ' + (al ? al.time : '');
+    var want = !!(al && al.on && al.wake && alarmWakeDoneKey !== key && document.visibilityState === 'visible' && ('wakeLock' in navigator));
+    if(want){
+      if(!alarmWakeLockObj){
+        try{
+          navigator.wakeLock.request('screen').then(function(wl){
+            alarmWakeLockObj = wl;
+            wl.addEventListener('release', function(){ if(alarmWakeLockObj === wl) alarmWakeLockObj = null; });
+          }).catch(function(){});
+        }catch(e){}
+      }
+    } else if(alarmWakeLockObj){
+      var wlOld = alarmWakeLockObj; alarmWakeLockObj = null;
+      try{ wlOld.release(); }catch(e){}
+    }
+  }
+  document.addEventListener('visibilitychange', function(){ if(document.visibilityState === 'visible') refreshAlarmWakeLock(); });
+  function alarmWhatText(al){
+    if(al.source === 'queue') return 'la cola que tengas preparada';
+    if(al.source === 'resume') return 'tu música justo donde ibas';
+    var pl = playlists.find(function(p){ return p.id === al.playlistId; });
+    return pl ? '“' + pl.name + '”' : 'la playlist elegida';
+  }
   function syncAlarmUI(){
     var btn = document.getElementById('btnAlarmOn');
     if(!btn) return;
@@ -7979,7 +8169,10 @@
     document.getElementById('alarmState').textContent = al.on ? 'Activada' : 'Desactivada';
     var timeEl = document.getElementById('alarmTime');
     if(document.activeElement !== timeEl) timeEl.value = al.time || '08:00';
+    var srcSel = document.getElementById('alarmSource');
+    if(srcSel && document.activeElement !== srcSel) srcSel.value = al.source || 'playlist';
     var sel = document.getElementById('alarmPlaylist');
+    if(sel) sel.style.display = (al.source === 'playlist') ? '' : 'none';
     var sig = playlists.map(function(p){ return p.id + ':' + p.name; }).join('|') + '#' + (al.playlistId || '');
     if(alarmUiSig !== sig){
       alarmUiSig = sig;
@@ -7990,18 +8183,66 @@
       });
       sel.value = al.playlistId || '';
     }
+    var wakeBtn = document.getElementById('btnAlarmWake');
+    if(wakeBtn){
+      wakeBtn.style.display = ('wakeLock' in navigator) ? '' : 'none';
+      wakeBtn.classList.toggle('on', !!al.wake);
+      wakeBtn.setAttribute('aria-pressed', al.wake ? 'true' : 'false');
+      document.getElementById('alarmWakeState').textContent = al.wake ? 'Sí' : 'No';
+    }
+    refreshAlarmWakeLock();
     var st = document.getElementById('alarmStatus');
     if(st){
       if(al.on){
-        var pl = playlists.find(function(p){ return p.id === al.playlistId; });
-        st.textContent = 'Alarma activada: a las ' + (al.time || '08:00') + ' sonará ' + (pl ? '“' + pl.name + '”' : 'la playlist elegida') + ' con la app abierta. Se repite cada día; desactívala aquí cuando quieras.';
+        st.textContent = 'Programada: a las ' + (al.time || '08:00') + ' sonará ' + alarmWhatText(al) + ', solo si la app está abierta. Se repite cada día; desactívala aquí cuando quieras.' + (al.wake ? ' La pantalla se mantendrá encendida hasta que suene.' : '');
       } else {
-        st.textContent = 'A la hora elegida, con la app abierta, empezará a sonar la playlist y verás un aviso. Se repite cada día mientras esté activada.';
+        st.textContent = 'Elige la hora y qué quieres que suene: una playlist, la cola que tengas preparada o seguir donde ibas. Se repite cada día mientras esté activada.';
       }
     }
   }
   function fireAlarm(){
     var al = settings.alarm;
+    // Pack 10: ya sonó por hoy — la pantalla puede apagarse otra vez hasta mañana
+    alarmWakeDoneKey = new Date().toDateString() + ' ' + al.time;
+    refreshAlarmWakeLock();
+    if(al.source === 'queue'){
+      // La cola manda: su primer tema reproducible abre y el resto sigue en orden
+      var qid = peekQueueNext();
+      if(qid){
+        var qi = queue.indexOf(qid);
+        if(qi >= 0) queue.splice(qi, 1);
+        playContext = { type: 'library', playlistId: null };
+        saveState(); renderPack();
+        selectTrack(qid, true);
+        toast('⏰ ¡Hora de la música! Sonando tu cola.');
+        return;
+      }
+      var fpq = firstPlayableId();
+      if(fpq){ selectTrack(fpq, true); toast('⏰ ¡Hora de la música! Tu cola estaba vacía: suena tu biblioteca.'); }
+      else toast('⏰ Es la hora programada, pero no hay canciones reproducibles.');
+      return;
+    }
+    if(al.source === 'resume'){
+      // «Seguir donde ibas»: la posición guardada al cerrar/pausar, tal cual
+      idbMetaGet('resumeState').then(function(rs){
+        var t = (rs && rs.id) ? trackById(rs.id) : null;
+        if(t && isPlayable(t)){
+          if(rs.id !== currentId) selectTrack(rs.id, false);
+          var pos = (typeof rs.pos === 'number' && isFinite(rs.pos)) ? rs.pos : 0;
+          var dur = t.duration || 0;
+          if(pos > 2 && (!dur || pos < dur - 3)){
+            setTimeout(function(){ try{ audio.currentTime = pos; }catch(e){} }, 500);
+          }
+          play();
+          toast('⏰ ¡Hora de la música! Seguimos donde ibas: “' + t.title + '”.');
+        } else {
+          var fp = firstPlayableId();
+          if(fp){ selectTrack(fp, true); toast('⏰ ¡Hora de la música! A sonar.'); }
+          else toast('⏰ Es la hora programada, pero no hay canciones reproducibles.');
+        }
+      });
+      return;
+    }
     var pl = playlists.find(function(p){ return p.id === al.playlistId; });
     if(pl && pl.trackIds.some(function(id){ var t = trackById(id); return t && isPlayable(t); })){
       selectedPlaylistId = pl.id;
@@ -8015,6 +8256,7 @@
     else toast('⏰ Es la hora de tu alarma, pero no hay canciones reproducibles.');
   }
   function checkAlarm(){
+    refreshAlarmWakeLock(); // también rearma la pantalla encendida al cambiar el día
     var al = settings.alarm;
     if(!al || !al.on || !al.time) return;
     var now = new Date();
@@ -8030,20 +8272,26 @@
     if(!settings.alarm.on){
       var sel = document.getElementById('alarmPlaylist');
       var timeEl = document.getElementById('alarmTime');
-      var pid = sel.value || settings.alarm.playlistId;
-      if(!playlists.length){ toast('Primero crea una playlist: será la que suene con la alarma.'); return; }
-      if(!pid){ toast('Elige primero la playlist que quieres que suene con la alarma.'); sel.focus(); return; }
-      settings.alarm.playlistId = pid;
+      var srcSel = document.getElementById('alarmSource');
+      var src = (srcSel && srcSel.value) || settings.alarm.source || 'playlist';
+      settings.alarm.source = src;
       if(/^([01]\d|2[0-3]):[0-5]\d$/.test(timeEl.value)) settings.alarm.time = timeEl.value;
+      if(src === 'playlist'){
+        var pid = sel.value || settings.alarm.playlistId;
+        if(!playlists.length){ toast('Primero crea una playlist: será la que suene a la hora programada.'); return; }
+        if(!pid){ toast('Elige primero la playlist que quieres que suene.'); sel.focus(); return; }
+        settings.alarm.playlistId = pid;
+      }
+      if(src === 'resume' && !tracks.length){ toast('Tu biblioteca está vacía: no hay nada que reanudar a esa hora.'); return; }
       settings.alarm.on = true;
       alarmFiredKey = '';
       saveState(); syncAlarmUI();
-      var pl = playlists.find(function(p){ return p.id === pid; });
-      toast('Alarma activada: a las ' + settings.alarm.time + ' sonará “' + (pl ? pl.name : 'tu playlist') + '” (con la app abierta).');
+      if(src === 'queue' && !queue.length) toast('Programada para las ' + settings.alarm.time + ', pero ojo: tu cola está vacía ahora; llénala antes de esa hora o sonará tu biblioteca (solo con la app abierta).');
+      else toast('Reproducción programada activada: a las ' + settings.alarm.time + ' sonará ' + alarmWhatText(settings.alarm) + ' (solo con la app abierta).');
     } else {
       settings.alarm.on = false;
       saveState(); syncAlarmUI();
-      toast('Alarma desactivada.');
+      toast('Reproducción programada desactivada.');
     }
   });
   document.getElementById('alarmTime').addEventListener('change', function(ev){
@@ -8056,6 +8304,17 @@
   document.getElementById('alarmPlaylist').addEventListener('change', function(ev){
     settings.alarm.playlistId = ev.target.value;
     saveState(); syncAlarmUI();
+  });
+  document.getElementById('alarmSource').addEventListener('change', function(ev){
+    settings.alarm.source = ev.target.value;
+    saveState(); syncAlarmUI();
+  });
+  document.getElementById('btnAlarmWake').addEventListener('click', function(){
+    settings.alarm.wake = !settings.alarm.wake;
+    saveState(); syncAlarmUI();
+    toast(settings.alarm.wake
+      ? 'Pantalla encendida activada: se mantendrá encendida mientras la programación esté activada, hasta que suene.'
+      : 'Pantalla encendida desactivada: la pantalla podrá apagarse; recuerda que la programación solo se cumple con la app abierta.');
   });
 
   // ----- Mezcla por energía: detección aproximada de BPM -----
@@ -8198,7 +8457,7 @@
   // ---------- Pack de mejoras: actualización, reanudar, deshacer, tap tempo ----------
 
   // ----- 1. Actualización sin atascos -----
-  var APP_VERSION = '2.3.0';
+  var APP_VERSION = '2.4.0';
   document.getElementById('appVersionNote').textContent = APP_VERSION;
   function cmpVersion(a, b){
     var pa = a.split('.').map(function(x){ return parseInt(x, 10) || 0; });
@@ -9819,6 +10078,150 @@
   document.getElementById('batchBookOn').addEventListener('change', updateBatchSummary);
   document.getElementById('batchBook').addEventListener('change', updateBatchSummary);
 
+  // ---------- Pack 10: «Por completar» ----------
+  // Lista de trabajo con las canciones incompletas: sin portada, sin BPM,
+  // sin género o sin año. Reutiliza las filas de la biblioteca
+  // (buildTrackRow), así que reproducir, el menú ⋯, like/dislike y la
+  // multiselección con el editor en lote funcionan igual que allí.
+  var incompleteFilter = 'all'; // all | cover | bpm | genre | year
+  var MISS_LABELS = { cover: 'Sin portada', bpm: 'Sin BPM', genre: 'Sin género', year: 'Sin año' };
+  function missingOf(t){
+    var m = [];
+    if(!t.coverUrl) m.push('cover');
+    if(!(typeof t.bpm === 'number' && t.bpm > 0)) m.push('bpm');
+    if(!(t.genre && String(t.genre).trim())) m.push('genre');
+    if(!(t.year && String(t.year).trim())) m.push('year');
+    return m;
+  }
+  function incompleteTracks(){
+    return tracks.filter(function(t){
+      var m = missingOf(t);
+      if(!m.length) return false;
+      return incompleteFilter === 'all' || m.indexOf(incompleteFilter) >= 0;
+    });
+  }
+  function updateIncompleteTab(){
+    var tc = document.getElementById('tabCountIncomplete');
+    if(!tc) return;
+    var n = tracks.filter(function(t){ return missingOf(t).length > 0; }).length;
+    tc.style.display = n ? '' : 'none';
+    tc.textContent = n || '';
+  }
+  function renderIncomplete(){
+    var listEl = document.getElementById('incompleteList');
+    if(!listEl) return;
+    var counts = { all: 0, cover: 0, bpm: 0, genre: 0, year: 0 };
+    tracks.forEach(function(t){
+      var m = missingOf(t);
+      if(!m.length) return;
+      counts.all++;
+      m.forEach(function(k){ counts[k]++; });
+    });
+    var setC = function(id, n){ var e = document.getElementById(id); if(e) e.textContent = n ? '(' + n + ')' : ''; };
+    setC('incCountAll', counts.all); setC('incCountCover', counts.cover);
+    setC('incCountBpm', counts.bpm); setC('incCountGenre', counts.genre); setC('incCountYear', counts.year);
+    var chips = document.querySelectorAll('#incompleteFilters .chip');
+    chips.forEach(function(ch){ ch.classList.toggle('active', ch.getAttribute('data-ifilter') === incompleteFilter); });
+    var st = document.getElementById('incompleteStatus');
+    if(st) st.textContent = counts.all ? (counts.all === 1 ? '1 canción por completar en total' : counts.all + ' canciones por completar en total') : '';
+    var list = incompleteTracks();
+    listEl.innerHTML = '';
+    pruneCoverObserver();
+    list.forEach(function(t){
+      var row = buildTrackRow(t);
+      var main = row.querySelector('.track-main');
+      if(main){
+        var tags = document.createElement('div');
+        tags.className = 'miss-tags';
+        missingOf(t).forEach(function(k){
+          var s = document.createElement('span');
+          s.className = 'miss-tag';
+          s.textContent = MISS_LABELS[k];
+          tags.appendChild(s);
+        });
+        main.appendChild(tags);
+      }
+      listEl.appendChild(row);
+    });
+    var emptyEl = document.getElementById('incompleteEmpty');
+    emptyEl.style.display = list.length ? 'none' : '';
+    if(!list.length){
+      emptyEl.textContent = (counts.all && incompleteFilter !== 'all')
+        ? 'Ninguna canción está en «' + MISS_LABELS[incompleteFilter] + '» ahora mismo. Prueba con otro filtro.'
+        : 'Nada por completar aquí: todas las canciones tienen portada, BPM, género y año. 🎉';
+    }
+  }
+  document.getElementById('incompleteFilters').addEventListener('click', function(ev){
+    var btn = ev.target.closest ? ev.target.closest('[data-ifilter]') : null;
+    if(!btn) return;
+    incompleteFilter = btn.getAttribute('data-ifilter') || 'all';
+    renderIncomplete();
+  });
+  document.getElementById('btnIncompleteMulti').addEventListener('click', function(){
+    if(multiMode) exitMulti(); else enterMulti();
+  });
+  document.getElementById('btnIncompleteBpm').addEventListener('click', function(){
+    // El mismo análisis de ritmo de la vista Inteligentes, sin salir de aquí
+    var b = document.getElementById('btnAnalyzeBpmAll');
+    if(b){ b.click(); toast('Analizando el ritmo de la biblioteca: las canciones sin BPM se completan solas al terminar.'); }
+  });
+
+  // ---------- Pack 10: «Mezclar ahora» ----------
+  // Dispara en el momento el crossfade hacia la siguiente canción, con el
+  // mismo destino que usaría el avance natural (cola → radio → DJ →
+  // contexto). Si el crossfade automático está apagado, hace una transición
+  // suave puntual de 3 s. Respeta «Repetir esta canción» y el temporizador
+  // de dormir (por minutos con su fundido o por canciones en su última
+  // canción no se mezcla: la música debe apagarse), y si el destino o la
+  // canción actual son video cae a un avance normal, como el crossfade.
+  function mixNow(){
+    var st = document.getElementById('mixNowStatus');
+    var say = function(msg){ if(st) st.textContent = msg; toast(msg); };
+    if(fading){ say('Ya hay una mezcla en curso, espera a que termine.'); return; }
+    if(!currentId || !currentTrack()){ say('Primero reproduce una canción: «Mezclar ahora» funde la que suena con la siguiente.'); return; }
+    if(!isPlaying){ say('La reproducción está en pausa: dale a reproducir y luego mezcla.'); return; }
+    if(repeatMode === 2){ say('Estás en «Repetir esta canción»: quita esa repetición para mezclar a la siguiente.'); return; }
+    if(sleepAfterTrack || (typeof sleepSongsLeft !== 'undefined' && sleepSongsLeft === 1)){
+      say('El temporizador de dormir apagará la música al terminar esta canción: no se mezcla.');
+      return;
+    }
+    if(sleepFadeTimer){ say('El temporizador de dormir ya está bajando el volumen para apagar la música.'); return; }
+    var targetId = peekQueueNext();
+    var fromQueue = !!targetId;
+    if(!targetId && radioState.active) targetId = radioPickNext();
+    if(!targetId && djMode) targetId = djPickNext();
+    if(!targetId){
+      if(repeatMode === 0 && !shuffle){
+        var list = contextPlayableIds();
+        if(list.length && list[list.length - 1] === currentId){ say('Es la última canción de la lista: no hay siguiente para mezclar.'); return; }
+      }
+      targetId = peekContextNext(1);
+    }
+    if(!targetId || targetId === currentId){ say('No hay una siguiente canción para mezclar.'); return; }
+    if(fromQueue){
+      var qi = queue.indexOf(targetId);
+      if(qi >= 0) queue.splice(qi, 1);
+      saveState(); renderPack();
+    }
+    if(djMode) djSession[targetId] = 1;
+    var dur = settings.crossfade ? settings.crossfadeSec : 3;
+    var remain = (audio.duration && isFinite(audio.duration)) ? audio.duration - audio.currentTime : dur;
+    if(remain > 0.5) dur = Math.min(dur, Math.max(1, remain - 0.1));
+    gaplessTargetId = null; // el deck auxiliar pasa a ser el de la mezcla
+    if(startCrossfade(targetId, dur)){
+      if(radioState.active) updateRadioUI();
+      if(djMode) updateDjUI();
+      say(settings.crossfade ? 'Mezclando ahora con la siguiente…' : 'Mezclando ahora (fundido puntual de ' + dur + ' s, con el crossfade automático apagado)…');
+    } else {
+      // Video o cadena de audio no lista: avance normal, sin romperse
+      next(false);
+      if(isPlaying) play();
+      say('Mezcla directa a la siguiente canción (esta transición no admite fundido).');
+    }
+  }
+  document.getElementById('btnMixNow').addEventListener('click', mixNow);
+  document.getElementById('btnMixNow2').addEventListener('click', mixNow);
+
   // ---------- Navegación v2: iconos en las pestañas ----------
   // La barra de navegación sale de la tarjeta de la biblioteca (que la
   // recorta con su overflow) y pasa a ser hija directa del body: así la
@@ -9833,6 +10236,8 @@
     moods: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>',
     artists: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 3.6-6.5 8-6.5s8 2.5 8 6.5"/></svg>',
     albums: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="2.5"/></svg>',
+    genres: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2H2v10l9.3 9.3a1.7 1.7 0 0 0 2.4 0l7-7a1.7 1.7 0 0 0 0-2.4z"/><circle cx="7" cy="7" r="1.6"/></svg>',
+    incomplete: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="4" width="14" height="17" rx="2"/><path d="M9 4a3 3 0 0 1 6 0"/><path d="m9 13 2 2 4-4"/></svg>',
     folders: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>',
     stats: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 20v-9M12 20V4M19 20v-6"/></svg>',
     summary: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 10h18"/></svg>',
