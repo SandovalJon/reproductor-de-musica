@@ -1376,6 +1376,7 @@
         <p>o haz clic para elegirlas desde tu dispositivo. Puedes soltar archivos sueltos o carpetas enteras (se leen sus subcarpetas) en cualquier parte de la página.</p>
         <div class="formats">MP3 · WAV · FLAC · OGG · M4A · AAC · Opus · Listas .M3U</div>
       </div>
+      <p class="folder-tip"><strong>Consejo:</strong> en el celular, añade la carpeta completa de música una vez y quedará guardada para la próxima vez que abras esta página en el mismo navegador.</p>
 
       <div class="saved-note" id="savedNote" style="display:none">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
@@ -1388,6 +1389,11 @@
         </div>
         <h3>Tu biblioteca está vacía</h3>
         <p>Trae la música que ya tienes en tu computadora o teléfono. No necesitas conexión ni subir nada a ningún servidor.</p>
+        <ol class="empty-steps">
+          <li><span class="step-n">1</span><span><strong>Añade tu música:</strong> toca «Elegir canciones» o «Carpeta» arriba, o arrastra archivos aquí.</span></li>
+          <li><span class="step-n">2</span><span><strong>Escucha:</strong> toca una canción de la lista para que suene.</span></li>
+          <li><span class="step-n">3</span><span><strong>Organiza:</strong> crea playlists, pon likes y explora las secciones cuando ya tengas canciones.</span></li>
+        </ol>
         <button class="btn primary" id="btnAddEmpty" type="button">Elegir canciones</button>
       </div>
 
@@ -1813,7 +1819,7 @@
     </section>
   </main>
 
-  <p style="text-align:center; color:var(--muted-2); font-size:12.5px; margin:18px 0 0">Consejo: en el celular, añade la carpeta completa de música una vez y quedará guardada para la próxima vez que abras esta página en el mismo navegador.</p>
+
   <p style="text-align:center; color:var(--muted-2); font-size:11.5px; margin:8px 0 0">Reproductor <span id="appVersion"></span> · 100% local, sin cuentas ni servidores</p>
 </div>
 
@@ -3444,6 +3450,8 @@
   }
 
   function render(){ renderStats(); renderList(); renderNow(); renderPack(); }
+  document.body.classList.toggle('empty-lib', tracks.length===0);
+  if(window.__mejorasUpdate) window.__mejorasUpdate();
 
   // ---------- Vistas (Biblioteca / Playlists / Cola / Historial) ----------
   function setView(v){
@@ -12591,5 +12599,6 @@
 })();
 </script>
 <script src="./lyrics.js"></script>
+<script src="./mejoras.js"></script>
 </body>
 </html>
