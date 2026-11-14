@@ -1,0 +1,75 @@
+/* Mejoras de la auditoría del sitio en vivo (v2.8.0). */
+
+/* 1) Estado vacío: paso 1-2-3 y secciones avanzadas ocultas. */
+.empty-steps{margin:14px 0 4px;padding:0;list-style:none;display:flex;
+  flex-direction:column;gap:8px;text-align:left}
+.empty-steps li{display:flex;gap:10px;align-items:flex-start;
+  font-size:14px;line-height:1.45;color:var(--text)}
+.empty-steps .step-n{flex:none;width:24px;height:24px;border-radius:50%;
+  background:var(--accent);color:#fff;font-weight:800;font-size:13px;
+  display:grid;place-items:center;margin-top:1px}
+body.empty-lib #viewTabs .view-tab[data-view="smart"],
+body.empty-lib #viewTabs .view-tab[data-view="moods"],
+body.empty-lib #viewTabs .view-tab[data-view="stats"],
+body.empty-lib #viewTabs .view-tab[data-view="summary"],
+body.empty-lib #viewTabs .view-tab[data-view="dup"],
+body.empty-lib #viewTabs .view-tab[data-view="incomplete"]{display:none}
+body.empty-lib .player-card .btn.small#btnParty,
+body.empty-lib .player-card .btn.small#btnCar,
+body.empty-lib .player-card .btn.small#btnFocus{display:none}
+
+/* 2) Acciones imposibles en vacío: inequívocamente apagadas. */
+.mejoras-off{opacity:.38 !important;filter:saturate(.4);cursor:not-allowed !important}
+button.mejoras-off{pointer-events:auto} /* que se vea el título "Añade una canción primero" */
+.icon-btn.mejoras-off,.play-btn.mejoras-off{box-shadow:none}
+
+/* 3) Consejo de la carpeta junto a añadir música. */
+.folder-tip{margin:10px 4px 0;font-size:13px;line-height:1.5;color:var(--muted);
+  background:var(--surface-2);border:1px solid var(--line);border-radius:12px;padding:10px 12px}
+.folder-tip strong{color:var(--text)}
+
+/* 4) Orden avanzado en su propio desplegable. */
+.mejoras-adv-sort{margin-top:8px;font-size:13px}
+.mejoras-adv-sort summary{cursor:pointer;font-weight:700;color:var(--muted);padding:4px 0}
+.mejoras-adv-sort select{margin-top:6px}
+
+/* 5) Textos sin truncar: que las notas largas ocupen todo el ancho. */
+.backup-note,.sound-note{flex:1 1 100% !important;min-width:0}
+.backup-row,.update-row,.sound-inline{flex-wrap:wrap}
+.kbd-hint{line-height:2;text-align:left}
+.kbd-hint kbd{white-space:nowrap}
+
+/* 6) Móvil: botones táctiles grandes y menú de secciones colapsable. */
+#mejorasMenuBtn{display:none}
+#mejorasMiniBar{display:none}
+@media (max-width:1023px){
+  #mejorasMenuBtn{display:block;position:fixed;left:12px;bottom:128px;z-index:61;
+    border:0;border-radius:999px;padding:11px 16px;min-height:44px;
+    font:700 14px/1 system-ui,sans-serif;background:var(--surface);color:var(--text);
+    border:1px solid var(--line);box-shadow:0 8px 24px rgba(0,0,0,.18);cursor:pointer}
+  #viewTabs{max-height:54px;overflow:hidden;transition:max-height .25s ease}
+  #viewTabs.mejoras-expanded{max-height:46vh;overflow-y:auto}
+  .controls .icon-btn{min-width:56px;min-height:56px}
+  .controls .play-btn{min-width:84px;min-height:84px}
+  .btn{min-height:44px}
+  .view-tab{min-height:48px}
+  #mejorasMiniBar{display:flex;position:fixed;left:0;right:0;bottom:0;z-index:62;
+    align-items:center;gap:6px;padding:8px 10px calc(8px + env(safe-area-inset-bottom));
+    background:var(--surface);border-top:1px solid var(--line);
+    box-shadow:0 -6px 24px rgba(0,0,0,.12)}
+  #mejorasMiniBar #mejorasMiniTitle{flex:1;min-width:0;overflow:hidden;
+    text-overflow:ellipsis;white-space:nowrap;font-weight:700;font-size:13.5px}
+  #mejorasMiniBar button{flex:none;width:48px;height:48px;border-radius:50%;
+    border:1px solid var(--line);background:var(--surface-2);color:var(--text);
+    font-size:17px;cursor:pointer}
+  #mejorasMiniBar #mejorasMiniPlay{background:var(--accent);color:#fff;border-color:transparent}
+  body{padding-bottom:122px} /* mini barra (~64px) + pestañas (~54px) */
+  /* La barra de pestañas original queda bajo la mini barra; al expandirla sube. */
+  #viewTabs{bottom:64px}
+  #viewTabs.mejoras-expanded{bottom:64px}
+  /* El botón de Letras no debe chocar con las dos barras inferiores. */
+  #lyricsBtn{bottom:180px}
+}
+@media (min-width:1024px){
+  #mejorasMiniBar,#mejorasMenuBtn{display:none !important}
+}
