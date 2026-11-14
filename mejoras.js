@@ -124,7 +124,11 @@
     });
     document.body.appendChild(btn);
     tabs.addEventListener('click', function (e) {
-      if (e.target.closest('.view-tab') && window.innerWidth < 1024) tabs.classList.remove('mejoras-expanded');
+      if (e.target.closest('.view-tab') && window.innerWidth < 1024) {
+        tabs.classList.remove('mejoras-expanded');
+        btn.setAttribute('aria-expanded', 'false');
+        btn.textContent = '☰ Secciones';
+      }
     });
 
     // Mini barra fija inferior en móvil, con los controles que ya existen.
