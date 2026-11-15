@@ -1,0 +1,60 @@
+/* Luces de modo fiesta (v3.6.0).
+   Overlay de color DENTRO de #partyOverlay, detrás de todo el contenido:
+   el fondo del overlay de fiesta (gradiente de setPartyColors()) es el
+   background del propio #partyOverlay; #rpmLuces pinta ENCIMA de ese
+   fondo y DEBAJO del contenido, con pointer-events:none, así que nunca
+   tapa el texto ni los controles y nunca intercepta toques o clics.
+   La opacidad máxima es 1 del elemento pero el fondo que pone luces.js
+   son dos radiales semitransparentes (alfa 0.20..0.65): el fondo de la
+   fiesta siempre se sigue viendo a través. En pausa, .paused atenúa el
+   último color quieto a 0.45: nunca parpadea. */
+
+/* Capa de luces: absoluta dentro del overlay de fiesta (fixed, z-130). */
+#rpmLuces{
+  position:absolute;
+  inset:0;
+  z-index:0;
+  pointer-events:none;
+  opacity:0;
+  transition:opacity .6s ease;
+}
+#rpmLuces.on{
+  opacity:1;
+}
+/* Pausa / fin / fiesta cerrada: último color quieto y atenuado. */
+#rpmLuces.paused{
+  opacity:.45;
+}
+
+/* Contenido del overlay de fiesta, POR ENCIMA de las luces.
+   Se enumeran los hijos (no un selector global) para no tocar el botón
+   de cerrar, que es absolute y debe seguir siéndolo: solo se le sube
+   el z-index. #rpmLuces queda fuera con :not(). */
+#partyOverlay > div:not(#rpmLuces),
+#partyOverlay > h2,
+#partyOverlay > .party-artist,
+#partyOverlay > #partyViz{
+  position:relative;
+  z-index:1;
+}
+#partyOverlay .party-close{
+  z-index:2;
+}
+
+/* Botón de luces (toggle-pill, igual que #btnWakeParty): separación del
+   botón de mantener la pantalla encendida, con el que comparte fila. */
+#btnLuces{
+  margin-left:10px;
+}
+#btnLuces:disabled{
+  opacity:.55;
+  cursor:not-allowed;
+}
+
+/* Con movimiento reducido las luces no se encienden (lo impone
+   luces.js); aquí solo se quita el fundido por si acaso. */
+@media (prefers-reduced-motion: reduce){
+  #rpmLuces{
+    transition:none;
+  }
+}

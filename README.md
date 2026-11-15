@@ -6,7 +6,7 @@ Abre `index.html` y agrega tus canciones con el botón, eligiendo una carpeta o 
 
 Tu biblioteca se guarda en IndexedDB de tu dispositivo.
 
-Versión actual de la app: 3.5.0 (se muestra también en el pie del reproductor).
+Versión actual de la app: 3.6.0 (se muestra también en el pie del reproductor).
 v2.9.0: letras sincronizadas (LRC) y mejoras del estado vacío, filtros y móvil.
 v2.9.1: corrección del botón de secciones en móvil.
 v3.0.0: sincronización entre dispositivos por paquete .rpmbak (sin cuenta ni servidor), con migración de la base de datos a v3.
@@ -15,6 +15,7 @@ v3.2.0: temas nuevos (Neón, Atardecer, Bosque) con transiciones y animaciones, 
 v3.3.0: accesibilidad (skip-link, foco visible, aria, objetivos táctiles de 44 px, movimiento reducido), modo karaoke a pantalla completa con la letra sincronizada, estadísticas tipo Wrapped (tops del año, minutos, racha, copiar resumen) y extracción del ecualizador y las listas inteligentes a módulos aparte.
 v3.4.0: despertador con fade-in y posponer 10 min (solo con la app abierta), compartir playlist por enlace con QR y marcado tiene/falta, traducciones de letras línea por línea (también en karaoke, viajan en el .rpmbak) y mini reproductor flotante arrastrable.
 v3.5.0: modo enfoque con Pomodoro (25/5 min, descanso largo, aviso sonoro), control por voz en español, Wrapped como imagen PNG y importar playlist desde Spotify (por texto, emparejada con la biblioteca local).
+v3.6.0: mezcla automática estilo DJ (enciende juntos crossfade y modo DJ, con BPM de actual y siguiente), acordes de guitarra línea por línea sobre la letra (viajan en el .rpmbak), luces al ritmo en modo fiesta y línea de tiempo de escucha con calendario y racha.
 
 ## Letras sincronizadas
 

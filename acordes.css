@@ -1,0 +1,120 @@
+/* Acordes de guitarra — estilos. Los acordes van ENCIMA de su línea
+   de letra, en negrita y con fuente monoespaciada (los acordes se
+   alinean mejor así), en el color de acento de la app. Nunca
+   sustituyen a la letra original.
+   La visibilidad la decide la clase .acordes-visible del contenedor
+   (#lyricsLines / #karaokeLines): sin ella, los spans existen en el
+   DOM pero no se muestran. El span es el primer hijo del botón de
+   línea, así que queda por encima del texto de la letra; el span de
+   traducción (si existe) queda debajo, al final del botón. */
+
+/* --- Acordes encima de la línea, en el panel de letras --- */
+.lyrics-line .acordes-line{
+  display:block;
+  margin-bottom:2px;
+  font-family:ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  font-size:.9em;
+  font-weight:700;
+  line-height:1.4;
+  letter-spacing:.02em;
+  color:var(--accent,#E94E1B);
+  text-align:left;
+  white-space:pre-wrap;
+  word-break:break-word;
+}
+.lyrics-line.active .acordes-line{color:var(--accent,#E94E1B)}
+#lyricsLines:not(.acordes-visible) .acordes-line,
+#karaokeLines:not(.acordes-visible) .acordes-line{display:none}
+
+/* --- Acordes encima de la línea, en el karaoke --- */
+.karaoke-line .acordes-line{
+  display:block;
+  margin-bottom:.12em;
+  font-family:ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  font-size:.5em;
+  font-weight:700;
+  line-height:1.3;
+  letter-spacing:.03em;
+  color:#ffb08a;
+  white-space:pre-wrap;
+  word-break:break-word;
+}
+.karaoke-line.active .acordes-line{color:#ffd2bd}
+
+/* --- Botón 🎸 Acordes (panel y karaoke) --- */
+#acordesToggle.active,
+#acordesKaraokeToggle.active{
+  background:#E94E1B;
+  border-color:#E94E1B;
+  color:#fff;
+}
+#acordesToggle:disabled,
+#acordesEditBtn:disabled{opacity:.45;cursor:not-allowed}
+.acordes-karaoke-toggle{font-size:18px}
+
+/* --- Aviso "sin acordes" en el panel --- */
+.acordes-aviso{
+  margin:0 16px 10px;
+  padding:10px 12px;
+  border:1px dashed var(--line,#E3DCD1);
+  border-radius:12px;
+  font-size:13px;
+  line-height:1.5;
+  color:var(--muted,#726B63);
+}
+.acordes-aviso button{
+  border:1px solid var(--line,#E3DCD1);
+  background:var(--surface-2,#F7F3EE);
+  color:inherit;
+  border-radius:999px;
+  padding:5px 10px;
+  font:600 12.5px/1 system-ui,sans-serif;
+  cursor:pointer;
+}
+
+/* --- Editor de acordes (solo en el panel de letras) --- */
+.acordes-editor{padding:0 16px 10px}
+.acordes-editor-hint{
+  margin:0 0 6px;
+  font-size:12.5px;
+  line-height:1.5;
+  color:var(--muted,#726B63);
+}
+.acordes-text{
+  width:100%;
+  box-sizing:border-box;
+  min-height:120px;
+  border-radius:12px;
+  padding:10px;
+  border:1px solid var(--line,#E3DCD1);
+  background:var(--surface,#fff);
+  color:inherit;
+  font:13px/1.6 ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  resize:vertical;
+}
+.acordes-editor-row{
+  display:flex;
+  flex-wrap:wrap;
+  gap:8px;
+  align-items:center;
+  margin-top:8px;
+}
+.acordes-editor-row button{
+  border:1px solid var(--line,#E3DCD1);
+  background:var(--surface-2,#F7F3EE);
+  color:inherit;
+  border-radius:999px;
+  padding:7px 12px;
+  font:600 12.5px/1 system-ui,sans-serif;
+  cursor:pointer;
+}
+.acordes-editor-row .acordes-save{
+  border:0;
+  background:#E94E1B;
+  color:#fff;
+  font-weight:700;
+}
+.acordes-count{
+  font-size:12.5px;
+  color:var(--muted,#726B63);
+}

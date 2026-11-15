@@ -1,0 +1,81 @@
+/* Línea de tiempo de escucha (v3.6.0).
+   Reutiliza las clases de la app (.modal-overlay, .modal,
+   .modal-actions, .btn) y sus variables (--surface, --text, --muted,
+   --line, --accent, --accent-soft, --shadow) para no desentonar con
+   el estilo actual ni con los temas rpm (temas.css: Neón, Atardecer,
+   Bosque). Solo añade lo propio de la línea de tiempo, con prefijo
+   .tl- / .timeline-. */
+
+.timeline-modal{width:min(620px,100%)}
+.timeline-head{display:flex; align-items:flex-start; justify-content:space-between; gap:12px}
+.timeline-head h3{margin:0; font-size:18px; font-weight:800}
+.timeline-close{flex:none; width:32px; height:32px; border-radius:50%; border:1px solid var(--line); background:var(--surface-2); color:var(--muted); font-size:13px; font-weight:800; cursor:pointer; line-height:1}
+.timeline-close:hover{border-color:var(--accent); color:var(--accent)}
+.timeline-sub{margin:6px 0 0; color:var(--muted); font-size:13.5px; line-height:1.5}
+.timeline-streak{margin:12px 0 0; font-size:14px; font-weight:800}
+.timeline-streak:empty{display:none}
+
+/* Navegación de mes */
+.tl-nav{display:flex; align-items:center; justify-content:space-between; gap:10px; margin-top:16px}
+.tl-month-label{margin:0; font-size:16px; font-weight:800; text-align:center; flex:1 1 auto}
+.tl-month-summary{margin:8px 0 0; color:var(--muted); font-size:13px; font-weight:600; text-align:center}
+
+/* Rejilla del calendario: semana de lunes a domingo */
+.tl-week-head{display:grid; grid-template-columns:repeat(7,1fr); gap:5px; margin-top:14px}
+.tl-week-head span{text-align:center; font-size:11px; font-weight:800; letter-spacing:.06em; text-transform:uppercase; color:var(--muted-2)}
+.tl-grid{display:grid; grid-template-columns:repeat(7,1fr); gap:5px; margin-top:6px}
+.tl-cell{
+  aspect-ratio:1/1; min-height:44px; border:1px solid var(--line); border-radius:10px;
+  background:var(--surface-2); color:var(--muted); padding:4px 2px;
+  display:flex; flex-direction:column; align-items:center; justify-content:center; gap:1px;
+  font-size:12px; cursor:pointer;
+}
+.tl-cell-empty{background:transparent; border-color:transparent; cursor:default}
+.tl-cell-day{font-size:14px; font-weight:800; line-height:1; color:var(--text); font-variant-numeric:tabular-nums}
+.tl-cell-min{font-size:10.5px; font-weight:700; line-height:1.2; font-variant-numeric:tabular-nums; white-space:nowrap}
+.tl-cell:hover{border-color:var(--accent)}
+.tl-cell.tl-has{background:var(--accent-soft); border-color:color-mix(in srgb, var(--accent) 30%, transparent)}
+.tl-cell.tl-has .tl-cell-min{color:var(--accent-dark)}
+/* Intensidad según los minutos del día, relativa al máximo del mes */
+.tl-cell[data-level="1"]{background:color-mix(in srgb, var(--accent) 12%, var(--surface-2))}
+.tl-cell[data-level="2"]{background:color-mix(in srgb, var(--accent) 26%, var(--surface-2))}
+.tl-cell[data-level="3"]{background:color-mix(in srgb, var(--accent) 45%, var(--surface-2))}
+.tl-cell[data-level="4"]{background:var(--accent); border-color:var(--accent)}
+.tl-cell[data-level="4"] .tl-cell-day, .tl-cell[data-level="4"] .tl-cell-min{color:#fff}
+.tl-cell.tl-history-only .tl-cell-min{color:var(--muted)}
+.tl-cell.tl-today{outline:2px solid var(--accent); outline-offset:1px}
+.tl-cell.tl-selected{outline:2px solid var(--text); outline-offset:1px}
+.tl-cell:focus-visible{outline:2px solid var(--accent); outline-offset:2px}
+
+/* Detalle del día tocado */
+.tl-detail{margin-top:18px; border-top:1px solid var(--line); padding-top:14px}
+.tl-detail-hint{margin:0; color:var(--muted); font-size:13.5px; line-height:1.55}
+.tl-detail-head h4{margin:0; font-size:15px; font-weight:800}
+.tl-detail-meta{margin:4px 0 0; color:var(--muted); font-size:13px; line-height:1.5}
+.tl-note{margin:10px 0 0; font-size:12.5px; color:var(--muted); line-height:1.55; background:var(--surface-2); border:1px solid var(--line); border-radius:10px; padding:9px 12px}
+.tl-day-list{margin:12px 0 0; padding:0; list-style:none}
+.tl-day-list li{display:flex; align-items:flex-start; gap:10px; padding:9px 0; border-bottom:1px solid var(--line)}
+.tl-day-list li:last-child{border-bottom:none}
+.tl-rank-n{flex:none; width:26px; height:26px; border-radius:50%; background:var(--accent-soft); color:var(--accent-dark); font-size:13px; font-weight:800; display:grid; place-items:center; margin-top:1px}
+.tl-rank-main{flex:1 1 auto; min-width:0}
+.tl-rank-t{font-size:14px; font-weight:700; line-height:1.35; overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
+.tl-bar{height:6px; border-radius:999px; background:var(--surface-3); margin-top:6px; overflow:hidden}
+.tl-bar-fill{height:100%; border-radius:999px; background:var(--accent)}
+.tl-rank-meta{flex:none; font-size:12.5px; font-weight:700; color:var(--muted); white-space:nowrap; margin-top:3px; font-variant-numeric:tabular-nums}
+
+/* Estados vacíos */
+.tl-empty{margin-top:16px; text-align:center; padding:18px 8px 6px}
+.tl-empty-art{font-size:44px; line-height:1; margin-bottom:12px}
+.tl-empty p{margin:0 0 8px; font-size:15px; font-weight:700}
+.tl-empty-sub{font-size:13.5px !important; font-weight:400 !important; color:var(--muted); line-height:1.55}
+
+@media (max-width:480px){
+  .tl-cell{min-height:40px; border-radius:8px}
+  .tl-cell-day{font-size:13px}
+  .tl-cell-min{font-size:9.5px}
+  .tl-rank-t{white-space:normal}
+  .tl-rank-meta{font-size:12px}
+}
+@media (prefers-reduced-motion: reduce){
+  .tl-cell{transition:none}
+}

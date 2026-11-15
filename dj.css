@@ -1,0 +1,49 @@
+/* Mezcla automática DJ (v3.6.0) — estilos del panel.
+   El panel reutiliza las clases de la app (.toggle-pill, .sound-note);
+   aquí solo van sus filas propias. Usa las variables de la app, así
+   respeta el tema claro/oscuro sin duplicar colores. */
+.dj-panel{
+  margin-top:12px; padding:13px 14px;
+  border:1px solid var(--line); border-radius:14px;
+  background:var(--surface-2);
+  font-size:13.5px; line-height:1.5;
+}
+.dj-panel .dj-auto-toggle{ width:100%; justify-content:center; }
+.dj-panel .dj-auto-toggle.on{
+  border-color:var(--accent); color:var(--accent);
+  background:var(--accent-soft);
+}
+.dj-status{ margin:9px 0 0; color:var(--muted); font-size:12.8px; }
+.dj-bpm-row{ display:flex; flex-wrap:wrap; gap:4px 6px; margin-top:8px; }
+.dj-bpm-k{ color:var(--muted); font-weight:700; }
+.dj-bpm-row strong{ font-variant-numeric:tabular-nums; }
+.dj-bpm-t{
+  color:var(--muted); white-space:nowrap; overflow:hidden;
+  text-overflow:ellipsis; max-width:100%;
+}
+.dj-jump{ margin:8px 0 0; font-size:12.8px; color:var(--muted); }
+.dj-jump-moderado{ color:var(--muted); font-weight:700; }
+.dj-jump-grande{ color:#B42318; font-weight:800; }
+@media (prefers-color-scheme: dark){ .dj-jump-grande{ color:#FF9A90; } }
+.dj-fade{ margin:6px 0 0; font-size:12.8px; color:var(--muted); }
+.dj-warn{
+  margin:8px 0 0; padding:9px 11px; border-radius:10px;
+  background:var(--accent-soft); color:var(--accent-dark);
+  font-size:12.8px; font-weight:700;
+}
+.dj-cf-row{
+  display:flex; align-items:center; gap:8px; flex-wrap:wrap;
+  margin-top:10px; padding-top:10px; border-top:1px solid var(--line);
+}
+.dj-step{
+  width:30px; height:30px; border-radius:50%;
+  border:1px solid var(--line); background:var(--surface);
+  color:var(--text); font-size:17px; font-weight:800; line-height:1;
+  display:grid; place-items:center; padding:0 0 2px;
+}
+.dj-step:hover{ border-color:var(--accent); color:var(--accent); }
+.dj-cf-row output{
+  font-weight:800; font-variant-numeric:tabular-nums; min-width:34px;
+  text-align:center;
+}
+.dj-note{ color:var(--muted-2); font-size:12px; }
