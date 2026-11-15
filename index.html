@@ -2347,7 +2347,7 @@
 
   // ---------- State ----------
   var tracks = []; // {id,name,title,artist,album,duration,size,type,addedAt,url,coverUrl,color,rating,stars}
-  var APP_VERSION = '4.3.0'; // al publicar cambios, subir este número y el CACHE de sw.js
+  var APP_VERSION = '4.3.1'; // al publicar cambios, subir este número y el CACHE de sw.js
   var currentId = null;
   var isPlaying = false;
   var shuffle = false;
@@ -3051,12 +3051,20 @@
     }
     adding = true;
     var added = 0;
+    var failed = 0;
+    var failedNames = [];
     var chain = Promise.resolve();
     files.forEach(function(file){
       chain = chain.then(function(){
+        // 4.3.1: que UN archivo roto no mate el lote: si processFile
+        // falla, se cuenta como fallido y se sigue con los demás.
         return processFile(file).then(function(){
           added++;
           render();
+        }).catch(function(err){
+          failed++;
+          failedNames.push((file && file.name) || 'sin-nombre');
+          try{ console.log('[reproductor] no se pudo cargar', file && file.name, err); }catch(e){}
         });
       });
     });
@@ -3080,6 +3088,11 @@
       var addMsg = '';
       if(added===1) addMsg = '1 canción añadida a tu biblioteca';
       else if(added>1) addMsg = added+' canciones añadidas a tu biblioteca';
+      // 4.3.1: reportar también las que fallaron, con hasta 3 nombres.
+      if(failed){
+        addMsg += (addMsg ? ' · ' : '') + failed + (failed===1 ? ' no se pudo cargar' : ' no se pudieron cargar');
+        if(failedNames.length) addMsg += ' (' + failedNames.slice(0,3).join(', ') + (failedNames.length>3 ? ', …' : '') + ')';
+      }
       if(coversApplied) addMsg += (addMsg ? ' · ' : '') + coversApplied + (coversApplied===1 ? ' carátula aplicada' : ' carátulas aplicadas') + ' desde la carpeta';
       if(addMsg) toast(addMsg);
       if(!currentId && tracks.length){
@@ -3087,6 +3100,13 @@
         if(fp) selectTrack(fp, false);
         else selectTrack(tracks[0].id, false);
       }
+      return added;
+    }).catch(function(err){
+      // 4.3.1: el error ya nunca es silencioso: se baja la bandera,
+      // se registra y se avisa con el motivo.
+      adding = false;
+      try{ console.log('[reproductor] error al añadir canciones:', err); }catch(e){}
+      toast('No se pudo cargar: ' + ((err && err.message) || 'error desconocido'));
       return added;
     });
   }
@@ -3111,11 +3131,20 @@
     return file.slice(0, headSize).arrayBuffer()
       .catch(function(){ return new ArrayBuffer(0); })
       .then(function(buf){
-        var meta = buf && buf.byteLength ? parseID3(buf) : {title:'',artist:'',album:'',genre:'',year:'',coverBlob:null,chapters:null};
-        if(buf && buf.byteLength && (!meta.genre || !meta.year)){
-          var vc = parseVorbisComment(buf);
-          if(vc.genre && !meta.genre) meta.genre = vc.genre;
-          if(vc.year && !meta.year) meta.year = vc.year;
+        // 4.3.1: metadatos raros o corruptos no deben romper la carga:
+        // si parseID3/parseVorbisComment lanzan, se añade la canción
+        // igual con el nombre del archivo como título.
+        var meta;
+        try{
+          meta = buf && buf.byteLength ? parseID3(buf) : {title:'',artist:'',album:'',genre:'',year:'',coverBlob:null,chapters:null};
+          if(buf && buf.byteLength && (!meta.genre || !meta.year)){
+            var vc = parseVorbisComment(buf);
+            if(vc.genre && !meta.genre) meta.genre = vc.genre;
+            if(vc.year && !meta.year) meta.year = vc.year;
+          }
+        }catch(me){
+          try{ console.log('[reproductor] metadatos no legibles en', file.name, me); }catch(_e){}
+          meta = {title:'',artist:'',album:'',genre:'',year:'',coverBlob:null,chapters:null};
         }
         var fallback = cleanName(file.name);
         var title = meta.title || fallback || file.name;
@@ -5173,7 +5202,12 @@
   dropzone.addEventListener('click', openPicker);
   dropzone.addEventListener('keydown', function(ev){ if(ev.key==='Enter'||ev.key===' '){ ev.preventDefault(); openPicker(); } });
   document.getElementById('btnFolder').addEventListener('click', function(){ folderInput.value=''; folderInput.click(); });
-  fileInput.addEventListener('change', function(){ addFiles(fileInput.files); });
+  // 4.3.1: si el selector no devuelve ningún archivo, avisar en vez
+  // de no hacer nada en silencio.
+  fileInput.addEventListener('change', function(){
+    if(!fileInput.files || !fileInput.files.length){ toast('No se recibió ningún archivo del selector. Vuelve a intentarlo.'); return; }
+    addFiles(fileInput.files);
+  });
   folderInput.addEventListener('change', function(){ addFiles(folderInput.files); });
 
   // ---------- Search / sort ----------
@@ -9149,7 +9183,7 @@
   // ---------- Pack de mejoras: actualización, reanudar, deshacer, tap tempo ----------
 
   // ----- 1. Actualización sin atascos -----
-  var APP_VERSION = '4.3.0';
+  var APP_VERSION = '4.3.1';
   document.getElementById('appVersionNote').textContent = APP_VERSION;
   // 4.0.0: cmpVersion vive en src/core/format.js (window.RpmFormat).
   function cmpVersion(a, b){

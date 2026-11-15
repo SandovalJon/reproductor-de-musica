@@ -1,4 +1,4 @@
-/* Historial de versiones / Qué hay de nuevo — Reproductor de Música v4.3.0.
+/* Historial de versiones / Qué hay de nuevo — Reproductor de Música v4.3.1.
    Módulo aparte: NO toca index.html ni ningún otro módulo. Se engancha
    solo a lo que ya existe en la app:
      - window.APP_VERSION (var global del script principal de
@@ -62,7 +62,7 @@
 
   /* ------------------------------------------------------------------
      Clave y changelog incrustado (copia literal de app/README.md).
-     Fuente: líneas "vX.Y.Z: ..." del README a fecha de la 4.3.0.
+     Fuente: líneas "vX.Y.Z: ..." del README a fecha de la 4.3.1.
      Al publicar una versión nueva, el integrador añade su línea
      aquí (o basta con que esté en el README, porque el fetch de
      './README.md' la recogerá solo).
@@ -70,6 +70,7 @@
   var LAST_SEEN_KEY = 'reproductor-novedades:ultima-version-vista';
 
   var CHANGELOG_TEXT = [
+    'v4.3.1: arreglo de la subida en Android (si una canción falla al cargar ya no se rompe el lote en silencio: las demás se añaden igual y se avisa cuáles fallaron; un archivo con metadatos raros se añade con su nombre como título).',
     'v4.3.0: buscar por tarareo mejorado (compara también el ritmo contra la rejilla de pulsos del BPM analizado; aproximado, la melodía no se compara nota a nota).',
     'v4.3.0: acordes en karaoke (tus acordes encima de cada línea, junto a la letra y su traducción; sin acordes guardados, el karaoke se ve como siempre).',
     'v4.3.0: modo lectura de letras (la letra completa como un libro, con letra grande y sin distracciones; se sale con ✕ o Esc).',
