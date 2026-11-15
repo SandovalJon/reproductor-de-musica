@@ -1,0 +1,56 @@
+/* Control por voz — v3.5.0 (módulo aparte, voz.css).
+   Reutiliza las variables de tema de la app (--surface, --text,
+   --muted, --accent, --line, --surface-2) con fallback claro, para
+   que el botón y la píldora sigan el tema Neón/Atardecer/Bosque y el
+   modo oscuro sin duplicar colores.
+   El botón mide 34x34 como #btnMute, su vecino en .vol-group.
+   La píldora de estado es fija, centrada abajo, z-index 58: por
+   encima del contenido y del mini flotante (55), por debajo de
+   #lyricsBtn (60) y #mejorasMiniBar (62). En móvil (<=1023px) sube
+   por encima de la franja inferior (mini barra + pestañas +
+   "☰ Secciones" + Letras, ~196px). */
+.rpm-voz-btn{
+  flex:none; width:34px; height:34px; border-radius:50%;
+  border:1px solid var(--line,#E3DCD1);
+  background:var(--surface-2,#F7F3EE); color:var(--text,#191613);
+  font-size:17px; line-height:1; cursor:pointer;
+  display:inline-flex; align-items:center; justify-content:center;
+  padding:0; margin-left:2px;
+  font-family:"Plus Jakarta Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+}
+.rpm-voz-btn:hover{ border-color:var(--accent,#E94E1B); }
+.rpm-voz-btn:focus-visible{
+  outline:2px solid var(--accent,#E94E1B); outline-offset:2px;
+}
+.rpm-voz-btn.listening{
+  background:var(--accent,#E94E1B); color:#fff;
+  border-color:var(--accent,#E94E1B);
+  animation:rpm-voz-pulse 1.2s ease-out infinite;
+}
+.rpm-voz-btn.rpm-voz-unsupported{ opacity:.55; }
+@keyframes rpm-voz-pulse{
+  0%{ box-shadow:0 0 0 0 rgba(233,78,27,.45); }
+  70%{ box-shadow:0 0 0 10px rgba(233,78,27,0); }
+  100%{ box-shadow:0 0 0 0 rgba(233,78,27,0); }
+}
+
+/* Píldora de estado: "Escuchando…", "Entendí: siguiente",
+   "No te entendí…". Solo visible mientras muestra algo. */
+.rpm-voz-status{
+  position:fixed; left:50%; transform:translateX(-50%); bottom:84px;
+  z-index:58; display:none;
+  max-width:calc(100vw - 32px);
+  padding:8px 14px; border-radius:999px;
+  background:var(--surface,#fff); color:var(--text,#191613);
+  border:1px solid var(--line,#E3DCD1);
+  box-shadow:0 8px 24px rgba(0,0,0,.20);
+  font-family:"Plus Jakarta Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+  font-size:13px; line-height:1.4; text-align:center;
+  pointer-events:none;
+}
+.rpm-voz-status.show{ display:block; }
+.rpm-voz-status.listening{ border-color:var(--accent,#E94E1B); }
+.rpm-voz-status.error{ border-color:#C0392B; }
+@media (max-width:1023px){
+  .rpm-voz-status{ bottom:196px; }
+}

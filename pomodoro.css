@@ -1,0 +1,220 @@
+/* Modo enfoque con Pomodoro — v3.5.0, módulo aparte (ver pomodoro.js
+   y WIRING.md). Todo va bajo .rpm-pomodoro / #rpmPomodoroOpenBtn para
+   no chocar con los estilos de la app ni con el overlay del «Modo
+   enfoque» que la app ya trae (#focusOverlay). Reutiliza las variables
+   de tema de la app (--surface, --surface-2, --line, --text, --muted,
+   --accent...) con valores de respaldo por si el tema no las define. */
+
+/* Botón de apertura: hereda .btn.small de la app; solo se marca el
+   estado activo y se evita que el texto de la cuenta atrás se parta. */
+#rpmPomodoroOpenBtn {
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+
+#rpmPomodoroOpenBtn[aria-pressed="true"] {
+  border-color: var(--accent, #e94e1b);
+  color: var(--accent, #e94e1b);
+}
+
+/* Panel: diálogo centrado, por encima del overlay de enfoque de la
+   app (z-index 130) pero sin tapar banners de aviso (9999). */
+.rpm-pomodoro {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 200;
+  width: min(92vw, 460px);
+  max-height: min(92vh, 720px);
+  overflow: auto;
+  padding: 20px 20px 16px;
+  border: 1px solid var(--line, #e3e3e8);
+  border-radius: 20px;
+  background: var(--surface, #fff);
+  color: var(--text, #1c1c1e);
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.28);
+  text-align: center;
+}
+
+.rpm-pomodoro[hidden] {
+  display: none;
+}
+
+.rpm-pomodoro-close {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  width: 36px;
+  height: 36px;
+  border: 1px solid var(--line, #e3e3e8);
+  border-radius: 50%;
+  background: var(--surface-2, #f2f2f5);
+  color: var(--text, #1c1c1e);
+  font-size: 15px;
+  cursor: pointer;
+}
+
+.rpm-pomodoro-close:hover {
+  background: var(--surface-3, #e9e9ee);
+}
+
+.rpm-pomodoro-kicker {
+  margin: 0 0 4px;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--accent, #e94e1b);
+}
+
+.rpm-pomodoro-phase {
+  margin: 0 0 2px;
+  font-size: 17px;
+  font-weight: 700;
+}
+
+.rpm-pomodoro-clock {
+  font-size: 64px;
+  font-weight: 800;
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Barra de progreso del bloque actual. */
+.rpm-pomodoro-bar {
+  height: 10px;
+  margin: 12px 0 10px;
+  border-radius: 999px;
+  background: var(--surface-3, #e9e9ee);
+  overflow: hidden;
+}
+
+.rpm-pomodoro-fill {
+  height: 100%;
+  width: 0%;
+  border-radius: 999px;
+  background: var(--accent, #e94e1b);
+  transition: width 0.3s linear;
+}
+
+.rpm-pomodoro-today {
+  margin: 0 0 12px;
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--muted, #666);
+}
+
+/* Banner de «descanso terminado»: ofrece el siguiente bloque. */
+.rpm-pomodoro-next {
+  margin: 0 0 12px;
+  padding: 12px;
+  border: 1px solid var(--accent, #e94e1b);
+  border-radius: 14px;
+  background: var(--accent-soft, #ffe8de);
+}
+
+.rpm-pomodoro-next[hidden] {
+  display: none;
+}
+
+.rpm-pomodoro-next p {
+  margin: 0 0 10px;
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 1.45;
+}
+
+.rpm-pomodoro-next .btn {
+  margin: 2px;
+}
+
+/* Configuración: rejilla de campos, como el overlay de enfoque. */
+.rpm-pomodoro-config {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px 12px;
+  text-align: left;
+  margin-bottom: 14px;
+}
+
+.rpm-pomodoro-config label {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  font-size: 12.5px;
+  font-weight: 700;
+  color: var(--muted, #666);
+}
+
+.rpm-pomodoro-config input,
+.rpm-pomodoro-config select {
+  padding: 9px 11px;
+  border: 1px solid var(--line, #e3e3e8);
+  border-radius: 10px;
+  background: var(--surface-2, #f2f2f5);
+  color: var(--text, #1c1c1e);
+  font-size: 14px;
+  font-family: inherit;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.rpm-pomodoro-config input:focus,
+.rpm-pomodoro-config select:focus {
+  border-color: var(--accent, #e94e1b);
+  outline: none;
+}
+
+.rpm-pomodoro-config input:disabled,
+.rpm-pomodoro-config select:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.rpm-pomodoro-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: center;
+  margin-bottom: 12px;
+}
+
+.rpm-pomodoro-actions .btn {
+  min-height: 44px;
+}
+
+.rpm-pomodoro .sound-note {
+  text-align: left;
+  margin: 0;
+}
+
+@media (max-width: 480px) {
+  .rpm-pomodoro {
+    padding: 18px 14px 14px;
+  }
+
+  .rpm-pomodoro-clock {
+    font-size: 52px;
+  }
+
+  .rpm-pomodoro-config {
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+
+  .rpm-pomodoro-actions .btn {
+    flex: 1 1 40%;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .rpm-pomodoro-fill {
+    transition: none;
+  }
+
+  .rpm-pomodoro {
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+  }
+}

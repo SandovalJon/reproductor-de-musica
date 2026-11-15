@@ -1,0 +1,20 @@
+/* wrapped-img.css — «Wrapped como imagen» (v3.5.0).
+   Solo añade lo propio del botón «Descargar como imagen» dentro del
+   modal del Wrapped. El botón reutiliza las clases de la app
+   (.btn, .modal-actions) y sus variables (--accent, --line); el
+   resto del aspecto de la imagen PNG vive en wrapped-img.js (canvas),
+   no aquí. */
+
+#wrappedImgBtn[disabled]{
+  opacity:.6;
+  cursor:wait;
+}
+
+@media (max-width:480px){
+  /* En móvil el modal ya envuelve las acciones a dos líneas
+     (wrapped.js pone flex-wrap:wrap en .modal-actions): el botón
+     de imagen ocupa su propia línea sin pelearse con «Copiar». */
+  #wrappedImgBtn{
+    flex:1 1 100%;
+  }
+}

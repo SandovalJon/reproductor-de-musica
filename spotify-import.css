@@ -1,0 +1,146 @@
+/* spotify-import.css — Importar playlist desde Spotify (reproductor-de-musica v3.5.0)
+ * Solo estilos propios del módulo (prefijo .spot-). La ventana reusa
+ * .modal-overlay / .modal / .modal-actions / .btn de la app; si
+ * spotify-import.css no carga, el modal sigue funcionando con el estilo
+ * base de la app. Sin importar, nada de esto se muestra.
+ * Reutiliza las variables de tema de la app: --surface, --surface-2,
+ * --text, --muted, --line, --accent. */
+
+.spot-modal { width: min(600px, 100%); }
+
+.spot-sub {
+  margin: 0 0 12px;
+  color: var(--muted, #6b6259);
+  font-size: 13.5px;
+  line-height: 1.5;
+}
+
+.spot-status { margin-top: 8px; }
+
+.spot-warn {
+  margin: 0 0 12px;
+  padding: 10px 12px;
+  border: 1px solid var(--line, #e3ddd2);
+  border-left: 3px solid #c98a1b;
+  border-radius: 10px;
+  background: var(--surface-2, #f6f2ea);
+  color: var(--text, #191613);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.spot-label {
+  display: block;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  color: var(--muted, #6b6259);
+  margin: 4px 0 6px;
+}
+
+.spot-input,
+.spot-text {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 10px 12px;
+  border: 1px solid var(--line, #e3ddd2);
+  border-radius: 12px;
+  background: var(--surface, #ffffff);
+  color: var(--text, #191613);
+  font-size: 14px;
+  line-height: 1.5;
+  margin-bottom: 10px;
+}
+
+.spot-input:focus,
+.spot-text:focus {
+  outline: 2px solid var(--accent, #e94e1b);
+  outline-offset: 1px;
+}
+
+.spot-text {
+  min-height: 140px;
+  resize: vertical;
+  font-family: inherit;
+}
+
+.spot-results { margin-top: 4px; }
+
+.spot-list {
+  list-style: none;
+  margin: 12px 0 0;
+  padding: 0;
+  max-height: 260px;
+  overflow-y: auto;
+  border-top: 1px solid var(--line, #e3ddd2);
+}
+
+.spot-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 2px;
+  border-bottom: 1px solid var(--line, #e3ddd2);
+}
+
+.spot-row-main {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.spot-row-title {
+  font-weight: 700;
+  font-size: 14px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.spot-row-meta {
+  font-size: 12.5px;
+  color: var(--muted, #6b6259);
+}
+
+.spot-badge {
+  flex: none;
+  font-size: 12px;
+  font-weight: 800;
+  padding: 4px 8px;
+  border-radius: 999px;
+  background: var(--surface-2, #f6f2ea);
+  color: var(--muted, #6b6259);
+  white-space: nowrap;
+}
+
+.spot-badge.have { background: #e3f2e4; color: #1e6b2e; }
+.spot-badge.missing { background: #fbe9e7; color: #9c2b1d; }
+
+.spot-actions { flex-wrap: wrap; }
+.spot-actions .btn[disabled] { opacity: .45; cursor: not-allowed; }
+
+.spot-toast {
+  position: fixed;
+  left: 50%;
+  bottom: 24px;
+  transform: translate(-50%, 8px);
+  z-index: 120;
+  background: #191613;
+  color: #f5f1eb;
+  padding: 10px 16px;
+  border-radius: 999px;
+  font-size: 14px;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity .2s, transform .2s;
+  max-width: calc(100vw - 32px);
+  text-align: center;
+}
+.spot-toast.show { opacity: 1; transform: translate(-50%, 0); }
+
+@media (max-width: 480px) {
+  .spot-row-title { white-space: normal; }
+}
