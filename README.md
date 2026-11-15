@@ -6,7 +6,11 @@ Abre `index.html` y agrega tus canciones con el botón, eligiendo una carpeta o 
 
 Tu biblioteca se guarda en IndexedDB de tu dispositivo.
 
-Versión actual de la app: 4.0.0 (se muestra también en el pie del reproductor).
+Versión actual de la app: 4.1.0 (se muestra también en el pie del reproductor).
+v4.1.0: letras traducidas en karaoke (la traducción línea por línea junto a la original, usando las traducciones que ya guardas; sin traducción, el karaoke se ve como siempre).
+v4.1.0: estadísticas por artista dentro de "Tu año en música" (artistas más escuchados, con horas, canciones y racha; solo con los datos de escucha que la app ya guarda).
+v4.1.0: modo fiesta con votos en la escucha conjunta (los participantes proponen y votan la siguiente canción por el mismo canal WebRTC; gana la más votada).
+v4.1.0: historial de versiones con "Qué hay de nuevo" al actualizar (los cambios salen del changelog del README, sin inventar ninguno).
 v4.0.0: rediseño total de la interfaz (nueva paleta, tipografía y espaciado; cabecera, reproductor, tarjetas de canciones y secciones con aspecto moderno), activable y desactivable en Ajustes · Apariencia (por defecto activado; el aspecto clásico sigue disponible).
 v4.0.0: sincronización automática en la nube (opcional, desactivada por defecto; usa tu Google Drive con tu propio Client ID, cada 15/30/60 min, con el mismo .rpmbak y las mismas reglas de fusión; nunca aplica un borrado sin avisar).
 v4.0.0: modo DJ en vivo (cola en vivo con peticiones y reorden, sobre la mezcla automática DJ y el crossfade que ya existen).

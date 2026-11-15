@@ -1,0 +1,18 @@
+/* Estadísticas por artista (v4.1.0).
+   La sección reutiliza las clases de wrapped.css (.wrapped-section,
+   .wrapped-rank, .wrapped-bar, .wrapped-note, .wrapped-empty) y las
+   de la app (.modal-overlay, .modal, .modal-actions, .btn) con sus
+   variables (--surface, --text, --muted, --line, --accent,
+   --accent-soft, --shadow). Solo añade lo propio, con prefijo .sa-.
+   El modal propio (#saModal) reutiliza .wrapped-modal y
+   .wrapped-head de wrapped.css: si wrapped.css no estuviera cargado,
+   el modal seguiría funcionando con las clases base de la app. */
+
+.sa-section{margin-top:4px}
+.sa-sub{font-size:12.5px; font-weight:600; color:var(--muted); line-height:1.45; margin-top:2px}
+.sa-note{margin:12px 0 0}
+.sa-more{margin:10px 0 0; font-size:12.5px; color:var(--muted); font-weight:600}
+
+@media (max-width:480px){
+  .sa-sub{white-space:normal}
+}

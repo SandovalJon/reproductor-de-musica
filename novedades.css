@@ -1,0 +1,78 @@
+/* Historial de versiones / Qué hay de nuevo — estilos (v4.1.0).
+   El modal reutiliza .modal-overlay y .modal de la app; aquí solo se
+   afina el interior del panel y el botón de Ajustes. Sin el CSS, el
+   modal sigue funcionando con los estilos base de la app. */
+
+.novedades-modal{
+  max-width:560px;
+  width:100%;
+  max-height:82vh;
+  overflow-y:auto;
+}
+
+.novedades-title{
+  margin:0 0 10px;
+  font-size:20px;
+  line-height:1.25;
+}
+
+.novedades-view{
+  font-size:14px;
+  line-height:1.55;
+}
+
+.novedades-list{
+  margin:0 0 10px;
+  padding-left:20px;
+}
+.novedades-list li{
+  margin-bottom:6px;
+}
+
+.novedades-note{
+  margin:8px 0 0;
+  font-size:13px;
+  opacity:.8;
+}
+
+.novedades-history .novedades-version{
+  margin:0 0 14px;
+  padding-bottom:12px;
+  border-bottom:1px solid var(--line,#E3DCD1);
+}
+.novedades-history .novedades-version:last-child{
+  margin-bottom:0;
+  padding-bottom:0;
+  border-bottom:0;
+}
+.novedades-history h3{
+  margin:0 0 6px;
+  font-size:15px;
+}
+
+.novedades-actions{
+  display:flex;
+  flex-wrap:wrap;
+  gap:8px;
+  justify-content:flex-end;
+  margin-top:14px;
+}
+
+#novedadesBtn{
+  margin-left:6px;
+}
+
+@media (max-width:600px){
+  .novedades-modal{
+    max-height:86vh;
+  }
+  .novedades-title{
+    font-size:18px;
+  }
+  .novedades-actions{
+    justify-content:stretch;
+  }
+  .novedades-actions .btn{
+    flex:1 1 auto;
+  }
+}

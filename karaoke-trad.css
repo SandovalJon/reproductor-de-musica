@@ -1,0 +1,30 @@
+/* Letras traducidas en karaoke — estilos.
+   La traducción va debajo de su línea original, más pequeña, en
+   cursiva y tenue; nunca sustituye a la original. La visibilidad la
+   decide la clase .traduccion-visible de #karaokeLines: sin ella,
+   los spans existen en el DOM pero no se muestran.
+   Las reglas repiten a propósito las de traduccion.css para el
+   karaoke, para que este módulo funcione solo aunque traduccion.css
+   no esté cargado; si los dos CSS están presentes, las reglas son
+   idénticas y no hay conflicto. */
+
+/* --- Línea traducida dentro del karaoke --- */
+.karaoke-line .traduccion-line{
+  display:block;
+  margin-top:.15em;
+  font-size:.55em;
+  font-style:italic;
+  font-weight:400;
+  line-height:1.35;
+  opacity:.75;
+}
+.karaoke-line.active .traduccion-line{opacity:.9}
+#karaokeLines:not(.traduccion-visible) .traduccion-line{display:none}
+
+/* --- Botón 🌐 propio del karaoke (solo si traduccion.js no puso el suyo) --- */
+.karaoke-trad-toggle{font-size:18px}
+#karaokeTradToggle.active{
+  background:#E94E1B;
+  border-color:#E94E1B;
+  color:#fff;
+}

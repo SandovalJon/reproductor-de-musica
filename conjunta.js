@@ -263,7 +263,8 @@
   }
 
   /* ---------- Mensajes del canal ---------- */
-  var MESSAGE_TYPES = ['hello', 'state', 'play', 'pause', 'seek', 'track', 'ping', 'pong', 'missing', 'bye'];
+  var MESSAGE_TYPES = ['hello', 'state', 'play', 'pause', 'seek', 'track', 'ping', 'pong', 'missing', 'bye',
+  'fiesta-propose', 'fiesta-vote', 'fiesta-retract', 'fiesta-sync', 'fiesta-result', 'fiesta-clear'];
   function createMessage(type, fields, from, seq) {
     if (MESSAGE_TYPES.indexOf(type) === -1) return null;
     var msg = { v: PROTOCOL_VERSION, t: type, from: String(from || ''), seq: Number(seq) || 0, ts: Date.now() };
@@ -499,6 +500,11 @@
     if (!msg) return;
     if (msg.from === deviceId()) return; // eco propio
     if (msg.from) state.peerId = msg.from;
+    if (msg.t.indexOf('fiesta-') === 0) {
+      try { if (typeof window !== 'undefined' && window.__fiesta && typeof window.__fiesta.onChannelMessage === 'function') window.__fiesta.onChannelMessage(msg); } catch (e) {}
+      if (fiestaHandler) { try { fiestaHandler(msg); } catch (e) {} }
+      return;
+    }
     if (msg.t === 'ping') { send('pong', { t0: msg.t0, t1: Date.now() }); return; }
     if (msg.t === 'pong') {
       var o = computeOffset(msg.t0, msg.t1, Date.now());
@@ -859,6 +865,7 @@
   }
 
   /* ================= Exportaciones ================= */
+  var fiestaHandler = null; // receptor registrado por fiesta.js (v4.1.0)
   var pure = {
     normText: normText, normHash: normHash,
     base64urlEncode: base64urlEncode, base64urlDecode: base64urlDecode,
@@ -887,7 +894,14 @@
           supported: rtcSupported(), offsetMs: state.offsetMs, rttMs: state.rttMs,
           missingTrack: state.missingTrack, peerMissing: state.peerMissing };
       },
-      sendState: function () { try { broadcastState(true); } catch (e) {} }
+      sendState: function () { try { broadcastState(true); } catch (e) {} },
+      sendFiesta: function (type, fields) {
+        if (!state.channel || state.channel.readyState !== 'open') return false;
+        var msg = createMessage(type, fields || {}, deviceId(), ++state.seq);
+        if (!msg) return false;
+        try { state.channel.send(JSON.stringify(msg)); return true; } catch (e) { return false; }
+      },
+      onFiestaMessage: function (cb) { fiestaHandler = (typeof cb === 'function') ? cb : null; }
     };
   }
 })(typeof window !== 'undefined' ? window : globalThis);
