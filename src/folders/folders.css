@@ -1,0 +1,47 @@
+/* folders.css — 3.1.0, carpetas persistentes.
+   Solo lo propio del botón "Vincular carpeta" y su línea de estado.
+   Todo lo demás (btn, colores, tipografía) lo pone la app.
+   Si este archivo falta, el botón sigue funcionando con el estilo
+   base de la app. */
+
+/* Envoltorio inyectado justo después de #btnAddTop, dentro de
+   .top-actions (flex con wrap): botón + estado van juntos. */
+.rpm-folder {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  min-width: 0;
+}
+
+/* Nombre de carpeta largo: recortar con … en vez de empujar el resto
+   de la barra superior fuera de la pantalla. */
+.rpm-folder-btn {
+  max-width: 280px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.rpm-folder-btn[disabled] {
+  opacity: 0.6;
+  cursor: wait;
+}
+
+/* Resumen del último rescan ("12 ya en biblioteca, 3 nuevas
+   añadidas"). Discreto; el toast de la app lo acompaña. */
+.rpm-folder-status {
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--muted);
+  max-width: 220px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+@media (max-width: 560px) {
+  .rpm-folder-status {
+    max-width: 160px;
+  }
+}
