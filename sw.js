@@ -3,7 +3,7 @@
 /* 3.0.0: los módulos de sync entran en ASSETS para que la app
    funcione offline desde la primera carga (antes, lyrics.js y
    mejoras.js solo se cacheaban tras la primera carga). */
-var CACHE = 'reproductor-musica-3.0.0';
+var CACHE = 'reproductor-musica-3.1.0';
 var ASSETS = [
   './',
   './index.html',
@@ -14,8 +14,16 @@ var ASSETS = [
   './apple-touch-icon.png',
   './lyrics.js',
   './lyrics.css',
+  './embedded-lyrics.js',
   './mejoras.js',
   './mejoras.css',
+  './cast.js',
+  './cast.css',
+  './fonts.css',
+  './fonts/plus-jakarta-sans-latin.woff2',
+  './fonts/plus-jakarta-sans-latin-ext.woff2',
+  './fonts/fraunces-latin.woff2',
+  './fonts/fraunces-latin-ext.woff2',
   './src/library/db.js',
   './src/library/track-meta.js',
   './src/library/zip.js',
@@ -23,7 +31,9 @@ var ASSETS = [
   './src/sync/package-io.js',
   './src/sync/sync-ui.js',
   './src/sync/sync-ui.css',
-  './src/sync/sync-bridge.js'
+  './src/sync/sync-bridge.js',
+  './src/folders/folders.js',
+  './src/folders/folders.css'
 ];
 
 self.addEventListener('install', function(event) {

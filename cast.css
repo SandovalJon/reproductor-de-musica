@@ -1,0 +1,34 @@
+/* Chromecast / reproducción remota (v3.1.0).
+   Estilo mínimo sobre la clase .btn.small que ya trae la app
+   (misma píldora, mismo radio 999px, mismas variables de tema):
+   aquí solo se define cuándo se ve el botón y su estado activo.
+   El botón nace oculto (hidden + display:none) y solo aparece
+   cuando hay un dispositivo disponible; nada que ver si no hay Cast. */
+
+#btnCast {
+  display: none;
+}
+
+/* Visible solo cuando cast.js decide que hay dispositivo (clase
+   .cast-visible; el atributo hidden del botón manda igualmente). */
+#btnCast.cast-visible {
+  display: inline-flex;
+}
+
+/* Enviando a un dispositivo: mismo acento que .btn.primary. */
+#btnCast.cast-on {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+}
+
+#btnCast.cast-on:hover {
+  background: var(--accent-dark);
+}
+
+/* Conectando: se deshabilita mientras el navegador negocia. */
+#btnCast:disabled {
+  opacity: .55;
+  cursor: not-allowed;
+  transform: none;
+}
