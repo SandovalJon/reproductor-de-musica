@@ -19,6 +19,9 @@
 <link rel="stylesheet" href="./temas.css">
 <link rel="stylesheet" href="./visual.css">
 <link rel="stylesheet" href="./atajos.css">
+<link rel="stylesheet" href="./a11y.css">
+<link rel="stylesheet" href="./karaoke.css">
+<link rel="stylesheet" href="./wrapped.css">
 <style>
   :root{
     --bg:#F4F1EC;
@@ -872,6 +875,10 @@
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:15px;height:15px"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2.5 2.5M9 2h6"/></svg>
             Modo enfoque
           </button>
+          <button class="btn small" id="btnKaraoke" type="button" style="display:none" title="Ver la letra a pantalla completa, sincronizada con la canción">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:15px;height:15px"><path d="M12 2a3 3 0 0 0-3 3v6a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/><path d="M19 10v1a7 7 0 0 1-14 0v-1M12 18v4"/></svg>
+            Karaoke
+          </button>
           <button class="btn small" id="btnShareCurrent" type="button" disabled>
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:15px;height:15px"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="m8.6 13.5 6.8 4M15.4 6.5l-6.8 4"/></svg>
             Compartir
@@ -1336,6 +1343,7 @@
           <button class="btn small" id="btnExportBackup" type="button">Exportar respaldo</button>
           <button class="btn small" id="btnImportBackup" type="button">Importar respaldo</button>
           <button class="btn small" id="btnSync" type="button">Sincronizar</button>
+          <button class="btn small" id="btnWrapped" type="button">🎧 Tu año en música</button>
           <button class="btn small" id="btnHealth" type="button">Revisar biblioteca</button>
           <span class="backup-note">El respaldo guarda playlists, likes, historial, contadores y ajustes en un archivo. No incluye los archivos de audio.</span>
           <span class="backup-note" id="lastBackupNote" style="flex:1 1 100%">Sin copia todavía</span>
@@ -1358,7 +1366,7 @@
         <div class="update-row">
           <button class="btn small" id="btnCheckUpdate" type="button">Actualizar app</button>
           <button class="btn small danger" id="btnForceUpdate" type="button">Forzar actualización</button>
-          <span class="backup-note" id="updateStatus">Versión de esta app: v<span id="appVersionNote">3.2.0</span>. «Actualizar app» consulta la versión publicada y te dice si ya estás al día antes de recargar. «Forzar actualización» limpia el service worker y las cachés de la app si una actualización se quedó atascada; tu biblioteca, playlists y ajustes (IndexedDB) nunca se tocan.</span>
+          <span class="backup-note" id="updateStatus">Versión de esta app: v<span id="appVersionNote">3.3.0</span>. «Actualizar app» consulta la versión publicada y te dice si ya estás al día antes de recargar. «Forzar actualización» limpia el service worker y las cachés de la app si una actualización se quedó atascada; tu biblioteca, playlists y ajustes (IndexedDB) nunca se tocan.</span>
         </div>
       </div>
 
@@ -2246,6 +2254,8 @@
 <input type="file" id="bgInput" class="hidden-input" accept="image/*" />
 <audio id="audio" preload="metadata"></audio>
 
+<script src="./src/library/eq.js"></script>
+<script src="./src/library/smart-lists.js"></script>
 <script>
 (function(){
   "use strict";
@@ -2285,7 +2295,7 @@
 
   // ---------- State ----------
   var tracks = []; // {id,name,title,artist,album,duration,size,type,addedAt,url,coverUrl,color,rating,stars}
-  var APP_VERSION = '3.2.0'; // al publicar cambios, subir este número y el CACHE de sw.js
+  var APP_VERSION = '3.3.0'; // al publicar cambios, subir este número y el CACHE de sw.js
   var currentId = null;
   var isPlaying = false;
   var shuffle = false;
@@ -4200,33 +4210,6 @@
     if(balStereoGain){ try{ balStereoGain.gain.value = settings.mono ? 0 : 1; }catch(e){} }
     if(balMonoGain){ try{ balMonoGain.gain.value = settings.mono ? 1 : 0; }catch(e){} }
   }
-  // Pack 9: ecualizador de 10 bandas octavales. La conversión 5→10 interpola
-  // sobre la curva en escala logarítmica de frecuencia: cada banda nueva toma
-  // el valor interpolado entre las dos bandas viejas que la rodean (y fuera
-  // del rango viejo, el valor de la banda vieja más cercana). Así, lo que el
-  // usuario ya tenía ajustado —EQ global, presets y memoria por canción—
-  // suena prácticamente igual, ahora con el doble de precisión.
-  var EQ_OLD_FREQS = [60, 250, 1000, 4000, 12000];
-  var EQ_FREQS = [31, 62, 125, 250, 500, 1000, 2000, 4000, 8000, 16000];
-  function clampDb(v){ v = parseFloat(v); return isFinite(v) ? Math.max(-12, Math.min(12, v)) : 0; }
-  function eqTo10(vals){
-    if(!Array.isArray(vals)) return [0,0,0,0,0,0,0,0,0,0];
-    if(vals.length === 10) return vals.map(clampDb);
-    if(vals.length !== 5) return [0,0,0,0,0,0,0,0,0,0];
-    var old = vals.map(clampDb);
-    return EQ_FREQS.map(function(f){
-      if(f <= EQ_OLD_FREQS[0]) return old[0];
-      if(f >= EQ_OLD_FREQS[EQ_OLD_FREQS.length - 1]) return old[old.length - 1];
-      for(var i = 0; i < EQ_OLD_FREQS.length - 1; i++){
-        var f0 = EQ_OLD_FREQS[i], f1 = EQ_OLD_FREQS[i + 1];
-        if(f >= f0 && f <= f1){
-          var t = Math.log(f / f0) / Math.log(f1 / f0);
-          return Math.round((old[i] + (old[i + 1] - old[i]) * t) * 10) / 10;
-        }
-      }
-      return old[old.length - 1];
-    });
-  }
   function ensureVisualizer(){
     if(audioCtx) return;
     try{
@@ -5538,14 +5521,6 @@
   }
 
   // ---------- Panel de sonido: EQ, velocidad, crossfade, sleep timer ----------
-  // Pack 9: los presets de fábrica se definen con su curva histórica de 5
-  // bandas y se convierten a 10 con la misma interpolación que convierte los
-  // datos del usuario, para que sigan sonando a lo mismo.
-  var EQ_PRESETS_5 = { flat:[0,0,0,0,0], bass:[6,4,1,0,1], treble:[-1,0,1,4,6], pop:[-1,2,4,2,0], rock:[5,2,-1,3,5], vocal:[-2,0,3,4,2] };
-  var EQ_PRESETS = {};
-  Object.keys(EQ_PRESETS_5).forEach(function(k){ EQ_PRESETS[k] = eqTo10(EQ_PRESETS_5[k]); });
-  var EQ_LABELS = ['31 Hz','62 Hz','125 Hz','250 Hz','500 Hz','1 kHz','2 kHz','4 kHz','8 kHz','16 kHz'];
-  function fmtDb(v){ return (v>0?'+':'') + v + ' dB'; }
   function buildEqRows(){
     var wrap = document.getElementById('eqRows');
     if(!wrap || wrap.children.length) return;
@@ -6277,54 +6252,18 @@
   });
 
   // ----- Playlists inteligentes -----
-  var SMART_LISTS = [
-    { id:'best',   name:'Mejor calificadas', desc:'Canciones con like (y con 3 estrellas donde esa calificación existe).', emptyText:'Todavía no tienes canciones con like. Marca “Me gusta” en las que quieras guardar aquí.' },
-    { id:'most',   name:'Más escuchadas',    desc:'Las que más veces han sonado en este dispositivo, primero las de más arriba.', emptyText:'Aún no hay reproducciones registradas. Cuando escuches canciones, las más repetidas aparecerán aquí.' },
-    { id:'never',  name:'Nunca escuchadas',  desc:'Canciones de tu biblioteca que todavía no han sonado ni una vez.', emptyText:'Ya escuchaste todo al menos una vez. Nada pendiente por descubrir aquí.' },
-    { id:'recent', name:'Recién agregadas',  desc:'Lo último que entró a tu biblioteca, lo más nuevo primero.', emptyText:'Tu biblioteca está vacía. Añade canciones y aparecerán aquí.' },
-    { id:'discover', name:'Descubrir', desc:'Mezcla automática: primero las que nunca o casi nunca has escuchado, revueltas con tus mejor calificadas.', emptyText:'Tu biblioteca está vacía. Añade canciones y esta mezcla se armará sola.' },
-    { id:'calm',   name:'Energía tranquila', desc:'Canciones con ritmo bajo detectado (menos de 100 BPM), de la más calmada a la menos.', emptyText:'Todavía no hay canciones tranquilas detectadas. Analiza el ritmo (BPM) de tu biblioteca con el botón «Analizar ritmo (BPM) de la biblioteca».' },
-    { id:'intense', name:'Energía intensa',  desc:'Canciones con ritmo alto detectado (120 BPM o más), de la más intensa a la menos.', emptyText:'Todavía no hay canciones intensas detectadas. Analiza el ritmo (BPM) de tu biblioteca con el botón «Analizar ritmo (BPM) de la biblioteca».' },
-    { id:'forgotten', name:'Olvidadas', desc:'Canciones con like o entre las más escuchadas que no suenan desde hace 90 días o más, ordenadas por más tiempo sin sonar.', emptyText:'Nada olvidado por aquí: tus favoritas han sonado en los últimos 90 días, o todavía no tienes favoritas con historial de escucha.' }
-  ];
   function computeSmart(id){
     // Pack 14: «Sin repetir» — TODAS las listas inteligentes/automáticas
     // pasan por el descanso por días, con salvavidas (si el filtro dejara
     // la lista vacía habiendo canciones, se ignora en esa pasada).
-    return applyCooldownTracks(computeSmartBase(id));
-  }
-  function computeSmartBase(id){
-    // Pack 13: lo bloqueado (artista/álbum) queda fuera de TODAS las listas
-    // inteligentes y automáticas, igual que fuera del aleatorio/DJ/radio.
-    var nb = function(t){ return !isBlocked(t); };
-    if(typeof id === 'string' && id.indexOf('cs:') === 0){
-      var csd = null;
-      for(var ci = 0; ci < customSmart.length; ci++){ if(customSmart[ci].id === id) csd = customSmart[ci]; }
-      return (csd ? computeCustomSmart(csd) : []).filter(nb);
-    }
-    if(id === 'discover'){
-      var fresh = tracks.filter(function(t){ return !(playCounts[t.id] > 0); });
-      var rare = tracks.filter(function(t){ var c = playCounts[t.id] || 0; return c >= 1 && c <= 2; })
-        .sort(function(a, b){ return (playCounts[a.id] || 0) - (playCounts[b.id] || 0); });
-      var pool = fresh.concat(rare);
-      var inPool = {}; pool.forEach(function(t){ inPool[t.id] = 1; });
-      var bestP = tracks.filter(function(t){ return !inPool[t.id] && (t.rating === 'like' || (typeof t.stars === 'number' && t.stars >= 3)); });
-      var outD = [], bi = 0;
-      pool.forEach(function(t, i){
-        outD.push(t);
-        if((i + 1) % 3 === 0 && bi < bestP.length) outD.push(bestP[bi++]);
-      });
-      while(bi < bestP.length) outD.push(bestP[bi++]);
-      return outD.filter(nb).slice(0, 60);
-    }
-    if(id === 'calm') return tracks.filter(function(t){ return typeof t.bpm === 'number' && t.bpm > 0 && t.bpm < 100; }).sort(function(a, b){ return a.bpm - b.bpm; }).filter(nb);
-    if(id === 'intense') return tracks.filter(function(t){ return typeof t.bpm === 'number' && t.bpm >= 120; }).sort(function(a, b){ return b.bpm - a.bpm; }).filter(nb);
-    if(id === 'best') return tracks.filter(function(t){ return t.rating === 'like' || (typeof t.stars === 'number' && t.stars >= 3); }).filter(nb);
-    if(id === 'most') return tracks.filter(function(t){ return (playCounts[t.id] || 0) > 0; })
-      .sort(function(a,b){ return (playCounts[b.id] || 0) - (playCounts[a.id] || 0); }).slice(0, 50).filter(nb);
-    if(id === 'never') return tracks.filter(function(t){ return !(playCounts[t.id] > 0); }).filter(nb);
-    if(id === 'forgotten') return computeForgotten().filter(nb); // Pack 12 + Pack 13
-    return tracks.slice().sort(function(a,b){ return (b.addedAt || 0) - (a.addedAt || 0); }).slice(0, 50).filter(nb);
+    // La lógica vive en src/library/smart-lists.js; aquí solo se le pasa
+    // el estado del IIFE, que el módulo no puede ver.
+    return applyCooldownTracks(computeSmartBase(id, {
+      tracks: tracks, playCounts: playCounts,
+      playHistory: playHistory, statsLog: statsLog,
+      customSmart: customSmart,
+      isBlocked: isBlocked, computeCustomSmart: computeCustomSmart
+    }));
   }
   function renderSmart(){
     var bar = document.getElementById('smartBar');
@@ -9190,7 +9129,7 @@
   // ---------- Pack de mejoras: actualización, reanudar, deshacer, tap tempo ----------
 
   // ----- 1. Actualización sin atascos -----
-  var APP_VERSION = '3.2.0';
+  var APP_VERSION = '3.3.0';
   document.getElementById('appVersionNote').textContent = APP_VERSION;
   function cmpVersion(a, b){
     var pa = a.split('.').map(function(x){ return parseInt(x, 10) || 0; });
@@ -11805,33 +11744,7 @@
   document.getElementById('btnYearComplete').addEventListener('click', function(){ setView('incomplete'); });
 
   // ----- 5) Lista inteligente «Olvidadas» -----
-  function lastPlayedMap(){
-    var map = {};
-    playHistory.forEach(function(h){ if(h && h.id && typeof h.at === 'number' && !(h.id in map)) map[h.id] = h.at; });
-    statsLog.forEach(function(e){ if(e && e.id && typeof e.at === 'number' && (!(e.id in map) || e.at > map[e.id])) map[e.id] = e.at; });
-    return map;
-  }
-  function computeForgotten(){
-    var limit = Date.now() - 90 * 86400000;
-    var lp = lastPlayedMap();
-    // «Entre las más escuchadas»: las 25 con más reproducciones (mínimo 3).
-    var topSet = {};
-    tracks.filter(function(t){ return (playCounts[t.id] || 0) >= 3; })
-      .sort(function(a, b){ return (playCounts[b.id] || 0) - (playCounts[a.id] || 0); })
-      .slice(0, 25)
-      .forEach(function(t){ topSet[t.id] = 1; });
-    function lastOf(t){
-      if(typeof lp[t.id] === 'number') return lp[t.id];
-      if((playCounts[t.id] || 0) > 0) return t.addedAt || 0; // sonó, pero su fecha salió del historial recortado
-      return null; // nunca sonó: eso es «Nunca escuchadas», no «Olvidadas»
-    }
-    return tracks.filter(function(t){
-      var fav = t.rating === 'like' || (typeof t.stars === 'number' && t.stars >= 3) || !!topSet[t.id];
-      if(!fav) return false;
-      var last = lastOf(t);
-      return last != null && last <= limit;
-    }).sort(function(a, b){ return lastOf(a) - lastOf(b); }); // la que más tiempo lleva sin sonar, primero
-  }
+  function lastPlayedMap(){ return RpmSmart.lastPlayedMap(playHistory, statsLog); }
   function updateForgottenCount(){
     var fc = document.getElementById('forgottenCount');
     if(!fc) return;
@@ -12849,6 +12762,9 @@
 <script src="./temas.js"></script>
 <script src="./visual.js"></script>
 <script src="./atajos.js"></script>
+<script src="./a11y.js"></script>
+<script src="./karaoke.js"></script>
+<script src="./wrapped.js"></script>
 <script type="module" src="./src/sync/sync-bridge.js"></script>
 <link rel="stylesheet" href="./src/folders/folders.css" />
 <script src="./src/folders/folders.js"></script>

@@ -1,0 +1,55 @@
+/* Wrapped — «Tu año en música» (v3.3.0).
+   Reutiliza las clases de la app (.modal-overlay, .modal,
+   .modal-actions, .btn) y sus variables (--surface, --text, --muted,
+   --line, --accent, --accent-soft, --shadow) para no desentonar con
+   el estilo actual ni con los temas rpm (temas.css: Neón, Atardecer,
+   Bosque). La tarjeta principal usa el mismo degradado que
+   .summary-card en index.html (#2B2118 → #E94E1B). Solo añade lo
+   propio del Wrapped, con prefijo .wrapped-. */
+
+.wrapped-modal{width:min(560px,100%)}
+.wrapped-head{display:flex; align-items:flex-start; justify-content:space-between; gap:12px}
+.wrapped-head h3{margin:0; font-size:18px; font-weight:800}
+.wrapped-close{flex:none; width:32px; height:32px; border-radius:50%; border:1px solid var(--line); background:var(--surface-2); color:var(--muted); font-size:13px; font-weight:800; cursor:pointer; line-height:1}
+.wrapped-close:hover{border-color:var(--accent); color:var(--accent)}
+.wrapped-sub{margin:6px 0 0; color:var(--muted); font-size:13.5px; line-height:1.5}
+.wrapped-controls{margin-top:14px; display:flex; gap:8px; flex-wrap:wrap}
+.wrapped-controls select{border:1px solid var(--line); background:var(--surface-2); color:var(--text); border-radius:999px; padding:8px 12px; font-size:13.5px; font-weight:700; outline:none}
+.wrapped-controls select:focus{border-color:var(--accent)}
+
+/* Tarjeta principal: mismo aire que .summary-card */
+.wrapped-card{margin-top:16px; border-radius:22px; padding:26px 24px; color:#fff; background:linear-gradient(150deg,#2B2118 0%, #E94E1B 130%); box-shadow:var(--shadow); overflow:hidden; position:relative}
+.wrapped-kicker{margin:0; font-size:11.5px; letter-spacing:.16em; text-transform:uppercase; font-weight:800; opacity:.85}
+.wrapped-big{margin:18px 0 0; font-size:52px; font-weight:800; letter-spacing:-.02em; line-height:1}
+.wrapped-big small{font-size:17px; font-weight:700; opacity:.85; letter-spacing:0}
+.wrapped-row{display:flex; flex-wrap:wrap; gap:22px; margin-top:14px}
+.wrapped-stat .v{font-size:21px; font-weight:800}
+.wrapped-stat .l{font-size:12px; opacity:.85; font-weight:600; margin-top:2px}
+.wrapped-streak{margin:16px 0 0; font-size:14px; font-weight:800}
+.wrapped-note{margin:12px 0 0; font-size:12.5px; line-height:1.5; opacity:.85}
+
+/* Tops */
+.wrapped-section h4{margin:20px 0 8px; font-size:11.5px; font-weight:800; letter-spacing:.12em; text-transform:uppercase; color:var(--muted)}
+.wrapped-rank{margin:0; padding:0; list-style:none}
+.wrapped-rank li{display:flex; align-items:flex-start; gap:10px; padding:9px 0; border-bottom:1px solid var(--line)}
+.wrapped-rank li:last-child{border-bottom:none}
+.wrapped-rank-n{flex:none; width:26px; height:26px; border-radius:50%; background:var(--accent-soft); color:var(--accent-dark); font-size:13px; font-weight:800; display:grid; place-items:center; margin-top:1px}
+.wrapped-rank-main{flex:1 1 auto; min-width:0}
+.wrapped-rank-t{font-size:14px; font-weight:700; line-height:1.35; overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
+.wrapped-bar{height:6px; border-radius:999px; background:var(--surface-3); margin-top:6px; overflow:hidden}
+.wrapped-bar-fill{height:100%; border-radius:999px; background:var(--accent)}
+.wrapped-rank-meta{flex:none; font-size:12.5px; font-weight:700; color:var(--muted); white-space:nowrap; margin-top:3px; font-variant-numeric:tabular-nums}
+.wrapped-none{margin:0; color:var(--muted); font-size:13.5px}
+
+/* Estado vacío */
+.wrapped-empty{margin-top:16px; text-align:center; padding:18px 8px 6px}
+.wrapped-empty-art{font-size:44px; line-height:1; margin-bottom:12px}
+.wrapped-empty p{margin:0 0 8px; font-size:15px; font-weight:700}
+.wrapped-empty-sub{font-size:13.5px !important; font-weight:400 !important; color:var(--muted); line-height:1.55}
+.wrapped-copied{margin:12px 0 0; font-size:13px; font-weight:700; color:var(--accent); text-align:center}
+
+@media (max-width:480px){
+  .wrapped-big{font-size:42px}
+  .wrapped-rank-t{white-space:normal}
+  .wrapped-rank-meta{font-size:12px}
+}

@@ -1,0 +1,193 @@
+/* Accesibilidad y móvil (v3.3.0) — acompaña a a11y.js.
+   Solo estilos del módulo: skip-link, foco visible, objetivos
+   táctiles en móvil y movimiento reducido. No cambia colores,
+   tamaños visuales ni layout fuera de lo que se dice aquí. Si este
+   CSS no carga, el módulo sigue funcionando (el skip-link queda
+   sin su estilo de aparición y los tamaños táctiles no se aplican),
+   pero la app no se rompe.
+
+   NOTA DE ESPECIFICIDAD (verificada en index.html): el <style> de
+   la app pone outline:none en .search-box input (línea 269),
+   .modal input/textarea (497/630) y .preset-row input[type=text]
+   (633), y va DESPUÉS de los <link> en el <head>. Por eso las
+   reglas de foco de este archivo llevan prefijo .app y repiten el
+   selector del input: .app .search-box input:focus-visible
+   (0,3,1) gana a .search-box input (0,1,1), y
+   .app .preset-row input[type="text"]:focus-visible (0,4,1) gana
+   a .preset-row input[type=text] (0,2,1). Sin ese prefijo, el
+   outline:none ganaría por orden de carga. */
+
+/* ---------- (1) Skip-link: oculto fuera de pantalla hasta recibir foco ---------- */
+/* Fuera de pantalla con top negativo (no display:none ni
+   visibility:hidden: debe seguir en el orden de Tab y ser visible
+   para el lector de pantalla). Al recibir foco baja a su sitio. */
+.a11y-skip-link{
+  position:absolute;
+  left:12px;
+  top:-100px;
+  z-index:200;
+  padding:12px 18px;
+  border-radius:999px;
+  background:var(--accent);
+  color:#fff;
+  font-weight:800;
+  font-size:14px;
+  line-height:1.2;
+  text-decoration:none;
+  box-shadow:var(--shadow-sm);
+  transition:top .15s ease;
+}
+
+.a11y-skip-link:focus{
+  top:12px;
+}
+
+/* Contorno blanco sobre el fondo de acento (el de --accent no se
+   vería sobre su propio color). */
+.a11y-skip-link:focus-visible{
+  outline:3px solid #fff;
+  outline-offset:2px;
+}
+
+/* ---------- (2) Foco visible claro en todo, sin romper el diseño ---------- */
+/* Solo :focus-visible (teclado): con ratón no aparece el contorno,
+   como hasta ahora. Solo outline + offset: no se toca border,
+   fondo ni tamaño, así que ningún layout se mueve. */
+:focus-visible{
+  outline:3px solid var(--accent);
+  outline-offset:2px;
+}
+
+/* Los inputs con outline:none en index.html: mismas reglas con la
+   especificidad necesaria para ganarles (ver nota de arriba). */
+.app .search-box input:focus-visible,
+.app .modal input:focus-visible,
+.app .modal textarea:focus-visible,
+.app .preset-row input[type="text"]:focus-visible{
+  outline:3px solid var(--accent);
+  outline-offset:2px;
+}
+
+/* El contorno del slider cubre toda la barra (input[type=range]),
+   no solo el pulgar: se ve dónde está el foco al tabular. */
+.app input[type="range"]:focus-visible{
+  outline:3px solid var(--accent);
+  outline-offset:4px;
+}
+
+/* ---------- (4) Objetivos táctiles >=44 px en móvil (360-390 px) ---------- */
+/* <=480 px cubre 360-390 px y el resto de teléfonos pequeños.
+   box-sizing:border-box en toda la app: min-height:44px es la
+   altura total, no 44px + padding. El tamaño visual no cambia:
+   los pulgares de los sliders quedan como están (22 px la barra
+   de progreso, 14 px el volumen); solo crece su zona táctil.
+   .controls .icon-btn (52 px) y .play-btn (78 px) ya cumplen a
+   todos los anchos: se dejan con un mínimo de guarda. */
+@media (max-width: 480px){
+  /* Reproducir/anterior/siguiente: ya cumplen; mínimo de guarda. */
+  .controls .icon-btn{
+    min-width:44px;
+    min-height:44px;
+  }
+  #btnPlay{
+    min-width:44px;
+    min-height:44px;
+  }
+
+  /* Silencio: 34 px en línea (index.html:972) y 38 px por
+     .secondary-row .icon-btn. El style en línea solo se vence con
+     !important; es el único !important de tamaño del módulo. */
+  .secondary-row .icon-btn{
+    width:44px;
+    height:44px;
+    min-width:44px;
+    min-height:44px;
+  }
+  #btnMute{
+    width:44px !important;
+    height:44px !important;
+    min-width:44px;
+    min-height:44px;
+  }
+
+  /* Estrellas de 1 a 3: 38 px -> 44 px. */
+  .star-btn{
+    width:44px;
+    height:44px;
+    min-width:44px;
+    min-height:44px;
+  }
+
+  /* Barra de progreso: 28 px -> 44 px (el .seek-wrap crece con
+     ella; la onda decorativa #waveCanvas es inset:0 y se estira:
+     comprobar en navegador real que no se deforma). */
+  .seek-wrap{
+    height:44px;
+  }
+  #seek{
+    height:44px;
+    min-height:44px;
+  }
+
+  /* Volumen: 18 px -> 44 px de zona táctil. */
+  #volume{
+    min-height:44px;
+  }
+
+  /* Buscador: ~41 px -> 44 px. */
+  .search-box{
+    min-height:44px;
+  }
+  .search-box input{
+    min-height:44px;
+  }
+
+  /* Pestañas de la barra inferior: ~44,5 px calculados; mínimo
+     garantizado aunque cambie la fuente. */
+  #viewTabs .view-tab{
+    min-height:44px;
+  }
+
+  /* Resto de controles principales de la biblioteca en móvil. */
+  .btn.small,
+  .chip,
+  .toggle-pill{
+    min-height:44px;
+  }
+}
+
+/* ---------- (5) Movimiento reducido ---------- */
+/* La app ya apaga .eq, .rec-dot y .subview/.player-body en
+   index.html y temas.js no añade sus animaciones con reduced
+   motion. Aquí va lo que falta: el glow de visual.js
+   (#rpmVisualGlow, transition opacity .6s, sin regla propia) y la
+   red de seguridad por si las clases rpm-cover-in/rpm-list-in de
+   temas se añadieron antes de cambiar la preferencia (a11y.js
+   también las quita por DOM al cambiar). */
+@media (prefers-reduced-motion: reduce){
+  #rpmVisualGlow{
+    transition:none !important;
+  }
+  #coverWrap.rpm-cover-in #coverImg,
+  #coverWrap.rpm-cover-in .cover-fallback,
+  .track-list.rpm-list-in .track{
+    animation:none !important;
+  }
+  .a11y-skip-link,
+  .seek-flash,
+  .atajos-flash{
+    transition:none;
+  }
+}
+
+/* Lo mismo cuando a11y.js marca el atributo en <html> (cambio de
+   preferencia en caliente): el mecanismo real es la media query
+   de arriba; estas reglas son el respaldo observable por JS. */
+html[data-a11y-reduced-motion="true"] #rpmVisualGlow{
+  transition:none !important;
+}
+html[data-a11y-reduced-motion="true"] #coverWrap.rpm-cover-in #coverImg,
+html[data-a11y-reduced-motion="true"] #coverWrap.rpm-cover-in .cover-fallback,
+html[data-a11y-reduced-motion="true"] .track-list.rpm-list-in .track{
+  animation:none !important;
+}
