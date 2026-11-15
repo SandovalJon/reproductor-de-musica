@@ -1,0 +1,172 @@
+/* Rediseño total de la interfaz (v4.0.0).
+   Cara nueva para toda la app: paleta moderna, radios mayores, más
+   aire, cabecera y reproductor renovados, tarjetas de canciones y
+   secciones con aspecto moderno. Misma biblioteca, mismos ajustes y
+   mismas funciones: solo cambia la presentación.
+
+   TODO vive bajo html[data-rpm-redisenio="on"] (el atributo lo pone
+   redisenio.js). Con el atributo en "off" o ausente, este archivo
+   no tiene ningún efecto: la app vuelve a su aspecto clásico.
+   - Las variables usan html:root[data-rpm-redisenio="on"]
+     (especificidad 0,2,1) para ganar a html[data-theme="dark"] /
+     html[data-theme="light"] del <style> de index.html.
+   - --accent / --accent-dark / --accent-soft NO se redefinen: el
+     color de acento elegido por el usuario, el tema dinámico y los
+     temas rpm (Neón/Atardecer/Bosque) siguen mandando. Con un tema
+     rpm activo, sus variables en línea también ganan a esta paleta;
+     el resto del rediseño (radios, espaciado, tarjetas, cabecera,
+     reproductor) se aplica igual.
+   - La única regla con !important es el degradado del
+     .cover-fallback, porque la app lo pone en línea (style="...").
+   - No se toca ningún id ni ninguna estructura que usen otros
+     módulos; solo presentación. */
+
+/* ---------- Paleta clara (moderna, neutra fría) ---------- */
+html:root[data-rpm-redisenio="on"]{
+  color-scheme: light;
+  --bg:#F5F7F8; --bg-2:#EBEEF0;
+  --surface:#FFFFFF; --surface-2:#F1F3F5; --surface-3:#E3E8EB;
+  --text:#13191E; --muted:#5A6570; --muted-2:#8B96A1;
+  --line:#E0E5E9;
+  --shadow:0 20px 44px rgba(15,25,35,.10), 0 2px 10px rgba(15,25,35,.06);
+  --shadow-sm:0 6px 18px rgba(15,25,35,.08);
+  --radius-lg:32px; --radius-md:22px; --radius-sm:14px;
+}
+
+/* ---------- Paleta oscura (tema oscuro elegido) ---------- */
+html:root[data-rpm-redisenio="on"][data-theme="dark"]{
+  color-scheme: dark;
+  --bg:#0A0D10; --bg-2:#10141A;
+  --surface:#161C22; --surface-2:#1D242B; --surface-3:#28303A;
+  --text:#F2F5F7; --muted:#9AA7B2; --muted-2:#6B7883;
+  --line:#262F37;
+  --shadow:0 24px 48px rgba(0,0,0,.55), 0 2px 12px rgba(0,0,0,.35);
+  --shadow-sm:0 8px 20px rgba(0,0,0,.4);
+}
+
+/* ---------- Paleta oscura (automático, sigue al sistema) ---------- */
+@media (prefers-color-scheme: dark){
+  html:root[data-rpm-redisenio="on"]:not([data-theme="light"]){
+    color-scheme: dark;
+    --bg:#0A0D10; --bg-2:#10141A;
+    --surface:#161C22; --surface-2:#1D242B; --surface-3:#28303A;
+    --text:#F2F5F7; --muted:#9AA7B2; --muted-2:#6B7883;
+    --line:#262F37;
+    --shadow:0 24px 48px rgba(0,0,0,.55), 0 2px 12px rgba(0,0,0,.35);
+    --shadow-sm:0 8px 20px rgba(0,0,0,.4);
+  }
+}
+
+/* ---------- Lienzo y cabecera ---------- */
+html[data-rpm-redisenio="on"] body{background:var(--bg)}
+html[data-rpm-redisenio="on"] .app{max-width:1240px; padding:24px 20px 40px}
+@media(min-width:760px){
+  html[data-rpm-redisenio="on"] .app{padding:32px 32px 56px}
+}
+html[data-rpm-redisenio="on"] .topbar{margin-bottom:26px; gap:20px}
+html[data-rpm-redisenio="on"] .title-block h1{font-size:38px; letter-spacing:-.03em}
+@media(min-width:760px){
+  html[data-rpm-redisenio="on"] .title-block h1{font-size:54px}
+}
+html[data-rpm-redisenio="on"] .title-block p{font-size:15px; line-height:1.6}
+html[data-rpm-redisenio="on"] .stat-pill{border-radius:16px; padding:11px 15px}
+html[data-rpm-redisenio="on"] .layout{gap:24px}
+@media(min-width:920px){
+  html[data-rpm-redisenio="on"] .layout{grid-template-columns:420px 1fr; gap:24px}
+}
+
+/* ---------- Botones ---------- */
+html[data-rpm-redisenio="on"] .btn{border-radius:16px; padding:12px 18px}
+html[data-rpm-redisenio="on"] .btn.small{padding:10px 14px; border-radius:14px}
+html[data-rpm-redisenio="on"] .btn.primary{
+  background:linear-gradient(135deg, var(--accent), var(--accent-dark));
+  border-color:transparent;
+}
+html[data-rpm-redisenio="on"] .toggle-pill{border-radius:14px; padding:9px 15px}
+
+/* ---------- Reproductor ---------- */
+html[data-rpm-redisenio="on"] .player-card{border-radius:var(--radius-lg)}
+html[data-rpm-redisenio="on"] .cover-wrap{margin:14px 14px 0; border-radius:22px}
+html[data-rpm-redisenio="on"] .cover-fallback{
+  background:linear-gradient(150deg, var(--surface-3), var(--accent)) !important;
+}
+html[data-rpm-redisenio="on"] .cover-fallback .big-note{border-radius:24px}
+html[data-rpm-redisenio="on"] .player-body{padding:24px 24px 22px}
+html[data-rpm-redisenio="on"] .now-kicker{letter-spacing:.18em; font-size:11.5px}
+html[data-rpm-redisenio="on"] .now-title{font-size:24px; letter-spacing:-.02em}
+html[data-rpm-redisenio="on"] .now-artist{font-size:15px}
+html[data-rpm-redisenio="on"] .progress-block{margin-top:20px}
+html[data-rpm-redisenio="on"] .controls{gap:10px; margin-top:12px}
+html[data-rpm-redisenio="on"] .icon-btn{width:48px; height:48px}
+html[data-rpm-redisenio="on"] .icon-btn:hover{background:var(--surface-3)}
+html[data-rpm-redisenio="on"] .play-btn{
+  width:70px; height:70px;
+  background:linear-gradient(135deg, var(--accent), var(--accent-dark));
+  box-shadow:0 12px 28px color-mix(in srgb, var(--accent) 45%, transparent);
+}
+html[data-rpm-redisenio="on"] .play-btn:hover{transform:scale(1.04)}
+html[data-rpm-redisenio="on"] input[type=range]::-webkit-slider-runnable-track{height:8px}
+html[data-rpm-redisenio="on"] input[type=range]::-webkit-slider-thumb{width:20px; height:20px; margin-top:-6px}
+html[data-rpm-redisenio="on"] input[type=range]::-moz-range-track{height:8px}
+html[data-rpm-redisenio="on"] input[type=range]::-moz-range-thumb{width:18px; height:18px}
+html[data-rpm-redisenio="on"] .secondary-row{margin-top:16px; padding-top:16px}
+html[data-rpm-redisenio="on"] .sound-panel{margin-top:18px; padding-top:18px}
+html[data-rpm-redisenio="on"] .sound-toggle{border-radius:16px; padding:12px 14px; background:var(--surface-2)}
+html[data-rpm-redisenio="on"] .sound-group-head h4{letter-spacing:.12em}
+
+/* ---------- Biblioteca: cabecera, buscador, filtros ---------- */
+html[data-rpm-redisenio="on"] .library{border-radius:var(--radius-lg)}
+html[data-rpm-redisenio="on"] .lib-head{padding:22px 22px 0}
+html[data-rpm-redisenio="on"] .lib-head h2{font-size:21px; letter-spacing:-.02em}
+html[data-rpm-redisenio="on"] .lib-tools{margin-top:16px; gap:10px}
+html[data-rpm-redisenio="on"] .search-box{border-radius:16px; padding:0 15px}
+html[data-rpm-redisenio="on"] .search-box input{padding:13px 0; font-size:14.5px}
+html[data-rpm-redisenio="on"] .search-box:focus-within{
+  border-color:var(--accent);
+  box-shadow:0 0 0 3px color-mix(in srgb, var(--accent) 22%, transparent);
+}
+html[data-rpm-redisenio="on"] .chip{border-radius:14px; padding:9px 15px; font-size:13px}
+html[data-rpm-redisenio="on"] .chip.active{background:var(--accent); color:#fff; border-color:var(--accent)}
+html[data-rpm-redisenio="on"] .dropzone{border-radius:20px; padding:22px}
+html[data-rpm-redisenio="on"] .saved-note{border-radius:14px}
+html[data-rpm-redisenio="on"] .playlist-note{border-radius:14px}
+
+/* ---------- Tarjetas de canciones ---------- */
+html[data-rpm-redisenio="on"] .track-list{padding:8px 12px 16px}
+html[data-rpm-redisenio="on"] .track{
+  grid-template-columns:48px 1fr auto; gap:14px;
+  padding:12px; border-radius:18px; transition:background .15s, transform .15s, box-shadow .15s;
+}
+html[data-rpm-redisenio="on"] .track:hover{
+  background:var(--surface-2); transform:translateY(-1px); box-shadow:var(--shadow-sm);
+}
+html[data-rpm-redisenio="on"] .track.active{box-shadow:var(--shadow-sm)}
+html[data-rpm-redisenio="on"] .thumb{width:48px; height:48px; border-radius:14px; font-size:18px}
+html[data-rpm-redisenio="on"] .track-title{font-size:15px}
+html[data-rpm-redisenio="on"] .track-sub{font-size:13.5px}
+html[data-rpm-redisenio="on"] .track-dur{font-size:13px}
+html[data-rpm-redisenio="on"] .remove-btn{width:36px; height:36px}
+
+/* ---------- Secciones y estado vacío ---------- */
+html[data-rpm-redisenio="on"] .subview-head{padding:20px 22px 0}
+html[data-rpm-redisenio="on"] .subview-head h3{font-size:18px}
+html[data-rpm-redisenio="on"] .subview-actions{padding:14px 22px 0}
+html[data-rpm-redisenio="on"] .pl-bar{padding:16px 22px 0}
+html[data-rpm-redisenio="on"] .smart-discover{margin:16px 22px 0; border-radius:18px; padding:18px}
+html[data-rpm-redisenio="on"] .empty{padding:44px 24px 48px}
+html[data-rpm-redisenio="on"] .empty-art{width:92px; height:92px; border-radius:28px}
+html[data-rpm-redisenio="on"] .lib-foot{padding:14px 22px 18px}
+
+/* ---------- Menús y modales ---------- */
+html[data-rpm-redisenio="on"] .track-menu{border-radius:18px; padding:8px}
+html[data-rpm-redisenio="on"] .track-menu button{border-radius:11px; padding:10px 11px}
+html[data-rpm-redisenio="on"] .modal{border-radius:26px; padding:26px}
+html[data-rpm-redisenio="on"] .modal h3{font-size:19px; letter-spacing:-.01em}
+html[data-rpm-redisenio="on"] .modal input{border-radius:14px; padding:13px 15px}
+html[data-rpm-redisenio="on"] .modal textarea{border-radius:14px}
+
+/* ---------- Movimiento reducido: sin desplazamiento en hover ---------- */
+@media (prefers-reduced-motion: reduce){
+  html[data-rpm-redisenio="on"] .track:hover{transform:none}
+  html[data-rpm-redisenio="on"] .play-btn:hover{transform:none}
+}

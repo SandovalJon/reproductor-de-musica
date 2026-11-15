@@ -6,7 +6,11 @@ Abre `index.html` y agrega tus canciones con el botón, eligiendo una carpeta o 
 
 Tu biblioteca se guarda en IndexedDB de tu dispositivo.
 
-Versión actual de la app: 3.9.0 (se muestra también en el pie del reproductor).
+Versión actual de la app: 4.0.0 (se muestra también en el pie del reproductor).
+v4.0.0: rediseño total de la interfaz (nueva paleta, tipografía y espaciado; cabecera, reproductor, tarjetas de canciones y secciones con aspecto moderno), activable y desactivable en Ajustes · Apariencia (por defecto activado; el aspecto clásico sigue disponible).
+v4.0.0: sincronización automática en la nube (opcional, desactivada por defecto; usa tu Google Drive con tu propio Client ID, cada 15/30/60 min, con el mismo .rpmbak y las mismas reglas de fusión; nunca aplica un borrado sin avisar).
+v4.0.0: modo DJ en vivo (cola en vivo con peticiones y reorden, sobre la mezcla automática DJ y el crossfade que ya existen).
+v4.0.0: el monolito empieza a partirse en módulos: el motor de búsqueda tolerante y las utilidades puras de formato y texto (duraciones, tamaños, fechas, géneros ID3, comparación de versiones) viven ahora en `src/core/search.js` y `src/core/format.js`, con la app funcionando igual que antes.
 v2.9.0: letras sincronizadas (LRC) y mejoras del estado vacío, filtros y móvil.
 v2.9.1: corrección del botón de secciones en móvil.
 v3.0.0: sincronización entre dispositivos por paquete .rpmbak (sin cuenta ni servidor), con migración de la base de datos a v3.

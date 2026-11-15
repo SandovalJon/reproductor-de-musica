@@ -1,0 +1,69 @@
+/* Modo DJ en vivo (v4.0.0) — estilos del panel.
+   El panel reutiliza las clases de la app (.dj-panel de dj.css,
+   .toggle-pill, .btn, .dj-status); aquí solo van sus filas propias.
+   Usa las variables de la app, así respeta el tema claro/oscuro sin
+   duplicar colores. */
+.dj-vivo-panel .dj-vivo-toggle{ width:100%; justify-content:center; }
+.dj-vivo-panel .dj-vivo-toggle.on{
+  border-color:var(--accent); color:var(--accent);
+  background:var(--accent-soft);
+}
+.dj-vivo-now{ margin:9px 0 0; font-size:13px; font-weight:700; }
+.dj-vivo-h{
+  margin:11px 0 6px; font-size:12px; text-transform:uppercase;
+  letter-spacing:.04em; color:var(--muted);
+}
+.dj-vivo-queue{
+  margin:0; padding:0; list-style:none;
+  display:flex; flex-direction:column; gap:6px;
+}
+.dj-vivo-row{
+  display:flex; align-items:center; gap:7px;
+  padding:7px 9px; border:1px solid var(--line); border-radius:10px;
+  background:var(--surface);
+}
+.dj-vivo-row-dj{ border-style:dashed; color:var(--muted); }
+.dj-vivo-pos{ font-weight:800; font-variant-numeric:tabular-nums; flex:none; }
+.dj-vivo-main{
+  flex:1; min-width:0; white-space:nowrap; overflow:hidden;
+  text-overflow:ellipsis; font-size:13px;
+}
+.dj-vivo-tag{
+  flex:none; font-size:11px; font-weight:800; text-transform:uppercase;
+  color:var(--muted); border:1px solid var(--line); border-radius:20px;
+  padding:1px 7px;
+}
+.dj-vivo-step{
+  flex:none; width:28px; height:28px; border-radius:50%;
+  border:1px solid var(--line); background:var(--surface);
+  color:var(--text); font-size:14px; font-weight:800; line-height:1;
+  display:grid; place-items:center; padding:0;
+}
+.dj-vivo-step:hover{ border-color:var(--accent); color:var(--accent); }
+.dj-vivo-empty{
+  color:var(--muted); font-size:12.8px; border:none; background:none;
+  padding:2px 0; list-style:none;
+}
+.dj-vivo-reqbox{ margin-top:12px; padding-top:11px; border-top:1px solid var(--line); }
+.dj-vivo-reqbox input{
+  width:100%; box-sizing:border-box; padding:9px 11px;
+  border:1px solid var(--line); border-radius:10px;
+  background:var(--surface); color:var(--text); font-size:13.5px;
+}
+.dj-vivo-reqbox input:focus{ outline:2px solid var(--accent); outline-offset:1px; }
+.dj-vivo-results{
+  margin:8px 0 0; padding:0; list-style:none;
+  display:flex; flex-direction:column; gap:6px;
+}
+.dj-vivo-result{
+  display:flex; align-items:center; gap:7px;
+  padding:6px 9px; border:1px solid var(--line); border-radius:10px;
+  background:var(--surface);
+}
+.dj-vivo-req{
+  flex:none; padding:6px 9px; border-radius:20px;
+  border:1px solid var(--line); background:var(--surface-2);
+  color:var(--text); font-size:12px; font-weight:700; white-space:nowrap;
+}
+.dj-vivo-req:hover{ border-color:var(--accent); color:var(--accent); }
+.dj-vivo-panel #btnDjVivoMix{ margin-top:12px; }

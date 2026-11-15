@@ -3,7 +3,7 @@
 /* 3.0.0: los módulos de sync entran en ASSETS para que la app
    funcione offline desde la primera carga (antes, lyrics.js y
    mejoras.js solo se cacheaban tras la primera carga). */
-var CACHE = 'reproductor-musica-3.9.0';
+var CACHE = 'reproductor-musica-4.0.0';
 var ASSETS = [
   './',
   './index.html',
@@ -49,6 +49,8 @@ var ASSETS = [
   './spotify-import.css',
   './dj.js',
   './dj.css',
+  './dj-vivo.js',
+  './dj-vivo.css',
   './acordes.js',
   './acordes.css',
   './luces.js',
@@ -65,6 +67,8 @@ var ASSETS = [
   './whatsapp.css',
   './salida.js',
   './salida.css',
+  './redisenio.js',
+  './redisenio.css',
   './mediasession.js',
   './export-m3u.js',
   './notas.js',
@@ -74,6 +78,8 @@ var ASSETS = [
   './animo.css',
   './drive.js',
   './drive.css',
+  './nube.js',
+  './nube.css',
   './dormir.js',
   './dormir.css',
   './notas.css',
@@ -93,7 +99,9 @@ var ASSETS = [
   './src/sync/sync-ui.css',
   './src/sync/sync-bridge.js',
   './src/folders/folders.js',
-  './src/folders/folders.css'
+  './src/folders/folders.css',
+  './src/core/format.js',
+  './src/core/search.js'
 ];
 
 self.addEventListener('install', function(event) {

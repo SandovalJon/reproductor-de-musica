@@ -45,7 +45,7 @@
 (function (global) {
   'use strict';
 
-  var VERSION = '1.0.0';
+  var VERSION = '1.1.0';
   var LS_CLIENT_ID = 'rpm-drive-client-id';
   var LS_LAST_UPLOAD = 'rpm-drive-last-upload';
   var GIS_URL = 'https://accounts.google.com/gsi/client';
@@ -574,6 +574,116 @@
     });
   }
 
+
+  /* ---------- API para la sincronización automática (nube.js, v4.0.0) ----------
+   * Las mismas llamadas que usa el panel, pero sin DOM y sin descargar
+   * a disco: nube.js las usa para leer y escribir LA copia de la nube
+   * (el .rpmbak con nombre fijo). Reutilizan withToken/driveFetch/
+   * buildMultipartBody/parseDrive* que ya existen arriba; no duplican
+   * nada. No tocan lastUpload: eso es del respaldo manual. */
+
+  // ¿Hay token en memoria en esta sesión?
+  function isConnected() { return !!accessToken; }
+
+  // Pide un token con el permiso ya concedido (sin mostrar nada si
+  // el usuario ya dio el permiso en el panel de Drive). Rechaza si
+  // no hay Client ID o Google no da acceso.
+  function ensureConnected() { return requestAccessToken(); }
+
+  // Consulta exacta por nombre (para la copia de la nube). Las
+  // comillas simples del nombre se escapan como exige Drive.
+  function buildDriveNameQuery(name) {
+    var safe = String(name || '').replace(/'/g, "\\'");
+    return "name = '" + safe + "' and trashed = false";
+  }
+
+  // Lista archivos con ese nombre exacto, los más recientes primero.
+  function listFilesByName(name) {
+    if (!String(name || '')) return Promise.resolve([]);
+    var url = DRIVE_FILES_URL + '?q=' + encodeURIComponent(buildDriveNameQuery(name)) +
+      '&fields=' + encodeURIComponent('files(id,name,mimeType,size,modifiedTime)') +
+      '&orderBy=' + encodeURIComponent('modifiedTime desc') +
+      '&pageSize=10';
+    return withToken(function () {
+      return driveFetch(url).then(function (res) {
+        return res.text().then(function (text) {
+          if (!res.ok) throw httpError(res.status, text);
+          var parsed;
+          try { parsed = JSON.parse(text); } catch (e) { parsed = null; }
+          var out = parseDriveFileList(parsed);
+          if (!out.ok) throw new Error(out.error);
+          return out.files;
+        });
+      });
+    });
+  }
+
+  // Descarga el contenido como Blob (para leer el .rpmbak), sin
+  // bajarlo al dispositivo como hace downloadBackup().
+  function downloadFileBlob(fileId) {
+    if (!fileId) return Promise.reject(new Error('Falta el id del archivo en Drive.'));
+    return withToken(function () {
+      return driveFetch(DRIVE_FILES_URL + '/' + encodeURIComponent(fileId) + '?alt=media')
+        .then(function (res) {
+          if (!res.ok) return res.text().then(function (t) { throw httpError(res.status, t); });
+          return res.blob();
+        });
+    });
+  }
+
+  // Sube un archivo nuevo (multipart, igual que el respaldo manual).
+  function uploadFile(blob, fileName, mimeType) {
+    if (!blob) return Promise.reject(new Error('No hay archivo que subir.'));
+    if (!String(fileName || '')) return Promise.reject(new Error('Falta el nombre del archivo.'));
+    return blobToBytes(blob).then(function (bytes) {
+      var multi = buildMultipartBody(
+        { name: fileName, mimeType: mimeType || guessMimeType(fileName) }, bytes);
+      return withToken(function () {
+        return driveFetch(DRIVE_UPLOAD_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': multi.contentType },
+          body: multi.body,
+        }).then(function (res) {
+          return res.text().then(function (text) {
+            if (!res.ok) throw httpError(res.status, text);
+            var parsed;
+            try { parsed = JSON.parse(text); } catch (e) { parsed = null; }
+            var out = parseDriveUploadResponse(parsed);
+            if (!out.ok) throw new Error(out.error);
+            return out;
+          });
+        });
+      });
+    });
+  }
+
+  // Sustituye el contenido de un archivo que ya existe (subida
+  // media, PATCH). Así la copia de la nube es siempre el MISMO
+  // archivo de Drive y no se acumulan copias con el mismo nombre.
+  function updateFileContent(fileId, blob, mimeType) {
+    if (!fileId) return Promise.reject(new Error('Falta el id del archivo en Drive.'));
+    if (!blob) return Promise.reject(new Error('No hay archivo que subir.'));
+    return blobToBytes(blob).then(function (bytes) {
+      return withToken(function () {
+        return driveFetch('https://www.googleapis.com/upload/drive/v3/files/' +
+          encodeURIComponent(fileId) + '?uploadType=media', {
+          method: 'PATCH',
+          headers: { 'Content-Type': mimeType || 'application/octet-stream' },
+          body: bytes,
+        }).then(function (res) {
+          return res.text().then(function (text) {
+            if (!res.ok) throw httpError(res.status, text);
+            var parsed;
+            try { parsed = JSON.parse(text); } catch (e) { parsed = null; }
+            var out = parseDriveUploadResponse(parsed);
+            if (!out.ok) throw new Error(out.error);
+            return out;
+          });
+        });
+      });
+    });
+  }
+
   /* ---------- Panel (reusa .modal-overlay/.modal de la app) ---------- */
 
   function el(tag, cls, text) {
@@ -802,6 +912,13 @@
     formatBytes: formatBytes,
     guessMimeType: guessMimeType,
     getStoredClientId: getStoredClientId,
+    isConnected: isConnected,
+    ensureConnected: ensureConnected,
+    buildDriveNameQuery: buildDriveNameQuery,
+    listFilesByName: listFilesByName,
+    downloadFileBlob: downloadFileBlob,
+    uploadFile: uploadFile,
+    updateFileContent: updateFileContent,
     openDriveModal: openDriveModal,
     init: init,
   };

@@ -32,18 +32,21 @@
 <link rel="stylesheet" href="./notas.css">
   <link rel="stylesheet" href="./conjunta.css">
   <link rel="stylesheet" href="./drive.css">
+  <link rel="stylesheet" href="./nube.css">
 <link rel="stylesheet" href="./mini.css">
 <link rel="stylesheet" href="./pomodoro.css">
   <link rel="stylesheet" href="./dormir.css">
 <link rel="stylesheet" href="./voz.css">
 <link rel="stylesheet" href="./spotify-import.css">
 <link rel="stylesheet" href="./dj.css">
+<link rel="stylesheet" href="./dj-vivo.css">
 <link rel="stylesheet" href="./tarareo.css">
 <link rel="stylesheet" href="./buscar-letra.css">
 <link rel="stylesheet" href="./limpio.css">
   <link rel="stylesheet" href="./animo.css">
 <link rel="stylesheet" href="./whatsapp.css">
 <link rel="stylesheet" href="./salida.css">
+<link rel="stylesheet" href="./redisenio.css">
 <style>
   :root{
     --bg:#F4F1EC;
@@ -1192,6 +1195,10 @@
                 <button class="toggle-pill" id="btnLargeText" type="button" aria-pressed="false"><span class="dot"></span><span>Texto grande:&nbsp;</span><span id="largeTextState">Apagado</span></button>
               </div>
               <p class="sound-note">Agranda la letra y los controles de toda la app con una escala global, sin cambiar el diseño: pensado para leer de lejos o para el modo coche. Se guarda en tus ajustes, como el resto de la apariencia.</p>
+              <div class="sound-inline" style="margin-top:12px">
+                <button class="toggle-pill on" id="btnRedisenio" type="button" aria-pressed="true"><span class="dot"></span><span>Diseño moderno:&nbsp;</span><span id="redisenioState">Activado</span></button>
+              </div>
+              <p class="sound-note">La cara nueva de la app: paleta moderna, más aire, cabecera y reproductor renovados y tarjetas de canciones con aspecto moderno. Apágalo para volver al aspecto clásico. Se guarda en este dispositivo.</p>
               <div class="sound-group-head" style="margin-top:16px"><h4>Fondo personalizado</h4></div>
               <div class="sound-inline">
                 <button class="btn small" id="btnBgPhoto" type="button">Elegir foto de fondo</button>
@@ -1391,7 +1398,7 @@
         <div class="update-row">
           <button class="btn small" id="btnCheckUpdate" type="button">Actualizar app</button>
           <button class="btn small danger" id="btnForceUpdate" type="button">Forzar actualización</button>
-          <span class="backup-note" id="updateStatus">Versión de esta app: v<span id="appVersionNote">3.9.0</span>. «Actualizar app» consulta la versión publicada y te dice si ya estás al día antes de recargar. «Forzar actualización» limpia el service worker y las cachés de la app si una actualización se quedó atascada; tu biblioteca, playlists y ajustes (IndexedDB) nunca se tocan.</span>
+          <span class="backup-note" id="updateStatus">Versión de esta app: v<span id="appVersionNote">4.0.0</span>. «Actualizar app» consulta la versión publicada y te dice si ya estás al día antes de recargar. «Forzar actualización» limpia el service worker y las cachés de la app si una actualización se quedó atascada; tu biblioteca, playlists y ajustes (IndexedDB) nunca se tocan.</span>
         </div>
       </div>
 
@@ -2283,6 +2290,8 @@
 
 <script src="./src/library/eq.js"></script>
 <script src="./src/library/smart-lists.js"></script>
+<script src="./src/core/format.js"></script>
+<script src="./src/core/search.js"></script>
 <script>
 (function(){
   "use strict";
@@ -2322,7 +2331,7 @@
 
   // ---------- State ----------
   var tracks = []; // {id,name,title,artist,album,duration,size,type,addedAt,url,coverUrl,color,rating,stars}
-  var APP_VERSION = '3.9.0'; // al publicar cambios, subir este número y el CACHE de sw.js
+  var APP_VERSION = '4.0.0'; // al publicar cambios, subir este número y el CACHE de sw.js
   var currentId = null;
   var isPlaying = false;
   var shuffle = false;
@@ -2468,27 +2477,21 @@
   var stateReady = false;
   function trackById(id){ return tracks.find(function(t){ return t.id===id; }) || null; }
 
-  var PALETTE = [
-    ['#3A2A1A','#E94E1B'], ['#12261E','#1F9D66'], ['#1D2440','#4F7CFF'], ['#33182E','#C94F9E'],
-    ['#0F2B33','#1AA6A0'], ['#31220F','#E8A51B'], ['#241A3A','#7B5CFF'], ['#2E1414','#E05252'],
-    ['#14261A','#6DBE45'], ['#2A1E12','#D07A2D']
-  ];
+  // 4.0.0: PALETTE y colorFor viven en src/core/format.js (window.RpmFormat).
+  // Adaptador con guarda: si el módulo no cargó, la app sigue con un color fijo.
   function colorFor(str){
-    var h=0; for(var i=0;i<str.length;i++){ h=(h*31 + str.charCodeAt(i))>>>0; }
-    return PALETTE[h % PALETTE.length];
+    if(typeof RpmFormat !== 'undefined' && RpmFormat.colorFor) return RpmFormat.colorFor(str);
+    return ['#3A2A1A', '#E94E1B'];
   }
+  // 4.0.0: fmtTime vive en src/core/format.js (window.RpmFormat).
   function fmtTime(sec){
-    if(!isFinite(sec) || sec==null || sec<0) return '0:00';
-    sec = Math.floor(sec);
-    var m = Math.floor(sec/60), s = sec%60;
-    if(m>=60){ var hh=Math.floor(m/60); return hh+':'+String(m%60).padStart(2,'0')+':'+String(s).padStart(2,'0'); }
-    return m+':'+String(s).padStart(2,'0');
+    if(typeof RpmFormat !== 'undefined' && RpmFormat.fmtTime) return RpmFormat.fmtTime(sec);
+    return '0:00';
   }
+  // 4.0.0: fmtSize vive en src/core/format.js (window.RpmFormat).
   function fmtSize(bytes){
-    if(!bytes && bytes!==0) return '';
-    if(bytes<1024) return bytes+' B';
-    if(bytes<1024*1024) return (bytes/1024).toFixed(0)+' KB';
-    return (bytes/(1024*1024)).toFixed(1)+' MB';
+    if(typeof RpmFormat !== 'undefined' && RpmFormat.fmtSize) return RpmFormat.fmtSize(bytes);
+    return '';
   }
   function toast(msg){
     toastEl.textContent = msg;
@@ -2815,17 +2818,10 @@
       return new TextDecoder('utf-8').decode(bytes).replace(/\0+$/,'').trim();
     }catch(e){ return ''; }
   }
-  var ID3_GENRES = ['Blues','Classic Rock','Country','Dance','Disco','Funk','Grunge','Hip-Hop','Jazz','Metal','New Age','Oldies','Other','Pop','R&B','Rap','Reggae','Rock','Techno','Industrial','Alternative','Ska','Death Metal','Pranks','Soundtrack','Euro-Techno','Ambient','Trip-Hop','Vocal','Jazz+Funk','Fusion','Trance','Classical','Instrumental','Acid','House','Game','Sound Clip','Gospel','Noise','AlternRock','Bass','Soul','Punk','Space','Meditative','Instrumental Pop','Instrumental Rock','Ethnic','Gothic','Darkwave','Techno-Industrial','Electronic','Pop-Folk','Eurodance','Dream','Southern Rock','Comedy','Cult','Gangsta','Top 40','Christian Rap','Pop/Funk','Jungle','Native American','Cabaret','New Wave','Psychadelic','Rave','Showtunes','Trailer','Lo-Fi','Tribal','Acid Punk','Acid Jazz','Polka','Retro','Musical','Rock & Roll','Hard Rock'];
+  // 4.0.0: la tabla de géneros ID3 y cleanGenre viven en src/core/format.js (window.RpmFormat).
   function cleanGenre(g){
-    g = (g || '').trim();
-    if(!g) return '';
-    var m = /^\((\d+)\)\s*(.*)$/.exec(g);
-    if(m){
-      if(m[2]) return m[2].trim();
-      return ID3_GENRES[parseInt(m[1], 10)] || '';
-    }
-    if(/^\d+$/.test(g)) return ID3_GENRES[parseInt(g, 10)] || '';
-    return g;
+    if(typeof RpmFormat !== 'undefined' && RpmFormat.cleanGenre) return RpmFormat.cleanGenre(g);
+    return (g || '').trim();
   }
   function parseVorbisComment(arrayBuffer){
     var out = { genre:'', year:'' };
@@ -2941,8 +2937,10 @@
     }catch(e){}
     return out;
   }
+  // 4.0.0: cleanName vive en src/core/format.js (window.RpmFormat).
   function cleanName(name){
-    return name.replace(/\.[^.]+$/,'').replace(/[_]+/g,' ').replace(/\s+/g,' ').trim();
+    if(typeof RpmFormat !== 'undefined' && RpmFormat.cleanName) return RpmFormat.cleanName(name);
+    return String(name == null ? '' : name);
   }
   function getDuration(url){
     return new Promise(function(resolve){
@@ -3229,54 +3227,31 @@
   // también por nombre de archivo y entiende combinaciones: cada palabra
   // escrita puede coincidir en un campo distinto (título, artista, álbum,
   // archivo…), así «artista álbum» funciona en una sola búsqueda.
+  // 4.0.0: el motor de búsqueda vive en src/core/search.js (window.RpmSearch).
+  // Adaptadores con guarda: si el módulo no cargó, la búsqueda sigue en
+  // modo degradado (subcadena sin difusa); la app no se rompe.
   function normSearchText(s){
-    return (s || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/\s+/g, ' ').trim();
+    if(typeof RpmSearch !== 'undefined' && RpmSearch.normSearchText) return RpmSearch.normSearchText(s);
+    return (s || '').toLowerCase().replace(/\s+/g, ' ').trim();
   }
   function editDist(a, b){
-    var la = a.length, lb = b.length;
-    if(Math.abs(la - lb) > 2) return 99;
-    var prev = [], cur = [], i, j, tmp;
-    for(j = 0; j <= lb; j++) prev[j] = j;
-    for(i = 1; i <= la; i++){
-      cur[0] = i;
-      var best = cur[0];
-      for(j = 1; j <= lb; j++){
-        var cost = a.charAt(i - 1) === b.charAt(j - 1) ? 0 : 1;
-        cur[j] = Math.min(prev[j] + 1, cur[j - 1] + 1, prev[j - 1] + cost);
-        if(cur[j] < best) best = cur[j];
-      }
-      if(best > 2) return 99;
-      tmp = prev; prev = cur; cur = tmp;
-    }
-    return prev[lb];
+    if(typeof RpmSearch !== 'undefined' && RpmSearch.editDist) return RpmSearch.editDist(a, b);
+    return 99;
   }
   function searchDataOf(t){
-    if(t._sf) return t._sf;
+    if(typeof RpmSearch !== 'undefined' && RpmSearch.searchDataOf) return RpmSearch.searchDataOf(t);
     var fields = [t.title, t.artist, t.album, t.name, t.genre, t.year, (t.tags || []).join(' ')].map(normSearchText);
-    var words = (fields[0] + ' ' + fields[1] + ' ' + fields[2] + ' ' + fields[3]).split(' ').filter(function(w){ return w.length >= 3; });
-    t._sf = { fields: fields, words: words };
-    return t._sf;
+    return { fields: fields, words: [] };
   }
   function termMatchesTrack(term, data){
-    var i;
-    for(i = 0; i < data.fields.length; i++){
-      if(data.fields[i].indexOf(term) >= 0) return true;
-    }
-    // Coincidencia difusa solo sobre las palabras de título/artista/álbum/archivo
-    if(term.length >= 4){
-      var maxDist = term.length >= 7 ? 2 : 1;
-      for(i = 0; i < data.words.length; i++){
-        var w = data.words[i];
-        if(Math.abs(w.length - term.length) <= maxDist && editDist(term, w) <= maxDist) return true;
-      }
-    }
+    if(typeof RpmSearch !== 'undefined' && RpmSearch.termMatchesTrack) return RpmSearch.termMatchesTrack(term, data);
+    for(var i = 0; i < data.fields.length; i++){ if(data.fields[i].indexOf(term) >= 0) return true; }
     return false;
   }
   function trackMatchesSearch(t, terms){
+    if(typeof RpmSearch !== 'undefined' && RpmSearch.trackMatchesSearch) return RpmSearch.trackMatchesSearch(t, terms);
     var data = searchDataOf(t);
-    for(var i = 0; i < terms.length; i++){
-      if(!termMatchesTrack(terms[i], data)) return false;
-    }
+    for(var i = 0; i < terms.length; i++){ if(!termMatchesTrack(terms[i], data)) return false; }
     return true;
   }
 
@@ -3964,16 +3939,10 @@
     if(playHistory.length>100) playHistory.length = 100;
     saveState();
   }
+  // 4.0.0: fmtWhen vive en src/core/format.js (window.RpmFormat).
   function fmtWhen(ts){
-    try{
-      var d = new Date(ts), now = new Date();
-      var sameDay = d.toDateString()===now.toDateString();
-      var time = d.toLocaleTimeString('es', {hour:'2-digit', minute:'2-digit'});
-      if(sameDay) return 'Hoy · '+time;
-      var y = new Date(now); y.setDate(now.getDate()-1);
-      if(d.toDateString()===y.toDateString()) return 'Ayer · '+time;
-      return d.toLocaleDateString('es', {day:'numeric', month:'short'}) + ' · ' + time;
-    }catch(e){ return ''; }
+    if(typeof RpmFormat !== 'undefined' && RpmFormat.fmtWhen) return RpmFormat.fmtWhen(ts);
+    return '';
   }
   function renderHistoryView(){
     var topEl = document.getElementById('topList');
@@ -6901,12 +6870,19 @@
   }
 
   // ----- Estadísticas de escucha -----
+  // 4.0.0: fmtMins, dayStart y weekStart viven en src/core/format.js (window.RpmFormat).
   function fmtMins(sec){
-    if(sec >= 3600) return (sec/3600).toFixed(1).replace('.', ',') + ' h';
-    return Math.round(sec/60) + ' min';
+    if(typeof RpmFormat !== 'undefined' && RpmFormat.fmtMins) return RpmFormat.fmtMins(sec);
+    return '';
   }
-  function dayStart(ts){ var d = new Date(ts); d.setHours(0,0,0,0); return d.getTime(); }
-  function weekStart(ts){ var d = new Date(dayStart(ts)); d.setDate(d.getDate() - ((d.getDay() + 6) % 7)); return d.getTime(); }
+  function dayStart(ts){
+    if(typeof RpmFormat !== 'undefined' && RpmFormat.dayStart) return RpmFormat.dayStart(ts);
+    return ts;
+  }
+  function weekStart(ts){
+    if(typeof RpmFormat !== 'undefined' && RpmFormat.weekStart) return RpmFormat.weekStart(ts);
+    return ts;
+  }
   function barSection(wrap, title, rows){
     if(!rows.length) return;
     var h = document.createElement('h4'); h.textContent = title; wrap.appendChild(h);
@@ -6997,8 +6973,10 @@
   }
 
   // ----- Detector de duplicadas -----
+  // 4.0.0: normStr vive en src/core/format.js (window.RpmFormat).
   function normStr(s){
-    return (s || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/\s+/g, ' ').trim();
+    if(typeof RpmFormat !== 'undefined' && RpmFormat.normStr) return RpmFormat.normStr(s);
+    return (s || '').toLowerCase().replace(/\s+/g, ' ').trim();
   }
   function dupGroups(){
     var groups = [];
@@ -9155,12 +9133,11 @@
   // ---------- Pack de mejoras: actualización, reanudar, deshacer, tap tempo ----------
 
   // ----- 1. Actualización sin atascos -----
-  var APP_VERSION = '3.9.0';
+  var APP_VERSION = '4.0.0';
   document.getElementById('appVersionNote').textContent = APP_VERSION;
+  // 4.0.0: cmpVersion vive en src/core/format.js (window.RpmFormat).
   function cmpVersion(a, b){
-    var pa = a.split('.').map(function(x){ return parseInt(x, 10) || 0; });
-    var pb = b.split('.').map(function(x){ return parseInt(x, 10) || 0; });
-    for(var i = 0; i < 3; i++){ if(pa[i] !== pb[i]) return pa[i] > pb[i] ? 1 : -1; }
+    if(typeof RpmFormat !== 'undefined' && RpmFormat.cmpVersion) return RpmFormat.cmpVersion(a, b);
     return 0;
   }
   document.getElementById('btnCheckUpdate').addEventListener('click', function(){
@@ -12813,13 +12790,16 @@
 <script src="./voz.js"></script>
 <script src="./spotify-import.js"></script>
 <script src="./dj.js"></script>
+<script src="./dj-vivo.js"></script>
 <script src="./tarareo.js"></script>
 <script src="./buscar-letra.js"></script>
 <script src="./limpio.js"></script>
 <script src="./whatsapp.js"></script>
 <script src="./salida.js"></script>
 <script src="./animo.js"></script>
+<script src="./redisenio.js"></script>
 <script src="./drive.js"></script>
+<script src="./nube.js"></script>
 <script src="./mediasession.js"></script>
 <script type="module" src="./src/sync/sync-bridge.js"></script>
 <link rel="stylesheet" href="./src/folders/folders.css" />

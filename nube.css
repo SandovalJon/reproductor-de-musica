@@ -1,0 +1,100 @@
+/* nube.css — Sincronización automática en la nube (reproductor-de-musica v4.0.0)
+ * Solo estilos propios del módulo (prefijo .nube-). La ventana reusa
+ * .modal-overlay / .modal / .modal-actions / .btn de la app; si
+ * nube.css no carga, el modal sigue funcionando con el estilo base. */
+
+.nube-modal { width: min(600px, 100%); }
+
+.nube-sub {
+  margin: 0 0 12px;
+  color: var(--muted, #6b6259);
+  font-size: 13.5px;
+  line-height: 1.5;
+}
+
+.nube-status {
+  margin: 0 0 12px;
+  padding: 10px 12px;
+  border: 1px solid var(--line, #e3ddd2);
+  border-radius: 10px;
+  background: var(--surface-2, #f6f2ea);
+  color: var(--text, #191613);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.nube-toggle-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 10px;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.nube-toggle-row input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  accent-color: var(--accent, #e94e1b);
+}
+
+.nube-interval-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 4px;
+  font-size: 13.5px;
+}
+
+.nube-interval-label { font-weight: 700; }
+
+.nube-interval-row select {
+  padding: 8px 10px;
+  border: 1px solid var(--line, #e3ddd2);
+  border-radius: 10px;
+  background: var(--surface-2, #f6f2ea);
+  color: var(--text, #191613);
+  font-size: 13.5px;
+}
+
+.nube-interval-row select:focus {
+  border-color: var(--accent, #e94e1b);
+  outline: none;
+}
+
+.nube-note {
+  margin: 8px 0 0;
+  color: var(--muted, #6b6259);
+  font-size: 12.5px;
+  line-height: 1.5;
+}
+
+.nube-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.nube-actions .btn[disabled] { opacity: .45; cursor: not-allowed; }
+
+.nube-toast {
+  position: fixed;
+  left: 50%;
+  bottom: 24px;
+  transform: translate(-50%, 8px);
+  z-index: 120;
+  background: #191613;
+  color: #f5f1eb;
+  padding: 10px 16px;
+  border-radius: 999px;
+  font-size: 14px;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity .2s, transform .2s;
+  max-width: calc(100vw - 32px);
+  text-align: center;
+}
+.nube-toast.show { opacity: 1; transform: translate(-50%, 0); }
