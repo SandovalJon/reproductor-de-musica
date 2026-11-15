@@ -1,0 +1,152 @@
+/* compartir.css — Compartir playlist (reproductor-de-musica v3.4.0)
+ * Solo estilos propios del módulo (prefijo .share-). La ventana reusa
+ * .modal-overlay / .modal / .modal-actions / .btn de la app; si
+ * compartir.css no carga, el modal sigue funcionando con el estilo
+ * base de la app. Sin compartir, nada de esto se muestra. */
+
+.share-modal { width: min(560px, 100%); }
+
+.share-sub {
+  margin: 0 0 12px;
+  color: var(--muted, #6b6259);
+  font-size: 13.5px;
+  line-height: 1.5;
+}
+
+.share-warn {
+  margin: 0 0 12px;
+  padding: 10px 12px;
+  border: 1px solid var(--line, #e3ddd2);
+  border-left: 3px solid #c98a1b;
+  border-radius: 10px;
+  background: var(--surface-2, #f6f2ea);
+  color: var(--text, #191613);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.share-label {
+  display: block;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  color: var(--muted, #6b6259);
+  margin: 4px 0 6px;
+}
+
+.share-link {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 10px 12px;
+  border: 1px solid var(--line, #e3ddd2);
+  border-radius: 12px;
+  background: var(--surface-2, #f6f2ea);
+  color: var(--text, #191613);
+  font-size: 12.5px;
+  line-height: 1.5;
+  word-break: break-all;
+  resize: vertical;
+}
+
+.share-qr-box { text-align: center; margin: 14px 0 4px; }
+
+.share-qr {
+  background: #fff;
+  padding: 10px;
+  border: 1px solid var(--line, #e3ddd2);
+  border-radius: 12px;
+  max-width: 100%;
+  height: auto;
+  image-rendering: pixelated;
+}
+
+.share-qr-note {
+  margin: 8px 0 0;
+  color: var(--muted, #6b6259);
+  font-size: 12.5px;
+  line-height: 1.45;
+}
+
+.share-list {
+  list-style: none;
+  margin: 12px 0 0;
+  padding: 0;
+  max-height: 260px;
+  overflow-y: auto;
+  border-top: 1px solid var(--line, #e3ddd2);
+}
+
+.share-list-wrap .share-list { margin-top: 0; }
+
+.share-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 2px;
+  border-bottom: 1px solid var(--line, #e3ddd2);
+}
+
+.share-row-main {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.share-row-title {
+  font-weight: 700;
+  font-size: 14px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.share-row-meta {
+  font-size: 12.5px;
+  color: var(--muted, #6b6259);
+}
+
+.share-badge {
+  flex: none;
+  font-size: 12px;
+  font-weight: 800;
+  padding: 4px 8px;
+  border-radius: 999px;
+  background: var(--surface-2, #f6f2ea);
+  color: var(--muted, #6b6259);
+  white-space: nowrap;
+}
+
+.share-badge.have { background: #e3f2e4; color: #1e6b2e; }
+.share-badge.missing { background: #fbe9e7; color: #9c2b1d; }
+.share-badge.nohash { background: #fdf3d7; color: #7a5b00; }
+
+.share-foot { margin-top: 10px; }
+
+.share-actions { flex-wrap: wrap; }
+.share-actions .btn[disabled] { opacity: .45; cursor: not-allowed; }
+
+.share-toast {
+  position: fixed;
+  left: 50%;
+  bottom: 24px;
+  transform: translate(-50%, 8px);
+  z-index: 120;
+  background: #191613;
+  color: #f5f1eb;
+  padding: 10px 16px;
+  border-radius: 999px;
+  font-size: 14px;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity .2s, transform .2s;
+  max-width: calc(100vw - 32px);
+  text-align: center;
+}
+.share-toast.show { opacity: 1; transform: translate(-50%, 0); }
+
+@media (max-width: 480px) {
+  .share-row-title { white-space: normal; }
+}

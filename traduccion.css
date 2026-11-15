@@ -1,0 +1,110 @@
+/* Letras traducidas — estilos. La traducción va debajo de su línea
+   original, más pequeña y tenue; nunca sustituye a la original.
+   La visibilidad la decide la clase .traduccion-visible del
+   contenedor (#lyricsLines / #karaokeLines): sin ella, los spans
+   existen en el DOM pero no se muestran. */
+
+/* --- Línea traducida dentro del panel de letras --- */
+.lyrics-line .traduccion-line{
+  display:block;
+  margin-top:2px;
+  font-size:.85em;
+  font-style:italic;
+  font-weight:400;
+  line-height:1.4;
+  opacity:.72;
+  text-align:left;
+}
+.lyrics-line.active .traduccion-line{opacity:.85}
+#lyricsLines:not(.traduccion-visible) .traduccion-line,
+#karaokeLines:not(.traduccion-visible) .traduccion-line{display:none}
+
+/* --- Línea traducida dentro del karaoke --- */
+.karaoke-line .traduccion-line{
+  display:block;
+  margin-top:.15em;
+  font-size:.55em;
+  font-style:italic;
+  font-weight:400;
+  line-height:1.35;
+  opacity:.75;
+}
+.karaoke-line.active .traduccion-line{opacity:.9}
+
+/* --- Botón 🌐 Traducción (panel y karaoke) --- */
+#traduccionToggle.active,
+#traduccionKaraokeToggle.active{
+  background:#E94E1B;
+  border-color:#E94E1B;
+  color:#fff;
+}
+#traduccionToggle:disabled,
+#traduccionEditBtn:disabled{opacity:.45;cursor:not-allowed}
+.traduccion-karaoke-toggle{font-size:18px}
+
+/* --- Aviso "sin traducción" en el panel --- */
+.traduccion-aviso{
+  margin:0 16px 10px;
+  padding:10px 12px;
+  border:1px dashed var(--line,#E3DCD1);
+  border-radius:12px;
+  font-size:13px;
+  line-height:1.5;
+  color:var(--muted,#726B63);
+}
+.traduccion-aviso button{
+  border:1px solid var(--line,#E3DCD1);
+  background:var(--surface-2,#F7F3EE);
+  color:inherit;
+  border-radius:999px;
+  padding:5px 10px;
+  font:600 12.5px/1 system-ui,sans-serif;
+  cursor:pointer;
+}
+
+/* --- Editor de traducción (solo en el panel de letras) --- */
+.traduccion-editor{padding:0 16px 10px}
+.traduccion-editor-hint{
+  margin:0 0 6px;
+  font-size:12.5px;
+  line-height:1.5;
+  color:var(--muted,#726B63);
+}
+.traduccion-text{
+  width:100%;
+  box-sizing:border-box;
+  min-height:120px;
+  border-radius:12px;
+  padding:10px;
+  border:1px solid var(--line,#E3DCD1);
+  background:var(--surface,#fff);
+  color:inherit;
+  font:13px/1.6 monospace;
+  resize:vertical;
+}
+.traduccion-editor-row{
+  display:flex;
+  flex-wrap:wrap;
+  gap:8px;
+  align-items:center;
+  margin-top:8px;
+}
+.traduccion-editor-row button{
+  border:1px solid var(--line,#E3DCD1);
+  background:var(--surface-2,#F7F3EE);
+  color:inherit;
+  border-radius:999px;
+  padding:7px 12px;
+  font:600 12.5px/1 system-ui,sans-serif;
+  cursor:pointer;
+}
+.traduccion-editor-row .traduccion-save{
+  border:0;
+  background:#E94E1B;
+  color:#fff;
+  font-weight:700;
+}
+.traduccion-count{
+  font-size:12.5px;
+  color:var(--muted,#726B63);
+}
