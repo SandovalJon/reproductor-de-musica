@@ -1,0 +1,123 @@
+/* Modo lectura de letras — estilos. Fondo tranquilo tipo papel,
+   letra grande con serifa, como leer un libro: nada de la app
+   visible salvo el título y el botón ✕. La vista cubre toda la
+   ventana tanto en pantalla completa real como en el fallback
+   (cuando el Fullscreen API falla o no existe), porque
+   .lectura-view.open ya es position:fixed inset:0. */
+
+.lectura-view {
+  display: none;
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  flex-direction: column;
+  background: #f7f1e5;
+  color: #2b2620;
+  padding: max(16px, env(safe-area-inset-top)) max(16px, env(safe-area-inset-right)) max(16px, env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-left));
+}
+.lectura-view.open { display: flex; }
+
+/* Botón flotante de respaldo: solo se usa si index.html NO trae
+   #btnLectura (ver WIRING.md). El botón estático usa las clases
+   .btn.small de la app y no necesita estos estilos. */
+#btnLectura.lectura-fab {
+  position: fixed;
+  right: 16px;
+  bottom: 200px;
+  z-index: 60;
+  border: 0;
+  border-radius: 999px;
+  padding: 10px 16px;
+  font: 700 14px/1 "Plus Jakarta Sans", system-ui, sans-serif;
+  background: #6b5d3f;
+  color: #fff;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, .25);
+  cursor: pointer;
+}
+#btnLectura.lectura-fab:hover { background: #574a31; }
+#btnLectura:disabled { opacity: .45; cursor: default; }
+
+.lectura-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+  flex: none;
+  max-width: 680px;
+  width: 100%;
+  margin: 0 auto;
+  padding-bottom: 12px;
+  border-bottom: 1px solid rgba(43, 38, 32, .15);
+}
+.lectura-titles strong {
+  display: block;
+  font: 700 clamp(18px, 3.5vw, 24px)/1.25 Georgia, "Times New Roman", serif;
+}
+.lectura-titles span {
+  display: block;
+  font: 400 clamp(13px, 2.5vw, 16px)/1.4 Georgia, "Times New Roman", serif;
+  color: #6f6558;
+  margin-top: 2px;
+}
+.lectura-close {
+  flex: none;
+  width: 44px;
+  height: 44px;
+  border: 1px solid rgba(43, 38, 32, .3);
+  border-radius: 50%;
+  background: rgba(43, 38, 32, .06);
+  color: #2b2620;
+  font-size: 18px;
+  line-height: 1;
+  cursor: pointer;
+}
+.lectura-close:hover { background: rgba(43, 38, 32, .14); }
+.lectura-close:focus-visible {
+  outline: 3px solid #6b5d3f;
+  outline-offset: 2px;
+}
+
+/* El cuerpo es lo único que se desplaza: título y ✕ quedan fijos. */
+.lectura-body {
+  flex: 1;
+  overflow-y: auto;
+  width: 100%;
+  max-width: 680px;
+  margin: 0 auto;
+  padding: 32px 4px 48px;
+  -webkit-overflow-scrolling: touch;
+}
+.lectura-stanza {
+  margin: 0 0 1.6em;
+  font: 400 clamp(20px, 4.5vw, 28px)/1.8 Georgia, "Times New Roman", serif;
+  white-space: pre-line;
+}
+.lectura-stanza:last-child { margin-bottom: 0; }
+.lectura-empty {
+  margin: 12vh 0 0;
+  font: 700 clamp(20px, 4vw, 26px)/1.5 Georgia, "Times New Roman", serif;
+  text-align: center;
+}
+.lectura-hint {
+  margin: 12px auto 0;
+  max-width: 480px;
+  font: 400 clamp(14px, 2.5vw, 17px)/1.6 Georgia, "Times New Roman", serif;
+  color: #6f6558;
+  text-align: center;
+}
+
+/* Móvil estrecho (360 px): menos relleno lateral, la letra sigue
+   siendo grande porque clamp() tiene un mínimo de 20 px. */
+@media (max-width: 400px) {
+  .lectura-view {
+    padding-left: max(12px, env(safe-area-inset-left));
+    padding-right: max(12px, env(safe-area-inset-right));
+  }
+  .lectura-body { padding-top: 24px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .lectura-view,
+  .lectura-close,
+  #btnLectura.lectura-fab { transition: none; }
+}

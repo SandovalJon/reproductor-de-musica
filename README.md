@@ -6,7 +6,11 @@ Abre `index.html` y agrega tus canciones con el botón, eligiendo una carpeta o 
 
 Tu biblioteca se guarda en IndexedDB de tu dispositivo.
 
-Versión actual de la app: 4.2.0 (se muestra también en el pie del reproductor).
+Versión actual de la app: 4.3.0 (se muestra también en el pie del reproductor).
+v4.3.0: buscar por tarareo mejorado (compara también el ritmo contra la rejilla de pulsos del BPM analizado; aproximado, la melodía no se compara nota a nota).
+v4.3.0: acordes en karaoke (tus acordes encima de cada línea, junto a la letra y su traducción; sin acordes guardados, el karaoke se ve como siempre).
+v4.3.0: modo lectura de letras (la letra completa como un libro, con letra grande y sin distracciones; se sale con ✕ o Esc).
+v4.3.0: Wrapped como video (tu año en música en WebM vertical de ~12 s, con tus tops animados, generado en local; sin datos no genera nada).
 v4.2.0: portada animada con la música (la portada late con el ritmo usando el analizador que ya existe; se puede apagar y respeta el movimiento reducido).
 v4.2.0: modo coche simplificado (voz manos libres al entrar, anuncio por voz de la canción que suena y botones extragrandes; al salir, todo vuelve a lo normal).
 v4.2.0: compartir canción con letra (imagen PNG local con portada, letra y tu nota, o texto plano, por Web Share; nunca comparte el audio).

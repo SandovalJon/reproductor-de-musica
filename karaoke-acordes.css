@@ -1,0 +1,38 @@
+/* Acordes en karaoke — estilos.
+   Los acordes van ENCIMA de su línea de letra, en negrita y con
+   fuente monoespaciada (los acordes se alinean mejor así), en un
+   tono cálido sobre el fondo oscuro del karaoke; nunca sustituyen
+   a la letra original. La visibilidad la decide la clase
+   .acordes-visible de #karaokeLines: sin ella, los spans existen
+   en el DOM pero no se muestran. El span es el primer hijo del
+   botón de línea, así que queda por encima del texto de la letra;
+   el span de traducción (si existe) queda debajo, al final del
+   botón, y este CSS no lo toca.
+   Las reglas repiten a propósito las de acordes.css para el
+   karaoke, para que este módulo funcione solo aunque acordes.css
+   no esté cargado; si los dos CSS están presentes, las reglas son
+   idénticas y no hay conflicto. */
+
+/* --- Acordes encima de la línea, en el karaoke --- */
+.karaoke-line .acordes-line{
+  display:block;
+  margin-bottom:.12em;
+  font-family:ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  font-size:.5em;
+  font-weight:700;
+  line-height:1.3;
+  letter-spacing:.03em;
+  color:#ffb08a;
+  white-space:pre-wrap;
+  word-break:break-word;
+}
+.karaoke-line.active .acordes-line{color:#ffd2bd}
+#karaokeLines:not(.acordes-visible) .acordes-line{display:none}
+
+/* --- Botón 🎸 propio del karaoke (solo si acordes.js no puso el suyo) --- */
+.karaoke-acordes-toggle{font-size:18px}
+#karaokeAcordesToggle.active{
+  background:#E94E1B;
+  border-color:#E94E1B;
+  color:#fff;
+}

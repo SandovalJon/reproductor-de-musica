@@ -1,0 +1,20 @@
+/* wrapped-video.css — «Wrapped como video» (v4.3.0).
+   Solo añade lo propio del botón «Descargar como video» dentro del
+   modal del Wrapped. El botón reutiliza las clases de la app
+   (.btn, .modal-actions) y sus variables (--accent, --line); el
+   aspecto del video vive en wrapped-video.js (canvas), no aquí. */
+
+#wrappedVideoBtn[disabled]{
+  opacity:.6;
+  cursor:wait;
+}
+
+@media (max-width:480px){
+  /* En móvil el modal ya envuelve las acciones a dos líneas
+     (wrapped.js pone flex-wrap:wrap en .modal-actions): el botón
+     de video ocupa su propia línea sin pelearse con «Copiar» ni
+     con «Descargar como imagen». */
+  #wrappedVideoBtn{
+    flex:1 1 100%;
+  }
+}

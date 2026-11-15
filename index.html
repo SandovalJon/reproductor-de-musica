@@ -23,15 +23,18 @@
 <link rel="stylesheet" href="./atajos.css">
 <link rel="stylesheet" href="./a11y.css">
 <link rel="stylesheet" href="./karaoke.css">
+<link rel="stylesheet" href="./lectura.css">
 <link rel="stylesheet" href="./wrapped.css">
 <link rel="stylesheet" href="./stats-artista.css">
 <link rel="stylesheet" href="./timeline.css">
 <link rel="stylesheet" href="./wrapped-img.css">
+<link rel="stylesheet" href="./wrapped-video.css">
 <link rel="stylesheet" href="./alarma.css">
 <link rel="stylesheet" href="./compartir.css">
 <link rel="stylesheet" href="./traduccion.css">
 <link rel="stylesheet" href="./karaoke-trad.css">
 <link rel="stylesheet" href="./acordes.css">
+<link rel="stylesheet" href="./karaoke-acordes.css">
 <link rel="stylesheet" href="./notas.css">
   <link rel="stylesheet" href="./conjunta.css">
   <link rel="stylesheet" href="./fiesta.css">
@@ -45,6 +48,7 @@
 <link rel="stylesheet" href="./dj.css">
 <link rel="stylesheet" href="./dj-vivo.css">
 <link rel="stylesheet" href="./tarareo.css">
+<link rel="stylesheet" href="./tarareo-ritmo.css">
 <link rel="stylesheet" href="./buscar-letra.css">
 <link rel="stylesheet" href="./limpio.css">
 <link rel="stylesheet" href="./novedades.css">
@@ -911,6 +915,10 @@
           <button class="btn small" id="btnKaraoke" type="button" style="display:none" title="Ver la letra a pantalla completa, sincronizada con la canción">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:15px;height:15px"><path d="M12 2a3 3 0 0 0-3 3v6a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/><path d="M19 10v1a7 7 0 0 1-14 0v-1M12 18v4"/></svg>
             Karaoke
+          </button>
+          <button class="btn small" id="btnLectura" type="button" style="display:none" title="Leer la letra completa de la canción actual, como un libro">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:15px;height:15px"><path d="M2 4h6a4 4 0 0 1 4 4v12a3 3 0 0 0-3-3H2V4Z"/><path d="M22 4h-6a4 4 0 0 0-4 4v12a3 3 0 0 1 3-3h7V4Z"/></svg>
+            Lectura
           </button>
           <button class="btn small" id="btnShareCurrent" type="button" disabled>
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:15px;height:15px"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="m8.6 13.5 6.8 4M15.4 6.5l-6.8 4"/></svg>
@@ -2339,7 +2347,7 @@
 
   // ---------- State ----------
   var tracks = []; // {id,name,title,artist,album,duration,size,type,addedAt,url,coverUrl,color,rating,stars}
-  var APP_VERSION = '4.2.0'; // al publicar cambios, subir este número y el CACHE de sw.js
+  var APP_VERSION = '4.3.0'; // al publicar cambios, subir este número y el CACHE de sw.js
   var currentId = null;
   var isPlaying = false;
   var shuffle = false;
@@ -9141,7 +9149,7 @@
   // ---------- Pack de mejoras: actualización, reanudar, deshacer, tap tempo ----------
 
   // ----- 1. Actualización sin atascos -----
-  var APP_VERSION = '4.2.0';
+  var APP_VERSION = '4.3.0';
   document.getElementById('appVersionNote').textContent = APP_VERSION;
   // 4.0.0: cmpVersion vive en src/core/format.js (window.RpmFormat).
   function cmpVersion(a, b){
@@ -12784,16 +12792,19 @@
 <script src="./atajos.js"></script>
 <script src="./a11y.js"></script>
 <script src="./karaoke.js"></script>
+<script src="./lectura.js"></script>
 <script src="./karaoke-trad.js"></script>
 <script src="./wrapped.js"></script>
 <script src="./stats-artista.js"></script>
 <script src="./export-m3u.js"></script>
 <script src="./wrapped-img.js"></script>
+<script src="./wrapped-video.js"></script>
 <script src="./timeline.js"></script>
 <script src="./alarma.js"></script>
 <script src="./compartir.js"></script>
 <script src="./traduccion.js"></script>
 <script src="./acordes.js"></script>
+<script src="./karaoke-acordes.js"></script>
 <script src="./notas.js"></script>
 <script src="./conjunta.js"></script>
 <script src="./fiesta.js"></script>
@@ -12805,6 +12816,7 @@
 <script src="./dj.js"></script>
 <script src="./dj-vivo.js"></script>
 <script src="./tarareo.js"></script>
+<script src="./tarareo-ritmo.js"></script>
 <script src="./buscar-letra.js"></script>
 <script src="./limpio.js"></script>
 <script src="./whatsapp.js"></script>

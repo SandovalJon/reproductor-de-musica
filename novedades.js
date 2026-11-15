@@ -1,4 +1,4 @@
-/* Historial de versiones / Qué hay de nuevo — Reproductor de Música v4.1.0.
+/* Historial de versiones / Qué hay de nuevo — Reproductor de Música v4.3.0.
    Módulo aparte: NO toca index.html ni ningún otro módulo. Se engancha
    solo a lo que ya existe en la app:
      - window.APP_VERSION (var global del script principal de
@@ -62,16 +62,18 @@
 
   /* ------------------------------------------------------------------
      Clave y changelog incrustado (copia literal de app/README.md).
-     Fuente: líneas "vX.Y.Z: ..." del README a fecha de la 4.1.0.
-     La 4.1.0 NO tiene entrada en el README: no se le inventa
-     ninguna; parseChangelog() simplemente no la encontrará y el
-     modal lo dirá así. Al publicar una versión nueva, el integrador
-     añade su línea aquí (o basta con que esté en el README, porque
-     el fetch de './README.md' la recogerá solo).
+     Fuente: líneas "vX.Y.Z: ..." del README a fecha de la 4.3.0.
+     Al publicar una versión nueva, el integrador añade su línea
+     aquí (o basta con que esté en el README, porque el fetch de
+     './README.md' la recogerá solo).
      ------------------------------------------------------------------ */
   var LAST_SEEN_KEY = 'reproductor-novedades:ultima-version-vista';
 
   var CHANGELOG_TEXT = [
+    'v4.3.0: buscar por tarareo mejorado (compara también el ritmo contra la rejilla de pulsos del BPM analizado; aproximado, la melodía no se compara nota a nota).',
+    'v4.3.0: acordes en karaoke (tus acordes encima de cada línea, junto a la letra y su traducción; sin acordes guardados, el karaoke se ve como siempre).',
+    'v4.3.0: modo lectura de letras (la letra completa como un libro, con letra grande y sin distracciones; se sale con ✕ o Esc).',
+    'v4.3.0: Wrapped como video (tu año en música en WebM vertical de ~12 s, con tus tops animados, generado en local; sin datos no genera nada).',
     'v4.2.0: portada animada con la música (la portada late con el ritmo usando el analizador que ya existe; se puede apagar y respeta el movimiento reducido).',
     'v4.2.0: modo coche simplificado (voz manos libres al entrar, anuncio por voz de la canción que suena y botones extragrandes; al salir, todo vuelve a lo normal).',
     'v4.2.0: compartir canción con letra (imagen PNG local con portada, letra y tu nota, o texto plano, por Web Share; nunca comparte el audio).',
