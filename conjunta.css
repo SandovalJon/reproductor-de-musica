@@ -1,0 +1,32 @@
+/* Escucha conjunta sincronizada — v3.9.0. Solo estilos propios (prefijo
+   .conjunta-). El modal reusa .modal-overlay / .modal / .modal-actions /
+   .btn de la app; si este CSS no carga, el modal sigue funcionando con
+   el estilo base. */
+.conjunta-overlay { z-index: 60; }
+.conjunta-modal { max-width: 560px; width: calc(100% - 32px); max-height: 88vh; overflow-y: auto; }
+.conjunta-modal h3 { margin: 0 0 10px; }
+.conjunta-rule {
+  margin: 0 0 10px; padding: 10px 12px; border-radius: 8px;
+  background: rgba(255, 193, 7, .14); border: 1px solid rgba(255, 193, 7, .45);
+  font-size: 13.5px; line-height: 1.5;
+}
+.conjunta-status { margin: 0 0 10px; font-size: 13.5px; line-height: 1.5; }
+.conjunta-missing {
+  margin: 0 0 10px; padding: 10px 12px; border-radius: 8px;
+  background: rgba(220, 53, 69, .12); border: 1px solid rgba(220, 53, 69, .45);
+  font-size: 13.5px; line-height: 1.5;
+}
+.conjunta-steps p { font-size: 13.5px; line-height: 1.5; margin: 8px 0; }
+.conjunta-row { display: flex; flex-wrap: wrap; gap: 8px; margin: 8px 0; }
+.conjunta-code {
+  width: 100%; box-sizing: border-box; font-family: ui-monospace, monospace;
+  font-size: 11.5px; line-height: 1.4; padding: 8px; border-radius: 8px;
+  border: 1px solid var(--border, #ccc); background: var(--bg-2, #fff);
+  color: inherit; resize: vertical; word-break: break-all;
+}
+.conjunta-note { font-size: 12.5px; opacity: .8; }
+.conjunta-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.conjunta-toast { font-size: 13px; margin: 8px 0 0; }
+@media (max-width: 480px) {
+  .conjunta-modal { width: calc(100% - 20px); }
+}

@@ -1,0 +1,196 @@
+/* Sonidos para dormir — v3.9.0, módulo aparte (ver dormir.js y
+   WIRING.md). Todo va bajo .rpm-dormir / #rpmDormirOpenBtn para no
+   chocar con los estilos de la app ni con el panel del temporizador
+   de apagado que la app ya trae (#sleepSelect / #sleepStatus).
+   Reutiliza las variables de tema de la app (--surface, --surface-2,
+   --line, --text, --muted, --accent...) con valores de respaldo. */
+
+/* Botón de apertura: hereda .btn.small de la app; solo se evita que
+   el texto de la cuenta atrás se parta. */
+#rpmDormirOpenBtn {
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+
+#rpmDormirOpenBtn[aria-pressed="true"] {
+  border-color: var(--accent, #e94e1b);
+  color: var(--accent, #e94e1b);
+}
+
+/* Panel: diálogo centrado, por encima del contenido de la app. */
+.rpm-dormir {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 200;
+  width: min(92vw, 440px);
+  max-height: min(92vh, 680px);
+  overflow: auto;
+  padding: 20px 20px 16px;
+  border: 1px solid var(--line, #e3e3e8);
+  border-radius: 20px;
+  background: var(--surface, #fff);
+  color: var(--text, #1c1c1e);
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.28);
+  text-align: center;
+}
+
+.rpm-dormir[hidden] {
+  display: none;
+}
+
+.rpm-dormir-close {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  width: 36px;
+  height: 36px;
+  border: 1px solid var(--line, #e3e3e8);
+  border-radius: 50%;
+  background: var(--surface-2, #f2f2f5);
+  color: var(--text, #1c1c1e);
+  font-size: 15px;
+  cursor: pointer;
+}
+
+.rpm-dormir-close:hover {
+  background: var(--surface-3, #e9e9ee);
+}
+
+.rpm-dormir-kicker {
+  margin: 0 0 4px;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--accent, #e94e1b);
+}
+
+.rpm-dormir-status {
+  margin: 0 0 2px;
+  font-size: 17px;
+  font-weight: 700;
+}
+
+.rpm-dormir-clock {
+  font-size: 52px;
+  font-weight: 800;
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Aviso de conflicto con el sleep timer / mezcla con la música. */
+.rpm-dormir-warn {
+  margin: 10px 0 0;
+  padding: 10px 12px;
+  border: 1px solid var(--accent, #e94e1b);
+  border-radius: 12px;
+  background: var(--accent-soft, #ffe8de);
+  color: var(--text, #1c1c1e);
+  font-size: 13.5px;
+  font-weight: 600;
+  line-height: 1.45;
+  text-align: left;
+}
+
+.rpm-dormir-warn[hidden] {
+  display: none;
+}
+
+/* Configuración: sonido y temporizador en dos columnas, volumen a
+   lo ancho. */
+.rpm-dormir-config {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px 12px;
+  text-align: left;
+  margin: 14px 0;
+}
+
+.rpm-dormir-config label {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  font-size: 12.5px;
+  font-weight: 700;
+  color: var(--muted, #666);
+}
+
+.rpm-dormir-config label:nth-child(3) {
+  grid-column: 1 / -1;
+}
+
+.rpm-dormir-config select,
+.rpm-dormir-config input[type="range"] {
+  padding: 9px 11px;
+  border: 1px solid var(--line, #e3e3e8);
+  border-radius: 10px;
+  background: var(--surface-2, #f2f2f5);
+  color: var(--text, #1c1c1e);
+  font-size: 14px;
+  font-family: inherit;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.rpm-dormir-config select:focus,
+.rpm-dormir-config input[type="range"]:focus {
+  border-color: var(--accent, #e94e1b);
+  outline: none;
+}
+
+.rpm-dormir-config input[type="range"] {
+  padding: 9px 4px;
+  accent-color: var(--accent, #e94e1b);
+}
+
+.rpm-dormir-volout {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text, #1c1c1e);
+  font-variant-numeric: tabular-nums;
+}
+
+.rpm-dormir-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: center;
+  margin-bottom: 12px;
+}
+
+.rpm-dormir-actions .btn {
+  min-height: 44px;
+}
+
+.rpm-dormir .sound-note {
+  text-align: left;
+  margin: 0;
+}
+
+@media (max-width: 480px) {
+  .rpm-dormir {
+    padding: 18px 14px 14px;
+  }
+
+  .rpm-dormir-clock {
+    font-size: 44px;
+  }
+
+  .rpm-dormir-config {
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+
+  .rpm-dormir-actions .btn {
+    flex: 1 1 40%;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .rpm-dormir {
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+  }
+}
