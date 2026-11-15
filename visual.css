@@ -1,0 +1,20 @@
+/* Brillo de fondo con el color de la portada (v3.2.0).
+   Capa fija detrás de todo el contenido: .app tiene z-index:1 y
+   #bgPhoto z-index:0; este div va a z-index:0 ANTES de #bgPhoto en el
+   DOM, así nunca tapa el texto ni los controles, y la foto de fondo
+   personalizada del usuario (cuando existe) queda por encima de él.
+   pointer-events:none: no intercepta ningún toque o clic. El color lo
+   pone visual.js en style.background (dos radiales suaves); aquí solo
+   va la posición y el fundido de entrada/salida. Sin portada o con el
+   efecto apagado, el div queda transparente (sin .on). */
+#rpmVisualGlow{
+  position:fixed;
+  inset:0;
+  z-index:0;
+  pointer-events:none;
+  opacity:0;
+  transition:opacity .6s ease;
+}
+#rpmVisualGlow.on{
+  opacity:1;
+}

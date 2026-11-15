@@ -1,0 +1,130 @@
+/* Temas y animaciones (v3.2.0).
+   Paletas de los 3 temas rpm. Se aplican con html[data-rpm-theme]
+   (el atributo lo pone temas.js) y con variables en línea.
+   - El selector lleva :root para ganar a html[data-theme="..."] de
+     index.html sin importar el orden de los <link>: la paleta rpm
+     es la base cuando hay un tema rpm activo.
+   - --accent/--accent-dark/--accent-soft: temas.js los escribe ADEMÁS
+     en línea, porque applyTheme() de la app también los escribe en
+     línea y la línea gana al CSS. Los valores de aquí y los de
+     temas.js DEBEN coincidir (hay un test que lo comprueba).
+   - Si el tema dinámico (dynTheme) está activo, su acento manda:
+     temas.js no escribe las 3 variables de acento en ese caso, así
+     que el acento dinámico (en línea, puesto después) gana.
+   - color-scheme acompaña a cada tema para que controles nativos y
+     barras de scroll sigan al tema. */
+
+/* ---------- Neón (base oscura, acento cian) ---------- */
+html:root[data-rpm-theme="neon"]{
+  color-scheme: dark;
+  --bg:#0A0A16; --bg-2:#101022;
+  --surface:#151528; --surface-2:#1C1C33; --surface-3:#262640;
+  --text:#EDF2FF; --muted:#9AA3C7; --muted-2:#6E7699;
+  --line:#2A2A4A;
+  --accent:#00E5FF; --accent-dark:#00B8D4; --accent-soft:#123B46;
+  --shadow:0 16px 40px rgba(0,0,0,.5), 0 2px 10px rgba(0,0,0,.35);
+  --shadow-sm:0 6px 18px rgba(0,0,0,.4);
+}
+
+/* ---------- Atardecer (base clara y cálida, acento naranja) ---------- */
+html:root[data-rpm-theme="sunset"]{
+  color-scheme: light;
+  --bg:#FDF1E3; --bg-2:#F9E4CF;
+  --surface:#FFF9F1; --surface-2:#FDEFE0; --surface-3:#F6DFC8;
+  --text:#2E1B12; --muted:#7A5C4A; --muted-2:#A68A76;
+  --line:#EDD9C4;
+  --accent:#FF6B35; --accent-dark:#D94F1E; --accent-soft:#FFE0D2;
+  --shadow:0 12px 32px rgba(60,30,10,.12), 0 2px 8px rgba(60,30,10,.07);
+  --shadow-sm:0 4px 14px rgba(60,30,10,.09);
+}
+
+/* ---------- Bosque (base oscura verdosa, acento verde) ---------- */
+html:root[data-rpm-theme="forest"]{
+  color-scheme: dark;
+  --bg:#0D1B12; --bg-2:#122619;
+  --surface:#16291C; --surface-2:#1C3324; --surface-3:#24402E;
+  --text:#E9F4EC; --muted:#9DB8A6; --muted-2:#6E8A78;
+  --line:#243B2D;
+  --accent:#4ADE80; --accent-dark:#22C55E; --accent-soft:#173B26;
+  --shadow:0 16px 40px rgba(0,0,0,.5), 0 2px 10px rgba(0,0,0,.35);
+  --shadow-sm:0 6px 18px rgba(0,0,0,.4);
+}
+
+/* ---------- Transiciones suaves al cambiar de tema ----------
+   Solo color/fondo/borde/sombra, y solo en los contenedores grandes:
+   un `* { transition }` rompería las animaciones que ya trae la app
+   (ecualizador, badges, etc.). .btn conserva su transform .15s. */
+body,
+.player-card,
+.library,
+.track,
+.chip,
+.modal,
+.dropzone,
+.view-tab,
+.sound-toggle,
+.stat-pill{
+  transition:background-color .35s ease, color .35s ease,
+    border-color .35s ease, box-shadow .35s ease;
+}
+.btn{
+  transition:background-color .35s ease, color .35s ease,
+    border-color .35s ease, box-shadow .35s ease, transform .15s ease;
+}
+
+/* ---------- Animación de entrada de la portada ----------
+   La clase .rpm-cover-in la pone/quita temas.js al cambiar de
+   canción (observa #coverImg[src] y #nowTitle). Sutil: medio
+   segundo, apenas un fundido con un leve zoom. */
+@keyframes rpmCoverIn{
+  from{ opacity:.35; transform:scale(.985); }
+  to{ opacity:1; transform:scale(1); }
+}
+#coverWrap.rpm-cover-in #coverImg,
+#coverWrap.rpm-cover-in .cover-fallback{
+  animation:rpmCoverIn .45s ease both;
+}
+
+/* ---------- Animación de entrada de la lista ----------
+   La clase .rpm-list-in la pone/quita temas.js cuando #trackList
+   se reconstruye. Entrada corta con escalonado solo en las 8
+   primeras filas; el resto entra a la vez. */
+@keyframes rpmTrackIn{
+  from{ opacity:0; transform:translateY(5px); }
+  to{ opacity:1; transform:translateY(0); }
+}
+.track-list.rpm-list-in .track{
+  animation:rpmTrackIn .3s ease both;
+}
+.track-list.rpm-list-in .track:nth-child(1){ animation-delay:0s; }
+.track-list.rpm-list-in .track:nth-child(2){ animation-delay:.03s; }
+.track-list.rpm-list-in .track:nth-child(3){ animation-delay:.06s; }
+.track-list.rpm-list-in .track:nth-child(4){ animation-delay:.09s; }
+.track-list.rpm-list-in .track:nth-child(5){ animation-delay:.12s; }
+.track-list.rpm-list-in .track:nth-child(6){ animation-delay:.15s; }
+.track-list.rpm-list-in .track:nth-child(7){ animation-delay:.18s; }
+.track-list.rpm-list-in .track:nth-child(8){ animation-delay:.21s; }
+
+/* ---------- prefers-reduced-motion: sin animaciones ----------
+   Sin transiciones ni animaciones del módulo si el usuario lo tiene
+   activado (temas.js también lo comprueba antes de añadir clases). */
+@media (prefers-reduced-motion: reduce){
+  body,
+  .player-card,
+  .library,
+  .track,
+  .chip,
+  .modal,
+  .dropzone,
+  .view-tab,
+  .sound-toggle,
+  .stat-pill,
+  .btn{
+    transition:none !important;
+  }
+  #coverWrap.rpm-cover-in #coverImg,
+  #coverWrap.rpm-cover-in .cover-fallback,
+  .track-list.rpm-list-in .track{
+    animation:none !important;
+  }
+}

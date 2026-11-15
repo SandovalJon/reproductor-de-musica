@@ -16,6 +16,9 @@
 <title>Reproductor de Música</title>
 <link rel="stylesheet" href="./fonts.css">
 <link rel="stylesheet" href="./cast.css">
+<link rel="stylesheet" href="./temas.css">
+<link rel="stylesheet" href="./visual.css">
+<link rel="stylesheet" href="./atajos.css">
 <style>
   :root{
     --bg:#F4F1EC;
@@ -1138,12 +1141,17 @@
                   <option value="auto">Automático (sistema)</option>
                   <option value="light">Claro</option>
                   <option value="dark">Oscuro</option>
+                  <option value="neon">Neón</option>
+                  <option value="sunset">Atardecer</option>
+                  <option value="forest">Bosque</option>
                 </select>
                 <label style="font-size:13px; font-weight:700" for="vizStyleSelect">Visualizador</label>
                 <select id="vizStyleSelect" class="speed-select">
                   <option value="bars">Barras</option>
                   <option value="wave">Onda</option>
                   <option value="circle">Círculo</option>
+                  <option value="combo">Combo (barras + onda)</option>
+                  <option value="rings">Anillos</option>
                 </select>
               </div>
               <p class="sound-note">Se guarda en este dispositivo y también viaja dentro del respaldo.</p>
@@ -1350,7 +1358,7 @@
         <div class="update-row">
           <button class="btn small" id="btnCheckUpdate" type="button">Actualizar app</button>
           <button class="btn small danger" id="btnForceUpdate" type="button">Forzar actualización</button>
-          <span class="backup-note" id="updateStatus">Versión de esta app: v<span id="appVersionNote">3.1.0</span>. «Actualizar app» consulta la versión publicada y te dice si ya estás al día antes de recargar. «Forzar actualización» limpia el service worker y las cachés de la app si una actualización se quedó atascada; tu biblioteca, playlists y ajustes (IndexedDB) nunca se tocan.</span>
+          <span class="backup-note" id="updateStatus">Versión de esta app: v<span id="appVersionNote">3.2.0</span>. «Actualizar app» consulta la versión publicada y te dice si ya estás al día antes de recargar. «Forzar actualización» limpia el service worker y las cachés de la app si una actualización se quedó atascada; tu biblioteca, playlists y ajustes (IndexedDB) nunca se tocan.</span>
         </div>
       </div>
 
@@ -2277,7 +2285,7 @@
 
   // ---------- State ----------
   var tracks = []; // {id,name,title,artist,album,duration,size,type,addedAt,url,coverUrl,color,rating,stars}
-  var APP_VERSION = '3.1.0'; // al publicar cambios, subir este número y el CACHE de sw.js
+  var APP_VERSION = '3.2.0'; // al publicar cambios, subir este número y el CACHE de sw.js
   var currentId = null;
   var isPlaying = false;
   var shuffle = false;
@@ -2335,7 +2343,7 @@
     customPresets: [],
     theme: 'auto', // Pack 6: 'auto' | 'light' | 'dark'
     accent: 'naranja', // Pack 6: id de color de acento
-    vizStyle: 'bars', // Pack 6: 'bars' | 'wave' | 'circle'
+    vizStyle: 'bars', // Pack 6: 'bars' | 'wave' | 'circle' · 3.2.0: + 'combo' | 'rings'
     alarm: { on: false, time: '08:00', playlistId: '', source: 'playlist', wake: false } // Pack 6: alarma musical · Pack 10: fuente (playlist/cola/reanudar) y pantalla encendida
   };
   // Pack 5: valida y fusiona un objeto de ajustes (estado guardado o respaldo) sin perder lo existente
@@ -2378,7 +2386,7 @@
     // Pack 6: apariencia y alarma, con valores por defecto sensatos
     if(typeof ds.theme === 'string') settings.theme = (ds.theme === 'light' || ds.theme === 'dark') ? ds.theme : 'auto';
     if(typeof ds.accent === 'string') settings.accent = validAccent(ds.accent);
-    if(typeof ds.vizStyle === 'string') settings.vizStyle = (ds.vizStyle === 'wave' || ds.vizStyle === 'circle') ? ds.vizStyle : 'bars';
+    if(typeof ds.vizStyle === 'string') settings.vizStyle = (['bars','wave','circle','combo','rings'].indexOf(ds.vizStyle) !== -1) ? ds.vizStyle : 'bars';
     if(ds.alarm) settings.alarm = sanitizeAlarm(ds.alarm);
     // Pack 12: tema dinámico y perfiles de sonido por salida. Si el estado o
     // el respaldo no trae perfiles, los valores de sonido ya aplicados arriba
@@ -4232,6 +4240,7 @@
       try{ audioCtx = new AC({ latencyHint: 'playback' }); }
       catch(e){ audioCtx = new AC(); }
       analyser = audioCtx.createAnalyser();
+      window.__rpmVizAnalyser = analyser; // 3.2.0: visual.js comparte este analizador (un solo AudioContext)
       analyser.fftSize = 128;
       masterGain = audioCtx.createGain();
       masterGain.gain.value = 1;
@@ -4371,6 +4380,7 @@
   }
   function applyEq(){ applyEqValues(currentEqValues()); }
   function drawViz(){
+    if(window.__rpmVisual && window.__rpmVisual.handles(settings.vizStyle)){ vizRAF = requestAnimationFrame(drawViz); return; }
     var w = viz.width, h = viz.height;
     vizCtx.clearRect(0,0,w,h);
     if(analyser && isPlaying){
@@ -8586,9 +8596,9 @@
     toast(settings.theme === 'auto' ? 'Tema automático (sigue al sistema)' : (settings.theme === 'dark' ? 'Tema oscuro' : 'Tema claro'));
   });
   document.getElementById('vizStyleSelect').addEventListener('change', function(ev){
-    settings.vizStyle = (ev.target.value === 'wave' || ev.target.value === 'circle') ? ev.target.value : 'bars';
+    settings.vizStyle = (['bars','wave','circle','combo','rings'].indexOf(ev.target.value) !== -1) ? ev.target.value : 'bars';
     saveState();
-    toast('Visualizador: ' + (settings.vizStyle === 'wave' ? 'onda' : settings.vizStyle === 'circle' ? 'círculo' : 'barras'));
+    toast('Visualizador: ' + (settings.vizStyle === 'wave' ? 'onda' : settings.vizStyle === 'circle' ? 'círculo' : settings.vizStyle === 'combo' ? 'combo (barras + onda)' : settings.vizStyle === 'rings' ? 'anillos' : 'barras'));
   });
 
   // ----- Compartir de verdad (Web Share con archivos; si no, descargar) -----
@@ -9180,7 +9190,7 @@
   // ---------- Pack de mejoras: actualización, reanudar, deshacer, tap tempo ----------
 
   // ----- 1. Actualización sin atascos -----
-  var APP_VERSION = '3.1.0';
+  var APP_VERSION = '3.2.0';
   document.getElementById('appVersionNote').textContent = APP_VERSION;
   function cmpVersion(a, b){
     var pa = a.split('.').map(function(x){ return parseInt(x, 10) || 0; });
@@ -12836,6 +12846,9 @@
 <script src="./embedded-lyrics.js"></script>
 <script src="./mejoras.js"></script>
 <script src="./cast.js"></script>
+<script src="./temas.js"></script>
+<script src="./visual.js"></script>
+<script src="./atajos.js"></script>
 <script type="module" src="./src/sync/sync-bridge.js"></script>
 <link rel="stylesheet" href="./src/folders/folders.css" />
 <script src="./src/folders/folders.js"></script>

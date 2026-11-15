@@ -1,0 +1,37 @@
+/* Atajos y gestos nuevos (v3.2.0) — acompaña a atajos.js.
+   Solo estilos del módulo: el flash ▶/⏸ del doble toque central y
+   touch-action para que el deslizamiento horizontal sobre la portada
+   no compita con el scroll vertical (el scroll vertical sigue siendo
+   del navegador; el swipe ±55 px ya cableado en index.html no se
+   toca). Si este CSS no carga, el módulo sigue funcionando: el flash
+   simplemente no se ve. */
+
+/* La portada entrega los gestos horizontales al JS; el scroll
+   vertical lo gestiona el navegador como siempre. */
+#coverWrap {
+  touch-action: pan-y;
+}
+
+/* Flash ▶/⏸ del doble toque central: mismo aspecto que el flash
+   −10 s/+10 s (.seek-flash) de index.html, pero centrado. */
+.atajos-flash {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 5;
+  padding: 10px 15px;
+  border-radius: 999px;
+  background: rgba(0, 0, 0, .55);
+  color: #fff;
+  font-size: 15px;
+  font-weight: 800;
+  letter-spacing: .02em;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity .18s ease;
+}
+
+.atajos-flash.show {
+  opacity: 1;
+}
