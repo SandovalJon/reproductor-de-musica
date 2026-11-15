@@ -34,6 +34,10 @@
 <link rel="stylesheet" href="./voz.css">
 <link rel="stylesheet" href="./spotify-import.css">
 <link rel="stylesheet" href="./dj.css">
+<link rel="stylesheet" href="./tarareo.css">
+<link rel="stylesheet" href="./limpio.css">
+<link rel="stylesheet" href="./whatsapp.css">
+<link rel="stylesheet" href="./salida.css">
 <style>
   :root{
     --bg:#F4F1EC;
@@ -1379,7 +1383,7 @@
         <div class="update-row">
           <button class="btn small" id="btnCheckUpdate" type="button">Actualizar app</button>
           <button class="btn small danger" id="btnForceUpdate" type="button">Forzar actualización</button>
-          <span class="backup-note" id="updateStatus">Versión de esta app: v<span id="appVersionNote">3.6.0</span>. «Actualizar app» consulta la versión publicada y te dice si ya estás al día antes de recargar. «Forzar actualización» limpia el service worker y las cachés de la app si una actualización se quedó atascada; tu biblioteca, playlists y ajustes (IndexedDB) nunca se tocan.</span>
+          <span class="backup-note" id="updateStatus">Versión de esta app: v<span id="appVersionNote">3.7.0</span>. «Actualizar app» consulta la versión publicada y te dice si ya estás al día antes de recargar. «Forzar actualización» limpia el service worker y las cachés de la app si una actualización se quedó atascada; tu biblioteca, playlists y ajustes (IndexedDB) nunca se tocan.</span>
         </div>
       </div>
 
@@ -2310,7 +2314,7 @@
 
   // ---------- State ----------
   var tracks = []; // {id,name,title,artist,album,duration,size,type,addedAt,url,coverUrl,color,rating,stars}
-  var APP_VERSION = '3.6.0'; // al publicar cambios, subir este número y el CACHE de sw.js
+  var APP_VERSION = '3.7.0'; // al publicar cambios, subir este número y el CACHE de sw.js
   var currentId = null;
   var isPlaying = false;
   var shuffle = false;
@@ -9144,7 +9148,7 @@
   // ---------- Pack de mejoras: actualización, reanudar, deshacer, tap tempo ----------
 
   // ----- 1. Actualización sin atascos -----
-  var APP_VERSION = '3.6.0';
+  var APP_VERSION = '3.7.0';
   document.getElementById('appVersionNote').textContent = APP_VERSION;
   function cmpVersion(a, b){
     var pa = a.split('.').map(function(x){ return parseInt(x, 10) || 0; });
@@ -12796,6 +12800,10 @@
 <script src="./voz.js"></script>
 <script src="./spotify-import.js"></script>
 <script src="./dj.js"></script>
+<script src="./tarareo.js"></script>
+<script src="./limpio.js"></script>
+<script src="./whatsapp.js"></script>
+<script src="./salida.js"></script>
 <script type="module" src="./src/sync/sync-bridge.js"></script>
 <link rel="stylesheet" href="./src/folders/folders.css" />
 <script src="./src/folders/folders.js"></script>

@@ -1,0 +1,29 @@
+/* Sonido por audífonos o bocina (v3.7.0): línea de estado discreta y
+   controles del módulo, dentro del grupo "Sonido según la salida"
+   (#soundBody). No redefine los estilos de la app: solo añade los
+   suyos, con prefijo rpm-salida-. Si salida.css no carga, la línea
+   y los botones siguen funcionando con el estilo base de la app. */
+
+.rpm-salida-status{
+  margin:6px 0 0;
+  font-size:12.5px;
+  line-height:1.45;
+  color:var(--muted, #6b6259);
+}
+
+.rpm-salida-row{
+  display:flex;
+  flex-wrap:wrap;
+  gap:6px;
+  margin-top:8px;
+}
+
+.rpm-salida-btn{
+  font-size:12.5px;
+  padding:5px 10px;
+}
+
+.rpm-salida-btn:disabled{
+  opacity:.45;
+  cursor:not-allowed;
+}

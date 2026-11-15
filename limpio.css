@@ -1,0 +1,177 @@
+/* Modo pantalla limpia — v3.7.0. Solo estilos del overlay propio
+   (.rpm-limpio*); no toca nada de la app. Sin animaciones si
+   prefers-reduced-motion está activado. */
+.rpm-limpio {
+  position: fixed;
+  inset: 0;
+  z-index: 140;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 18px;
+  padding: 24px 20px calc(28px + env(safe-area-inset-bottom));
+  background: var(--bg, #f4f1ec);
+  color: var(--text, #191613);
+  text-align: center;
+  overflow: auto;
+  opacity: 1;
+  transition: opacity .18s ease;
+}
+.rpm-limpio[hidden] { display: none; }
+
+.rpm-limpio-close {
+  position: absolute;
+  top: calc(14px + env(safe-area-inset-top));
+  right: 16px;
+  width: 46px;
+  height: 46px;
+  border-radius: 50%;
+  border: 1px solid var(--line, #e3dcd1);
+  background: var(--surface, #fff);
+  color: var(--text, #191613);
+  font-size: 19px;
+  line-height: 1;
+  display: grid;
+  place-items: center;
+}
+.rpm-limpio-close:hover { background: var(--surface-2, #f7f3ee); }
+
+.rpm-limpio-inner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 18px;
+  width: min(560px, 100%);
+}
+
+.rpm-limpio-cover-wrap {
+  width: min(68vw, 380px);
+  aspect-ratio: 1 / 1;
+  border-radius: 22px;
+  overflow: hidden;
+  background: var(--surface-3, #efe9e0);
+  box-shadow: var(--shadow, 0 12px 32px rgba(28, 20, 10, .10));
+  position: relative;
+  flex: none;
+}
+.rpm-limpio-cover {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+.rpm-limpio-cover-fb {
+  width: 100%;
+  height: 100%;
+  display: grid;
+  place-items: center;
+  color: #fff;
+  font-family: "Fraunces", serif;
+  font-size: 96px;
+  font-weight: 700;
+  background: linear-gradient(145deg, #2b2118, #e94e1b);
+}
+
+.rpm-limpio-title {
+  margin: 0;
+  font-size: clamp(22px, 5vw, 32px);
+  line-height: 1.15;
+  font-weight: 800;
+  letter-spacing: -.01em;
+  overflow-wrap: break-word;
+}
+.rpm-limpio-artist {
+  margin: 6px 0 0;
+  color: var(--muted, #726b63);
+  font-size: 16px;
+}
+.rpm-limpio-empty {
+  margin: 0;
+  color: var(--muted, #726b63);
+  font-size: 14.5px;
+  line-height: 1.55;
+  max-width: 46ch;
+}
+.rpm-limpio-empty[hidden],
+.rpm-limpio-track[hidden] { display: none; }
+
+.rpm-limpio-controls {
+  display: flex;
+  gap: 14px;
+  align-items: center;
+  justify-content: center;
+}
+.rpm-limpio-btn {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--text, #191613);
+  font-size: 24px;
+  display: grid;
+  place-items: center;
+}
+.rpm-limpio-btn:hover { background: var(--surface-2, #f7f3ee); }
+.rpm-limpio-btn:disabled,
+.rpm-limpio-play:disabled { opacity: .45; cursor: not-allowed; }
+.rpm-limpio-play {
+  width: 76px;
+  height: 76px;
+  border-radius: 50%;
+  border: none;
+  background: var(--accent, #e94e1b);
+  color: #fff;
+  font-size: 28px;
+  display: grid;
+  place-items: center;
+  box-shadow: 0 10px 24px rgba(233, 78, 27, .35);
+}
+.rpm-limpio-play:hover { background: var(--accent-dark, #c93e12); }
+
+.rpm-limpio-vol {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: min(320px, 100%);
+}
+.rpm-limpio-vol input[type="range"] {
+  flex: 1;
+  -webkit-appearance: none;
+  appearance: none;
+  height: 22px;
+  background: transparent;
+  cursor: pointer;
+  margin: 0;
+}
+.rpm-limpio-vol input[type="range"]::-webkit-slider-runnable-track {
+  height: 6px;
+  border-radius: 999px;
+  background: var(--surface-3, #efe9e0);
+}
+.rpm-limpio-vol input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #fff;
+  border: 2px solid var(--accent, #e94e1b);
+  margin-top: -6px;
+}
+.rpm-limpio-vol input[type="range"]::-moz-range-track {
+  height: 6px;
+  border-radius: 999px;
+  background: var(--surface-3, #efe9e0);
+}
+.rpm-limpio-vol input[type="range"]::-moz-range-thumb {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #fff;
+  border: 2px solid var(--accent, #e94e1b);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .rpm-limpio { transition: none; }
+}

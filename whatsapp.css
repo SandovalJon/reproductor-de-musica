@@ -1,0 +1,41 @@
+/* whatsapp.css — Compartir canción por WhatsApp (reproductor-de-musica v3.7.0)
+ * Solo estilos propios del módulo (prefijo .wa-). El botón reusa
+ * .btn / .btn small de la app; si whatsapp.css no carga, el botón
+ * sigue funcionando con el estilo base. Sin pulsar el botón, nada
+ * de esto se muestra. */
+
+.wa-btn {
+  border-color: #25d366;
+  color: #128c4b;
+}
+
+.wa-btn:hover {
+  background: #e7f9ee;
+  border-color: #1eb856;
+  color: #0e7a3e;
+}
+
+@media (prefers-color-scheme: dark) {
+  .wa-btn { color: #4be389; }
+  .wa-btn:hover { background: #12261a; color: #6ff0a4; }
+}
+
+.wa-toast {
+  position: fixed;
+  left: 50%;
+  bottom: 24px;
+  transform: translate(-50%, 8px);
+  z-index: 120;
+  background: #191613;
+  color: #f5f1eb;
+  padding: 10px 16px;
+  border-radius: 999px;
+  font-size: 14px;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity .2s, transform .2s;
+  max-width: calc(100vw - 32px);
+  text-align: center;
+}
+
+.wa-toast.show { opacity: 1; transform: translate(-50%, 0); }
