@@ -1,0 +1,97 @@
+/* Buscar por fragmento de letra — v3.8.0 (módulo aparte, buscar-letra.css).
+   Reutiliza las variables de tema de la app (--surface, --text,
+   --muted, --accent, --line, --surface-2) con fallback claro, para
+   que el botón y el panel sigan el tema y el modo oscuro sin
+   duplicar colores. El botón mide 34px de alto como el resto de
+   controles de .lib-tools. El panel aparece dentro de .lib-head,
+   justo debajo de la fila del buscador; no es flotante, así que no
+   tapa la biblioteca ni choca con el panel de letras (#lyricsPanel,
+   fijo abajo a la derecha). El resaltado usa <mark> con el color
+   de acento de la app. */
+
+/* Botón "♪ Letra" junto al buscador */
+.rpm-buscar-letra-btn{
+  flex:none; height:34px; border-radius:999px; padding:0 12px;
+  border:1px solid var(--line,#E3DCD1);
+  background:var(--surface-2,#F7F3EE); color:var(--text,#191613);
+  font-size:13.5px; font-weight:600; line-height:1; cursor:pointer;
+  font-family:"Plus Jakarta Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+  white-space:nowrap;
+}
+.rpm-buscar-letra-btn:hover{ border-color:var(--accent,#E94E1B); }
+.rpm-buscar-letra-btn:focus-visible{
+  outline:2px solid var(--accent,#E94E1B); outline-offset:2px;
+}
+.rpm-buscar-letra-btn[aria-expanded="true"]{
+  background:var(--accent,#E94E1B); border-color:var(--accent,#E94E1B);
+  color:#fff;
+}
+
+/* Panel de búsqueda (en flujo, bajo .lib-tools) */
+.rpm-buscar-letra-panel{
+  display:none; margin:12px 18px 0;
+  background:var(--surface-2,#F7F3EE);
+  border:1px solid var(--line,#E3DCD1); border-radius:14px;
+  padding:12px 14px;
+}
+.rpm-buscar-letra-panel.on{ display:block; }
+.rpm-buscar-letra-head-row{
+  display:flex; align-items:center; justify-content:space-between;
+  gap:10px; font-size:14px;
+}
+.rpm-buscar-letra-close{
+  width:28px; height:28px; border-radius:50%; border:1px solid var(--line,#E3DCD1);
+  background:var(--surface,#FFFFFF); color:var(--muted,#726B63);
+  font-size:13px; line-height:1; cursor:pointer; flex:none;
+}
+.rpm-buscar-letra-close:hover{ color:var(--text,#191613); border-color:var(--muted,#726B63); }
+.rpm-buscar-letra-input{
+  width:100%; box-sizing:border-box; margin-top:10px;
+  padding:9px 12px; border-radius:10px;
+  border:1px solid var(--line,#E3DCD1);
+  background:var(--surface,#FFFFFF); color:var(--text,#191613);
+  font-size:14px; font-family:inherit;
+}
+.rpm-buscar-letra-input:focus-visible{
+  outline:2px solid var(--accent,#E94E1B); outline-offset:1px;
+}
+.rpm-buscar-letra-status{
+  margin:8px 0 0; font-size:13px; line-height:1.5;
+  color:var(--muted,#726B63);
+}
+.rpm-buscar-letra-list{
+  list-style:none; margin:10px 0 0; padding:0;
+  display:flex; flex-direction:column; gap:8px;
+}
+.rpm-buscar-letra-item{
+  display:block; width:100%; box-sizing:border-box; text-align:left;
+  background:var(--surface,#FFFFFF);
+  border:1px solid var(--line,#E3DCD1); border-radius:10px;
+  padding:10px 12px; cursor:pointer; font-family:inherit;
+}
+button.rpm-buscar-letra-item:hover{
+  border-color:var(--accent,#E94E1B);
+}
+button.rpm-buscar-letra-item:focus-visible{
+  outline:2px solid var(--accent,#E94E1B); outline-offset:2px;
+}
+.rpm-buscar-letra-orphan{ cursor:default; opacity:.85; }
+.rpm-buscar-letra-head{
+  display:block; font-size:14px; font-weight:700;
+  color:var(--text,#191613); line-height:1.4;
+}
+.rpm-buscar-letra-snippet{
+  display:block; margin-top:4px; font-size:13.5px; line-height:1.55;
+  color:var(--muted,#726B63); word-break:break-word;
+}
+.rpm-buscar-letra-snippet mark{
+  background:var(--accent,#E94E1B); color:#fff;
+  border-radius:3px; padding:0 1px;
+}
+.rpm-buscar-letra-note{
+  display:block; margin-top:6px; font-size:12.5px; font-style:italic;
+  color:var(--muted,#726B63);
+}
+@media (max-width:560px){
+  .rpm-buscar-letra-panel{ margin:10px 12px 0; padding:10px 12px; }
+}

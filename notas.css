@@ -1,0 +1,93 @@
+/* Notas personales por canción — estilos. La nota se muestra debajo
+   del artista/álbum, discreta, con el mismo lenguaje visual de la
+   app (bordes suaves, color de acento, tipografía del sistema).
+   Sin nota no se muestra nada: #notasView y #notasEditor llevan
+   hidden y el CSS no los revive. El texto de la nota respeta los
+   saltos de línea que escribió el usuario (white-space:pre-wrap). */
+
+/* --- Botón discreto junto a "Editar datos" --- */
+#notasBtn:disabled{opacity:.45;cursor:not-allowed}
+
+/* --- Vista de la nota (solo si hay nota) --- */
+.notas-view{
+  margin:10px 0 0;
+  padding:10px 12px;
+  border:1px solid var(--line,#E3DCD1);
+  border-left:3px solid var(--accent,#E94E1B);
+  border-radius:12px;
+  background:var(--surface-2,#F7F3EE);
+}
+.notas-label{
+  margin:0 0 4px;
+  font-size:12px;
+  font-weight:700;
+  letter-spacing:.04em;
+  text-transform:uppercase;
+  color:var(--muted,#726B63);
+}
+.notas-text{
+  margin:0;
+  font-size:14px;
+  line-height:1.6;
+  white-space:pre-wrap;
+  word-break:break-word;
+}
+.notas-view-row{
+  display:flex;
+  flex-wrap:wrap;
+  gap:8px;
+  margin-top:8px;
+}
+.notas-sync{
+  margin:8px 0 0;
+  font-size:12px;
+  line-height:1.5;
+  color:var(--muted,#726B63);
+}
+
+/* --- Editor de la nota (solo al abrirlo) --- */
+.notas-editor{margin:10px 0 0}
+.notas-editor-hint{
+  margin:0 0 6px;
+  font-size:12.5px;
+  line-height:1.5;
+  color:var(--muted,#726B63);
+}
+.notas-textarea{
+  width:100%;
+  box-sizing:border-box;
+  min-height:110px;
+  border-radius:12px;
+  padding:10px;
+  border:1px solid var(--line,#E3DCD1);
+  background:var(--surface,#fff);
+  color:inherit;
+  font:14px/1.6 system-ui,sans-serif;
+  resize:vertical;
+}
+.notas-editor-row{
+  display:flex;
+  flex-wrap:wrap;
+  gap:8px;
+  align-items:center;
+  margin-top:8px;
+}
+.notas-editor-row button{
+  border:1px solid var(--line,#E3DCD1);
+  background:var(--surface-2,#F7F3EE);
+  color:inherit;
+  border-radius:999px;
+  padding:7px 12px;
+  font:600 12.5px/1 system-ui,sans-serif;
+  cursor:pointer;
+}
+.notas-editor-row .notas-save{
+  border:0;
+  background:#E94E1B;
+  color:#fff;
+  font-weight:700;
+}
+.notas-count{
+  font-size:12.5px;
+  color:var(--muted,#726B63);
+}
