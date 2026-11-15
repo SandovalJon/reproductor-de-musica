@@ -1,6 +1,9 @@
 /* Service worker del Reproductor de Música: app shell offline-first. */
 /* Al publicar cambios, subir APP_VERSION en index.html y este CACHE juntos. */
-var CACHE = 'reproductor-musica-2.9.1';
+/* 3.0.0: los módulos de sync entran en ASSETS para que la app
+   funcione offline desde la primera carga (antes, lyrics.js y
+   mejoras.js solo se cacheaban tras la primera carga). */
+var CACHE = 'reproductor-musica-3.0.0';
 var ASSETS = [
   './',
   './index.html',
@@ -8,7 +11,19 @@ var ASSETS = [
   './icon-192.png',
   './icon-512.png',
   './maskable-512.png',
-  './apple-touch-icon.png'
+  './apple-touch-icon.png',
+  './lyrics.js',
+  './lyrics.css',
+  './mejoras.js',
+  './mejoras.css',
+  './src/library/db.js',
+  './src/library/track-meta.js',
+  './src/library/zip.js',
+  './src/sync/sync-core.js',
+  './src/sync/package-io.js',
+  './src/sync/sync-ui.js',
+  './src/sync/sync-ui.css',
+  './src/sync/sync-bridge.js'
 ];
 
 self.addEventListener('install', function(event) {

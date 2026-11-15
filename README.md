@@ -6,9 +6,10 @@ Abre `index.html` y agrega tus canciones con el botón, eligiendo una carpeta o 
 
 Tu biblioteca se guarda en IndexedDB de tu dispositivo.
 
-Versión actual de la app: 2.9.1 (se muestra también en el pie del reproductor).
+Versión actual de la app: 3.0.0 (se muestra también en el pie del reproductor).
 v2.9.0: letras sincronizadas (LRC) y mejoras del estado vacío, filtros y móvil.
 v2.9.1: corrección del botón de secciones en móvil.
+v3.0.0: sincronización entre dispositivos por paquete .rpmbak (sin cuenta ni servidor), con migración de la base de datos a v3.
 
 ## Letras sincronizadas
 

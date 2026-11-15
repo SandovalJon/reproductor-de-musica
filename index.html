@@ -1328,6 +1328,7 @@
         <div class="backup-row">
           <button class="btn small" id="btnExportBackup" type="button">Exportar respaldo</button>
           <button class="btn small" id="btnImportBackup" type="button">Importar respaldo</button>
+          <button class="btn small" id="btnSync" type="button">Sincronizar</button>
           <button class="btn small" id="btnHealth" type="button">Revisar biblioteca</button>
           <span class="backup-note">El respaldo guarda playlists, likes, historial, contadores y ajustes en un archivo. No incluye los archivos de audio.</span>
           <span class="backup-note" id="lastBackupNote" style="flex:1 1 100%">Sin copia todavía</span>
@@ -1350,7 +1351,7 @@
         <div class="update-row">
           <button class="btn small" id="btnCheckUpdate" type="button">Actualizar app</button>
           <button class="btn small danger" id="btnForceUpdate" type="button">Forzar actualización</button>
-          <span class="backup-note" id="updateStatus">Versión de esta app: v<span id="appVersionNote">2.9.1</span>. «Actualizar app» consulta la versión publicada y te dice si ya estás al día antes de recargar. «Forzar actualización» limpia el service worker y las cachés de la app si una actualización se quedó atascada; tu biblioteca, playlists y ajustes (IndexedDB) nunca se tocan.</span>
+          <span class="backup-note" id="updateStatus">Versión de esta app: v<span id="appVersionNote">3.0.0</span>. «Actualizar app» consulta la versión publicada y te dice si ya estás al día antes de recargar. «Forzar actualización» limpia el service worker y las cachés de la app si una actualización se quedó atascada; tu biblioteca, playlists y ajustes (IndexedDB) nunca se tocan.</span>
         </div>
       </div>
 
@@ -2277,7 +2278,7 @@
 
   // ---------- State ----------
   var tracks = []; // {id,name,title,artist,album,duration,size,type,addedAt,url,coverUrl,color,rating,stars}
-  var APP_VERSION = '2.9.1'; // al publicar cambios, subir este número y el CACHE de sw.js
+  var APP_VERSION = '3.0.0'; // al publicar cambios, subir este número y el CACHE de sw.js
   var currentId = null;
   var isPlaying = false;
   var shuffle = false;
@@ -2463,17 +2464,54 @@
   }
 
   // ---------- IndexedDB ----------
-  var DB_NAME='reproductor-musica-local', DB_VER=2, STORE='tracks', META='meta';
+  var DB_NAME='reproductor-musica-local', DB_VER=3, STORE='tracks', META='meta';
   var dbPromise = null;
   function openDB(){
     if(dbPromise) return dbPromise;
     dbPromise = new Promise(function(resolve, reject){
       if(!('indexedDB' in window)){ reject(new Error('no-idb')); return; }
       var req = indexedDB.open(DB_NAME, DB_VER);
-      req.onupgradeneeded = function(){
+      req.onupgradeneeded = function(ev){
         var db = req.result;
         if(!db.objectStoreNames.contains(STORE)) db.createObjectStore(STORE, {keyPath:'id'});
         if(!db.objectStoreNames.contains(META)) db.createObjectStore(META, {keyPath:'key'});
+        // 3.0.0: migración v2 -> v3 (ver PLAN-3.0.0.md, §5). Cada pista
+        // gana updatedAt (= addedAt) y cada playlist su updatedAt; la
+        // fila 'syncMeta' aparece en el almacén meta. Es idempotente,
+        // no borra nada y la 2.9.1 seguiría leyendo esta DB (los
+        // campos nuevos se ignoran). NOTA: syncMeta vive en su propia
+        // fila 'syncMeta', no dentro de packState (ver db.js).
+        var oldVersion = (ev && typeof ev.oldVersion === 'number') ? ev.oldVersion : 0;
+        if(oldVersion < 3){
+          try{
+            var tx = req.transaction;
+            var ts = tx.objectStore(STORE);
+            var allReq = ts.getAll();
+            allReq.onsuccess = function(){
+              (allReq.result || []).forEach(function(rec){
+                if(rec && typeof rec.updatedAt !== 'number'){
+                  rec.updatedAt = (typeof rec.addedAt === 'number') ? rec.addedAt : Date.now();
+                  ts.put(rec);
+                }
+              });
+            };
+            var ms = tx.objectStore(META);
+            var stReq = ms.get('packState');
+            stReq.onsuccess = function(){
+              var row = stReq.result;
+              var st = (row && row.value) ? row.value : {};
+              var changed = false;
+              if(Array.isArray(st.playlists)){
+                st.playlists.forEach(function(p){ if(p && typeof p.updatedAt !== 'number'){ p.updatedAt = Date.now(); changed = true; } });
+              }
+              if(changed) ms.put({ key:'packState', value: st });
+            };
+            var smReq = ms.get('syncMeta');
+            smReq.onsuccess = function(){
+              if(!smReq.result) ms.put({ key:'syncMeta', value:{ deviceId:null, lastSyncAt:0, stateUpdatedAt:0, deletions:[] } });
+            };
+          }catch(e){ /* la migración no debe impedir abrir la DB */ }
+        }
       };
       req.onsuccess = function(){ resolve(req.result); };
       req.onerror = function(){ reject(req.error); };
@@ -2504,13 +2542,77 @@
       });
     }).catch(function(){});
   }
+
+  // ---------- 3.0.0: sync (fase 3) ----------
+  // Identidad de sync de una pista: igual que trackKey() en
+  // src/library/track-meta.js (huella, o nombre+tamaño+duración).
+  function syncTrackKey(t){
+    if(!t || typeof t !== 'object') return null;
+    if(typeof t.audioHash === 'string' && t.audioHash) return 'hash:' + t.audioHash;
+    var name = (typeof t.name === 'string') ? t.name : '';
+    var size = (typeof t.size === 'number') ? t.size : 0;
+    var dur = (typeof t.duration === 'number' && t.duration > 0) ? Math.round(t.duration) : 0;
+    if(!name && !size) return null;
+    return 'file:' + name + '|' + size + '|' + dur;
+  }
+  function idbGet(id){
+    return openDB().then(function(db){
+      return new Promise(function(resolve){
+        try{
+          var tx = db.transaction(STORE,'readonly');
+          var req = tx.objectStore(STORE).get(id);
+          req.onsuccess = function(){ resolve(req.result || null); };
+          req.onerror = function(){ resolve(null); };
+        }catch(e){ resolve(null); }
+      });
+    }).catch(function(){ return null; });
+  }
+  function defaultSyncMeta(){ return { deviceId:null, lastSyncAt:0, stateUpdatedAt:0, deletions:[] }; }
+  function getSyncMeta(){
+    return idbMetaGet('syncMeta').then(function(m){ return Object.assign(defaultSyncMeta(), m || {}); });
+  }
+  function setSyncMeta(meta){
+    return idbMetaSet('syncMeta', Object.assign(defaultSyncMeta(), meta || {}));
+  }
+  function newDeviceId(){
+    try{ if(typeof crypto !== 'undefined' && crypto.randomUUID) return crypto.randomUUID(); }catch(e){}
+    return 'd-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2,10);
+  }
+  function ensureDeviceId(){
+    return getSyncMeta().then(function(meta){
+      if(typeof meta.deviceId === 'string' && meta.deviceId) return meta.deviceId;
+      meta.deviceId = newDeviceId();
+      return setSyncMeta(meta).then(function(){ return meta.deviceId; });
+    });
+  }
+  function touchState(now){
+    now = now || Date.now();
+    return getSyncMeta().then(function(meta){ meta.stateUpdatedAt = now; return setSyncMeta(meta); });
+  }
+  function markSynced(now){
+    now = now || Date.now();
+    return getSyncMeta().then(function(meta){ meta.lastSyncAt = now; return setSyncMeta(meta); });
+  }
+  // Registra el borrado de una canción (por su trackKey) ANTES de
+  // borrar el registro. Solo se llama desde commitPendingDelete(),
+  // cuando el borrado diferido con deshacer se confirma de verdad.
+  function recordDeletion(key, deletedAt){
+    deletedAt = deletedAt || Date.now();
+    return getSyncMeta().then(function(meta){
+      var rest = (meta.deletions || []).filter(function(d){ return d.key !== key; });
+      rest.push({ key:key, deletedAt:deletedAt });
+      rest.sort(function(a,b){ return b.deletedAt - a.deletedAt; });
+      meta.deletions = rest.slice(0, 500);
+      return setSyncMeta(meta);
+    });
+  }
   var saveStateTimer = null;
   function saveState(){
     if(!stateReady) return;
     clearTimeout(saveStateTimer);
     saveStateTimer = setTimeout(function(){
       // v2: el perfil activo refresca su foto en profileStore; el resto de
-      // perfiles conserva la suya. Todo vive en el almacén meta (DB sigue v2).
+      // perfiles conserva la suya. Todo vive en el almacén meta (DB v3 desde la 3.0.0).
       profileStore[activeProfileId] = snapshotProfileData();
       idbMetaSet('packState', {
         playlists: playlists,
@@ -2530,6 +2632,7 @@
         profileStore: profileStore,
         seriesSpeed: seriesSpeed
       });
+      touchState(); // 3.0.0: los ajustes/playlists cambiaron
     }, 150);
   }
   function loadState(){
@@ -2618,7 +2721,7 @@
         var getReq = store.get(id);
         getReq.onsuccess = function(){
           var rec = getReq.result;
-          if(rec){ rec.rating = rating || null; store.put(rec); }
+          if(rec){ rec.rating = rating || null; rec.updatedAt = Date.now(); store.put(rec); }
         };
         tx.oncomplete = function(){ resolve(); };
         tx.onerror = function(){ resolve(); };
@@ -2639,7 +2742,7 @@
         var getReq = store.get(id);
         getReq.onsuccess = function(){
           var rec = getReq.result;
-          if(rec){ rec.stars = clampStars(stars); store.put(rec); }
+          if(rec){ rec.stars = clampStars(stars); rec.updatedAt = Date.now(); store.put(rec); }
         };
         tx.oncomplete = function(){ resolve(); };
         tx.onerror = function(){ resolve(); };
@@ -2834,7 +2937,7 @@
       return getDuration(track.url).then(function(d){
         if(d && isFinite(d) && !track.duration){
           track.duration = d;
-          idbPatch(track.id, { duration: d });
+          patchTrack(track.id, { duration: d });
           renderStats(); renderList();
         }
       });
@@ -2909,7 +3012,7 @@
         tracks.forEach(function(t){
           if((t.folder || '') === dir && !t.coverUrl){
             t.coverUrl = URL.createObjectURL(blob);
-            idbPatch(t.id, { coverBlob: blob });
+            patchTrack(t.id, { coverBlob: blob });
             coversApplied++;
           }
         });
@@ -2929,8 +3032,22 @@
       return added;
     });
   }
+  // 3.0.0: al re-añadir un archivo cuya pista quedó "pendiente de
+  // audio" tras un sync (metadatos en IndexedDB sin blob), se
+  // re-vincula a esa pista en vez de crear un duplicado.
+  function findPendingRecord(file){
+    return idbAll().then(function(records){
+      var found = null;
+      (records || []).forEach(function(r){
+        if(!found && !r.blob && r.name === file.name && r.size === file.size) found = r;
+      });
+      return found;
+    }).catch(function(){ return null; });
+  }
   function processFile(file){
-    var id = 't' + Date.now().toString(36) + Math.random().toString(36).slice(2,9);
+    return findPendingRecord(file).then(function(pending){
+    var id = pending ? pending.id : 't' + Date.now().toString(36) + Math.random().toString(36).slice(2,9);
+    var addedAt = pending ? pending.addedAt : Date.now();
     var url = URL.createObjectURL(file);
     var headSize = Math.min(file.size, 3*1024*1024);
     return file.slice(0, headSize).arrayBuffer()
@@ -2960,7 +3077,7 @@
         var kind = isVideoFile(file) ? 'video' : 'audio';
         var track = {
           id:id, name:file.name, title:title, artist:artist, album:meta.album||'',
-          duration:0, size:file.size, type:file.type, addedAt:Date.now(),
+          duration:0, size:file.size, type:file.type, addedAt:addedAt, updatedAt:Date.now(),
           url:url, coverUrl:coverUrl, color:colorFor(title+file.name), rating:null, stars:0,
           normDb:null, volAdj:0,
           genre:meta.genre||'', year:meta.year||'', tags:[], memSpeed:null, memEq:null,
@@ -2972,17 +3089,31 @@
         };
         tracks.unshift(track);
         probeDurationLater(track);
-        // Persist (blob + metadata + cover blob)
+        if(pending){
+          // Conservar lo que el sync trajo (likes, estrellas, etc.):
+          // el registro nuevo parte de la pista pendiente y solo se
+          // actualizan el audio, la portada y los datos recién leídos.
+          ['rating','stars','normDb','volAdj','tags','memSpeed','memEq','abLoop','bookmarks','silence','bpm','bpmManual','energy','brightness','mood','musicalKey','keyName','isAudiobook','abPos','peaks','trackNo','sampleRate','channels'].forEach(function(k){ if(pending[k] !== undefined) track[k] = pending[k]; });
+          if(pending.audioHash) track.audioHash = pending.audioHash;
+        }
+        // Persist (blob + metadata + cover blob). El registro se
+        // construye desde el objeto track (ya con lo conservado del
+        // pendiente), no desde los valores recién leídos.
         return idbPut({
-          id:id, blob:file, name:file.name, type:file.type, size:file.size,
-          title:title, artist:artist, album:meta.album||'', duration:0,
-          addedAt:track.addedAt, coverBlob:meta.coverBlob||null, rating:null, stars:0, normDb:null, volAdj:0,
-          genre:meta.genre||'', year:meta.year||'', tags:[], memSpeed:null, memEq:null,
-          folder:folderPath, abLoop:null, bookmarks:[], silence:null, bpm:null, bpmManual:false, audioHash:null,
-          kind:kind, energy:null, brightness:null, mood:null, musicalKey:null, keyName:null,
-          isAudiobook:false, abPos:0, chapters:track.chapters, peaks:null, trackNo:null, sampleRate:null, channels:null
+          id:id, blob:file, name:track.name, type:track.type, size:track.size,
+          title:track.title, artist:track.artist, album:track.album, duration:track.duration,
+          addedAt:track.addedAt, updatedAt:Date.now(), coverBlob:meta.coverBlob || (pending && pending.coverBlob) || null,
+          rating:track.rating, stars:track.stars, normDb:track.normDb, volAdj:track.volAdj,
+          genre:track.genre, year:track.year, tags:track.tags, memSpeed:track.memSpeed, memEq:track.memEq,
+          folder:track.folder, abLoop:track.abLoop, bookmarks:track.bookmarks, silence:track.silence,
+          bpm:track.bpm, bpmManual:track.bpmManual, audioHash:track.audioHash,
+          kind:track.kind, energy:track.energy, brightness:track.brightness, mood:track.mood,
+          musicalKey:track.musicalKey, keyName:track.keyName, isAudiobook:track.isAudiobook,
+          abPos:track.abPos, chapters:track.chapters, peaks:track.peaks, trackNo:track.trackNo,
+          sampleRate:track.sampleRate, channels:track.channels
         }).then(function(){ return track; });
       });
+    });
   }
 
   function loadLibrary(){
@@ -3606,7 +3737,7 @@
   // ---------- Playlists personalizadas ----------
   function selectedPlaylist(){ return playlists.find(function(p){ return p.id===selectedPlaylistId; }) || null; }
   function createPlaylist(name, addTrackId){
-    var pl = { id:'p'+Date.now().toString(36)+Math.random().toString(36).slice(2,7), name:name, trackIds:[] };
+    var pl = { id:'p'+Date.now().toString(36)+Math.random().toString(36).slice(2,7), name:name, trackIds:[], updatedAt: Date.now() };
     if(addTrackId) pl.trackIds.push(addTrackId);
     playlists.push(pl);
     selectedPlaylistId = pl.id;
@@ -5421,7 +5552,7 @@
         out.textContent = fmtDb(v);
         var ct = currentTrack();
         var et = (ct && Array.isArray(ct.memEq)) ? ct : null;
-        if(et){ et.memEq[i] = v; idbPatchSoon(et.id, { memEq: et.memEq.slice() }); }
+        if(et){ et.memEq[i] = v; patchTrackSoon(et.id, { memEq: et.memEq.slice() }); }
         else {
           settings.eq[i] = v;
           settings.eqPreset = 'custom';
@@ -5447,7 +5578,7 @@
     v = Math.max(0.5, Math.min(2, v||1));
     var ct = currentTrack();
     var st = (ct && typeof ct.memSpeed === 'number') ? ct : null;
-    if(st){ st.memSpeed = v; idbPatchSoon(st.id, { memSpeed: v }); }
+    if(st){ st.memSpeed = v; patchTrackSoon(st.id, { memSpeed: v }); }
     else { settings.speed = v; saveState(); }
     // v2: en audiolibros/podcasts la velocidad se recuerda por serie (mismo álbum)
     if(ct && ct.isAudiobook){ seriesSpeed[seriesKeyOf(ct)] = v; saveState(); }
@@ -5509,7 +5640,7 @@
     var et = (ct && Array.isArray(ct.memEq)) ? ct : null;
     if(EQ_PRESETS[p]){
       var vals = EQ_PRESETS[p].slice();
-      if(et){ et.memEq = vals; idbPatch(et.id, { memEq: vals.slice() }); }
+      if(et){ et.memEq = vals; patchTrack(et.id, { memEq: vals.slice() }); }
       else { settings.eq = vals; settings.eqPreset = p; genreEqBypassId = ct ? ct.id : null; }
       syncEqUI(vals); applyEqValues(vals);
     }
@@ -5882,6 +6013,15 @@
       });
     }).catch(function(){});
   }
+  // 3.0.0: único camino para cambiar una pista (ver db.js). Misma
+  // firma que idbPatch, pero estampa updatedAt = now: así el sync
+  // sabe cuándo cambió cada canción. idbPatch queda como primitiva.
+  function patchTrack(id, fields, now){
+    var f = Object.assign({}, fields || {});
+    delete f.updatedAt;
+    f.updatedAt = now || Date.now();
+    return idbPatch(id, f);
+  }
   function downloadFile(name, blob){
     try{
       var a = document.createElement('a');
@@ -5958,7 +6098,7 @@
         var pk = peaksFromBuffer(ab);
         var patchA = { normDb: db };
         if(pk){ t.peaks = pk; patchA.peaks = pk; }
-        idbPatch(t.id, patchA);
+        patchTrack(t.id, patchA);
         if(pk && currentId === t.id && typeof refreshWaveform === 'function') refreshWaveform();
         return true;
       })
@@ -6097,7 +6237,7 @@
     if(newBook !== !!t.isAudiobook){ t.isAudiobook = newBook; patch.isAudiobook = newBook; if(t.id === currentId) v2OnSelectTrack(t); }
     t.color = colorFor(t.title + t.name);
     t._sf = null; // la búsqueda tolerante recalcula sus datos
-    if(Object.keys(patch).length) idbPatch(t.id, patch);
+    if(Object.keys(patch).length) patchTrack(t.id, patch);
     refreshNorm();
     render();
     closeEditor();
@@ -6614,7 +6754,7 @@
         if(Array.isArray(td.chapters)){ var chs = td.chapters.filter(function(c){ return c && typeof c.start === 'number' && isFinite(c.start) && c.start >= 0; }).map(function(c){ return { title: (typeof c.title === 'string' && c.title) ? c.title.slice(0, 80) : 'Capítulo', start: c.start }; }).sort(function(a, b){ return a.start - b.start; }); t.chapters = chs.length ? chs : null; patch.chapters = t.chapters; }
         t._sf = null; // la búsqueda tolerante recalcula sus datos
         t.color = colorFor(t.title + t.name);
-        if(Object.keys(patch).length) idbPatch(t.id, patch);
+        if(Object.keys(patch).length) patchTrack(t.id, patch);
       });
       if(sel.playlists){
       if(Array.isArray(data.playlists)){
@@ -7032,7 +7172,7 @@
         }
         var h = parts.join('');
         t.audioHash = h;
-        idbPatch(t.id, { audioHash: h });
+        patchTrack(t.id, { audioHash: h });
         return h;
       })
       .catch(function(){ return null; })
@@ -7132,7 +7272,7 @@
         del.addEventListener('click', function(){
           var ct = currentTrack(); if(!ct) return;
           ct.bookmarks = ct.bookmarks.filter(function(x){ return !(x.time === bm.time && x.name === bm.name); });
-          idbPatch(ct.id, { bookmarks: ct.bookmarks });
+          patchTrack(ct.id, { bookmarks: ct.bookmarks });
           renderLoopPanel();
           toast('Marcador borrado');
         });
@@ -7160,14 +7300,14 @@
     if(t.abLoop && t.abLoop.b > a + 0.3){
       // Ya hay un loop válido: solo se mueve el inicio
       t.abLoop = { a: a, b: t.abLoop.b };
-      idbPatch(t.id, { abLoop: t.abLoop });
+      patchTrack(t.id, { abLoop: t.abLoop });
       renderLoopPanel();
       toast('Punto A movido a ' + fmtTime(a));
       return;
     }
     // Sin loop todavía: A queda pendiente hasta que se marque B
     t._pendingA = a;
-    if(t.abLoop){ t.abLoop = null; idbPatch(t.id, { abLoop: null }); }
+    if(t.abLoop){ t.abLoop = null; patchTrack(t.id, { abLoop: null }); }
     renderLoopPanel();
     toast('Punto A marcado en ' + fmtTime(a) + '. Ahora marca el punto B para cerrar el loop.');
   });
@@ -7179,14 +7319,14 @@
     if(b <= a + 0.3){ toast('El punto B debe ir después del A (' + fmtTime(a) + '). Avanza un poco más y márcalo de nuevo.'); return; }
     t.abLoop = { a: a, b: b };
     t._pendingA = null;
-    idbPatch(t.id, { abLoop: t.abLoop });
+    patchTrack(t.id, { abLoop: t.abLoop });
     renderLoopPanel();
     toast('Loop activado: ' + fmtTime(a) + ' → ' + fmtTime(b));
   });
   document.getElementById('btnLoopClear').addEventListener('click', function(){
     var t = currentTrack(); if(!t) return;
     t.abLoop = null; t._pendingA = null;
-    idbPatch(t.id, { abLoop: null });
+    patchTrack(t.id, { abLoop: null });
     renderLoopPanel();
     toast('Loop quitado de “' + t.title + '”');
   });
@@ -7197,7 +7337,7 @@
     var name = nameEl.value.trim() || ('Marcador ' + ((t.bookmarks ? t.bookmarks.length : 0) + 1));
     if(!t.bookmarks) t.bookmarks = [];
     t.bookmarks.push({ name: name, time: time });
-    idbPatch(t.id, { bookmarks: t.bookmarks });
+    patchTrack(t.id, { bookmarks: t.bookmarks });
     nameEl.value = '';
     renderLoopPanel();
     toast('Marcador “' + name + '” guardado en ' + fmtTime(time));
@@ -7256,7 +7396,7 @@
           if(start < 0.3 && end > ab.duration - 0.3) t.silence = { start: 0, end: ab.duration };
           else t.silence = { start: Math.round(start * 100) / 100, end: Math.round(end * 100) / 100 };
         }
-        idbPatch(t.id, { silence: t.silence });
+        patchTrack(t.id, { silence: t.silence });
         if(currentId === t.id) applySilenceStart(audio);
         updateSilenceStatus();
         return true;
@@ -7539,6 +7679,17 @@
       idbPatch(id, f);
     }, 450);
   }
+  // 3.0.0: como idbPatchSoon, pero estampa updatedAt al aplicar.
+  function patchTrackSoon(id, fields){
+    var slot = patchSoonTimers[id];
+    if(!slot){ slot = patchSoonTimers[id] = { fields:{}, timer:null }; }
+    Object.keys(fields || {}).forEach(function(k){ if(k !== 'updatedAt') slot.fields[k] = fields[k]; });
+    clearTimeout(slot.timer);
+    slot.timer = setTimeout(function(){
+      var f = slot.fields; slot.fields = {};
+      patchTrack(id, f);
+    }, 450);
+  }
 
   // ----- Memoria por canción (velocidad y ecualizador) -----
   function setSpeedUI(v){
@@ -7586,12 +7737,12 @@
     if(!t){ toast('Primero elige una canción.'); return; }
     if(typeof t.memSpeed === 'number'){
       t.memSpeed = null;
-      idbPatch(t.id, { memSpeed: null });
+      patchTrack(t.id, { memSpeed: null });
       applyMemForTrack(t);
       toast('“' + t.title + '” ya no recuerda su velocidad: vuelve a la general');
     } else {
       t.memSpeed = Math.max(0.5, Math.min(2, audio.playbackRate || settings.speed));
-      idbPatch(t.id, { memSpeed: t.memSpeed });
+      patchTrack(t.id, { memSpeed: t.memSpeed });
       syncMemUI();
       toast('“' + t.title + '” recordará su velocidad (' + t.memSpeed.toFixed(2) + '×) cada vez que suene');
     }
@@ -7601,12 +7752,12 @@
     if(!t){ toast('Primero elige una canción.'); return; }
     if(Array.isArray(t.memEq)){
       t.memEq = null;
-      idbPatch(t.id, { memEq: null });
+      patchTrack(t.id, { memEq: null });
       applyMemForTrack(t);
       toast('“' + t.title + '” ya no recuerda su ecualizador: vuelve al general');
     } else {
       t.memEq = currentEqValues().slice();
-      idbPatch(t.id, { memEq: t.memEq.slice() });
+      patchTrack(t.id, { memEq: t.memEq.slice() });
       syncMemUI();
       toast('“' + t.title + '” recordará este ajuste de ecualizador cada vez que suene');
     }
@@ -7843,7 +7994,7 @@
       chosen.forEach(function(c){ t[c.key] = c.value; });
       if(bookOn) t.isAudiobook = bookVal;
       t._sf = null; // la búsqueda tolerante recalcula sus datos
-      idbPatch(t.id, patch);
+      patchTrack(t.id, patch);
       n++;
     });
     if(bookOn) chosen.push({ key:'isAudiobook', label: bookVal ? 'Audiolibro/podcast: sí' : 'Audiolibro/podcast: no' });
@@ -8146,7 +8297,7 @@
         var vals = p.values.slice();
         var ct = currentTrack();
         var et = (ct && Array.isArray(ct.memEq)) ? ct : null;
-        if(et){ et.memEq = vals; idbPatch(et.id, { memEq: vals.slice() }); }
+        if(et){ et.memEq = vals; patchTrack(et.id, { memEq: vals.slice() }); }
         else { settings.eq = vals; settings.eqPreset = 'custom'; document.getElementById('eqPreset').value = 'custom'; genreEqBypassId = ct ? ct.id : null; saveState(); }
         syncEqUI(vals); applyEqValues(vals);
         toast('Preset “'+p.name+'” aplicado');
@@ -8947,8 +9098,8 @@
         var bpm = estimateBpm(ab);
         if(bpm){
           t.bpm = bpm;
-          if(force && t.bpmManual){ t.bpmManual = false; idbPatch(t.id, { bpm: bpm, bpmManual: false }); }
-          else idbPatch(t.id, { bpm: bpm });
+          if(force && t.bpmManual){ t.bpmManual = false; patchTrack(t.id, { bpm: bpm, bpmManual: false }); }
+          else patchTrack(t.id, { bpm: bpm });
           return true;
         }
         return false;
@@ -9030,7 +9181,7 @@
   // ---------- Pack de mejoras: actualización, reanudar, deshacer, tap tempo ----------
 
   // ----- 1. Actualización sin atascos -----
-  var APP_VERSION = '2.9.1';
+  var APP_VERSION = '3.0.0';
   document.getElementById('appVersionNote').textContent = APP_VERSION;
   function cmpVersion(a, b){
     var pa = a.split('.').map(function(x){ return parseInt(x, 10) || 0; });
@@ -9224,6 +9375,8 @@
     pendingDeletes.splice(i, 1);
     persistPending();
     if(entry.kind === 'track'){
+      // 3.0.0: registrar la tumba de sync ANTES de borrar el registro.
+      if(entry.track) recordDeletion(syncTrackKey(entry.track), Date.now());
       // Ahora sí: se borra el registro de IndexedDB y se liberan las URL.
       idbDelete(entry.id);
       try{ URL.revokeObjectURL(entry.track.url); if(entry.track.coverUrl) URL.revokeObjectURL(entry.track.coverUrl); }catch(e){}
@@ -9359,7 +9512,7 @@
     var bpm = tapTempoCalc(tapCurTimes);
     if(bpm){
       t.bpm = bpm; t.bpmManual = true;
-      idbPatch(t.id, { bpm: bpm, bpmManual: true });
+      patchTrack(t.id, { bpm: bpm, bpmManual: true });
       if(st) st.textContent = 'Ritmo de “' + t.title + '” fijado a mano: ' + bpm + ' BPM (manual; el análisis automático no lo sobrescribirá).';
       renderList(); renderPack();
     } else if(st){
@@ -10196,7 +10349,7 @@
       var r = layer[t.id];
       var nr = r ? ((r.rating === 'like' || r.rating === 'dislike') ? r.rating : null) : null;
       var ns = (r && typeof r.stars === 'number') ? Math.max(0, Math.min(3, Math.round(r.stars))) : null;
-      if(nr !== t.rating || ns !== t.stars){ t.rating = nr; t.stars = ns; idbPatch(t.id, { rating: nr, stars: ns }); }
+      if(nr !== t.rating || ns !== t.stars){ t.rating = nr; t.stars = ns; patchTrack(t.id, { rating: nr, stars: ns }); }
     });
     // Pack 13: capa de bloqueados del perfil; perfiles viejos sin el dato = sin bloqueos
     blockedArtists = sanitizeBlockedList(d.blocked && d.blocked.artists);
@@ -10434,7 +10587,7 @@
         t.mood = moodFromFeatures((typeof t.bpm === 'number' && t.bpm) ? t.bpm : bpm, feats.energy);
         patch.mood = t.mood;
         if(feats.key){ t.musicalKey = feats.key.code; t.keyName = feats.key.name; patch.musicalKey = t.musicalKey; patch.keyName = t.keyName; }
-        idbPatch(t.id, patch);
+        patchTrack(t.id, patch);
         return true;
       })
       .catch(function(){ return false; })
@@ -10660,7 +10813,7 @@
     var t = currentTrack();
     if(t && t.isAudiobook && audio.currentTime > 0){
       t.abPos = Math.floor(audio.currentTime);
-      idbPatchSoon(t.id, { abPos: t.abPos });
+      patchTrackSoon(t.id, { abPos: t.abPos });
     }
   }
   [audioEl, audioB, videoEl].forEach(function(el){
@@ -10895,7 +11048,7 @@
         var pk = peaksFromBuffer(ab);
         if(pk){
           t.peaks = pk;
-          idbPatch(t.id, { peaks: pk });
+          patchTrack(t.id, { peaks: pk });
           if(currentId === t.id) refreshWaveform();
         }
       })
@@ -11143,7 +11296,7 @@
       Object.keys(p.fields).forEach(function(k){ t[k] = p.fields[k]; });
       t._sf = null; // la búsqueda tolerante recalcula sus datos
       t.color = colorFor(t.title + t.name);
-      idbPatch(t.id, p.fields);
+      patchTrack(t.id, p.fields);
       n++;
     });
     closeAutoTag();
@@ -11497,7 +11650,7 @@
     var changed = false;
     if(sr && t.sampleRate !== sr){ t.sampleRate = sr; changed = true; }
     if(ch && t.channels !== ch){ t.channels = ch; changed = true; }
-    if(changed) idbPatch(t.id, { sampleRate: t.sampleRate || null, channels: t.channels || null });
+    if(changed) patchTrack(t.id, { sampleRate: t.sampleRate || null, channels: t.channels || null });
   }
   function techText(t){
     if(!t) return '—';
@@ -12596,9 +12749,92 @@
   buildEqRows();
   render();
   loadLibrary();
+
+  // ---------- 3.0.0: puente de sync (fase 3) ----------
+  // Expone lo mínimo que el puente (src/sync/sync-bridge.js)
+  // necesita para exportar, importar y aplicar paquetes .rpmbak.
+  // Si el módulo no carga, la app sigue como en 2.9.1: el botón
+  // "Sincronizar" solo avisa y nada más cambia.
+  function rpmReloadLibrary(){
+    try{
+      tracks.forEach(function(t){
+        try{ if(t.url) URL.revokeObjectURL(t.url); if(t.coverUrl) URL.revokeObjectURL(t.coverUrl); }catch(e){}
+      });
+    }catch(e){}
+    tracks.length = 0;
+    return loadLibrary();
+  }
+  function rpmApplyPackState(st){
+    if(!st || typeof st !== 'object') return Promise.resolve();
+    if(Array.isArray(st.playlists)) playlists = st.playlists.filter(function(p){ return p && p.id && Array.isArray(p.trackIds); });
+    if(Array.isArray(st.queue)) queue = st.queue.slice();
+    if(Array.isArray(st.history)) playHistory = st.history.slice(0,100);
+    if(st.counts && typeof st.counts === 'object') playCounts = st.counts;
+    if(Array.isArray(st.statsLog)) statsLog = st.statsLog.filter(function(e){ return e && typeof e.sec === 'number' && isFinite(e.sec); }).slice(-1500);
+    if(st.settings) applySettingsObject(st.settings);
+    if(Array.isArray(st.customSmart)) customSmart = sanitizeCustomSmart(st.customSmart);
+    if(Array.isArray(st.profiles) && st.profiles.length){
+      profiles = st.profiles.filter(function(p){ return p && typeof p.id === 'string' && typeof p.name === 'string'; }).map(function(p){ return { id:p.id, name:p.name }; });
+      if(!profiles.some(function(p){ return p.id === activeProfileId; })) activeProfileId = profiles[0].id;
+    }
+    if(st.seriesSpeed && typeof st.seriesSpeed === 'object'){
+      Object.keys(st.seriesSpeed).forEach(function(k){
+        var v = parseFloat(st.seriesSpeed[k]);
+        if(isFinite(v) && v >= 0.5 && v <= 2) seriesSpeed[k] = v;
+      });
+    }
+    rebuildShuffle();
+    saveState();
+    render();
+    return Promise.resolve();
+  }
+  function rpmReadLyrics(){
+    var out = {};
+    try{
+      for(var i = 0; i < localStorage.length; i++){
+        var k = localStorage.key(i);
+        if(k && k.indexOf('reproductor-letras:') === 0) out[k.slice('reproductor-letras:'.length)] = localStorage.getItem(k);
+      }
+    }catch(e){}
+    return out;
+  }
+  function rpmWriteLyrics(map){
+    try{
+      Object.keys(map || {}).forEach(function(k){
+        localStorage.setItem('reproductor-letras:' + k, map[k]);
+      });
+    }catch(e){}
+  }
+  window.__rpmApp = {
+    idbAll: idbAll, idbPut: idbPut, idbDelete: idbDelete, idbGet: idbGet,
+    idbMetaGet: idbMetaGet, idbMetaSet: idbMetaSet,
+    patchTrack: patchTrack, patchTrackSoon: patchTrackSoon,
+    getSyncMeta: getSyncMeta, setSyncMeta: setSyncMeta,
+    ensureDeviceId: ensureDeviceId, touchState: touchState,
+    markSynced: markSynced, recordDeletion: recordDeletion,
+    getPackState: function(){ return idbMetaGet('packState'); },
+    applyPackState: rpmApplyPackState,
+    getTracks: function(){ return tracks; },
+    getTrackBlob: getTrackBlob,
+    getCoverBlob: function(t){ return idbGet(t.id).then(function(r){ return (r && r.coverBlob) || null; }); },
+    readLyrics: rpmReadLyrics, writeLyrics: rpmWriteLyrics,
+    trackKey: syncTrackKey,
+    reloadLibrary: rpmReloadLibrary, loadLibrary: loadLibrary,
+    render: render, toast: toast,
+    version: APP_VERSION
+  };
+  (function(){
+    var btn = document.getElementById('btnSync');
+    if(!btn) return;
+    btn.addEventListener('click', function(){
+      if(window.__rpmSyncUI) window.__rpmSyncUI.open();
+      else toast('La sincronización no se pudo cargar. Recarga la app e inténtalo de nuevo.');
+    });
+  })();
 })();
 </script>
 <script src="./lyrics.js"></script>
 <script src="./mejoras.js"></script>
+<script type="module" src="./src/sync/sync-bridge.js"></script>
 </body>
 </html>
