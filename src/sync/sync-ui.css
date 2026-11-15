@@ -1,0 +1,28 @@
+/* sync-ui.css — 3.0.0, fase 2.
+   Solo lo propio del resumen de sync. Todo lo demás (modal-overlay,
+   modal, modal-actions, import-row, btn) lo pone la app, como en el
+   modal de importar respaldo. Cargar con <link> o dejar que el
+   cableado lo inyecte; si este archivo falta, la UI sigue
+   funcionando con el estilo base de la app. */
+
+.sync-body .sync-row {
+  cursor: default;
+}
+
+.sync-menu-row {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-top: 12px;
+}
+
+/* A 360 px los botones "Cancelar" + "Aplicar sincronización" van
+   justos (~270 px frente a ~280 útiles): que la fila pueda bajar
+   a dos líneas en vez de cortarse. Solo afecta al modal de sync. */
+#syncModal .modal-actions {
+  flex-wrap: wrap;
+}
+
+.sync-body .sound-note {
+  margin-top: 12px;
+}
