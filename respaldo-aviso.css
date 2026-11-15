@@ -1,0 +1,36 @@
+/* Recordatorio de respaldo — v4.2.0, módulo aparte (ver respaldo-aviso.js).
+   Solo da estilo a lo que el módulo crea: el botón «Posponer 7 días»
+   dentro de #backupReminder (usa .btn.small de la app) y la fila con el
+   interruptor bajo la barra. El interruptor reutiliza .toggle-pill y
+   .toggle-pill.on de la app (index.html ~560-566); aquí solo se le da
+   la fila que lo contiene. Todo bajo .rpm-respaldo-* / #rpmRespaldo*
+   para no chocar con los estilos de la app. Reutiliza sus variables de
+   tema (--surface, --line, --text, --muted-2...) con valores de
+   respaldo por si el tema no las define. */
+
+.rpm-respaldo-controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+  margin-top: 8px;
+}
+
+.rpm-respaldo-controls .toggle-pill {
+  flex: none;
+}
+
+/* Apagado: el interruptor pierde el acento (la app solo define .on). */
+.rpm-respaldo-controls .toggle-pill:not(.on) {
+  opacity: 0.75;
+}
+
+.rpm-respaldo-note {
+  flex: 1 1 220px;
+}
+
+/* El botón de posponer vive dentro de .backup-reminder, que ya es flex
+   con wrap (index.html ~477-482): solo se asegura de que no crezca. */
+#rpmRespaldoSnooze {
+  flex: none;
+}

@@ -1,0 +1,93 @@
+/* compartir-letra.css — «Compartir canción con letra» (v4.2.0).
+   Solo añade lo propio del botón y de la ventana de compartir con
+   letra. El botón reutiliza las clases de la app (.btn small) y la
+   ventana reutiliza .modal-overlay / .modal / .modal-actions; si
+   este CSS no carga, la ventana sigue funcionando con el estilo base.
+   El aspecto de la imagen PNG vive en compartir-letra.js (canvas),
+   no aquí. */
+
+#btnCompartirLetra[disabled]{
+  opacity:.45;
+  cursor:not-allowed;
+}
+
+/* --- Ventana --- */
+.compartir-letra-modal{
+  max-width:560px;
+}
+.compartir-letra-sub{
+  margin:0 0 8px;
+  font-size:13.5px;
+  color:var(--muted,#726B63);
+}
+.compartir-letra-ok{
+  margin:6px 0;
+  font-size:13.5px;
+  color:var(--accent,#E94E1B);
+}
+.compartir-letra-warn{
+  margin:6px 0;
+  padding:8px 10px;
+  font-size:13.5px;
+  line-height:1.5;
+  border:1px solid var(--line,#E3DCD1);
+  border-left:3px solid #B7791F;
+  border-radius:10px;
+  background:var(--surface-2,#F7F3EE);
+}
+.compartir-letra-preview{
+  margin:10px 0 0;
+  padding:12px;
+  max-height:320px;
+  overflow:auto;
+  font-size:13.5px;
+  line-height:1.6;
+  white-space:pre-wrap;
+  word-break:break-word;
+  border:1px solid var(--line,#E3DCD1);
+  border-radius:12px;
+  background:var(--surface-2,#F7F3EE);
+  color:inherit;
+}
+.compartir-letra-actions{
+  flex-wrap:wrap;
+}
+.compartir-letra-actions .btn[disabled]{
+  opacity:.6;
+  cursor:wait;
+}
+
+/* Toast propio (solo si #toast de la app no existe). */
+.compartir-letra-toast{
+  position:fixed;
+  left:50%;
+  bottom:24px;
+  transform:translateX(-50%) translateY(20px);
+  padding:10px 16px;
+  border-radius:999px;
+  background:#222;
+  color:#fff;
+  font-size:14px;
+  opacity:0;
+  pointer-events:none;
+  transition:opacity .25s, transform .25s;
+  z-index:9999;
+  max-width:90vw;
+  text-align:center;
+}
+.compartir-letra-toast.show{
+  opacity:1;
+  transform:translateX(-50%) translateY(0);
+}
+
+@media (max-width:480px){
+  /* En móvil la fila de acciones ya envuelve a dos líneas
+     (flex-wrap:wrap): cada botón de la ventana ocupa su línea
+     sin pelearse con los demás. */
+  .compartir-letra-actions .btn{
+    flex:1 1 100%;
+  }
+  .compartir-letra-preview{
+    max-height:260px;
+  }
+}

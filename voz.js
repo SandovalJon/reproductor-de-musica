@@ -578,8 +578,9 @@
         clearSilenceTimer();
         var res = ev.results && ev.results[0] && ev.results[0][0];
         var transcript = res ? String(res.transcript || '') : '';
-        var action = parseCommand(transcript);
-        var msg = execute(action);
+        var carAction = (typeof window !== 'undefined' && typeof window.__rpmCocheParse === 'function') ? window.__rpmCocheParse(transcript) : null;
+        var action = (carAction && carAction.kind !== 'unknown') ? carAction : parseCommand(transcript);
+        var msg = (carAction && carAction.kind !== 'unknown' && typeof window.__rpmCocheExec === 'function') ? window.__rpmCocheExec(carAction) : execute(action);
         showStatus(msg, action.kind === 'unknown' ? 'error' : 'ok');
       } catch (e) {
         showStatus('No pude procesar ese comando.', 'error');

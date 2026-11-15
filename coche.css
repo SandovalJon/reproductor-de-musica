@@ -1,0 +1,56 @@
+/* Modo coche simplificado — v4.2.0 (módulo aparte, coche.css).
+   Solo añade estilo a lo que crea coche.js dentro del overlay que ya
+   existe (#carOverlay): la barra de tres interruptores y el modo de
+   botones extragrandes. No toca los botones del coche (.car-btn,
+   .car-play, .car-rate) salvo para agrandarlos cuando el overlay
+   lleva la clase rpm-coche-xl. El overlay es oscuro (#101418), así
+   que los interruptores reutilizan .toggle-pill con colores claros
+   sobre fondo oscuro, como el Wake Lock que ya vive ahí. */
+
+/* Barra de interruptores del módulo: voz, anunciar, XL. */
+.rpm-coche-bar{
+  display:flex; flex-wrap:wrap; gap:10px; justify-content:center;
+  max-width:640px; margin-top:4px;
+}
+.car #rpmCocheBar .toggle-pill{
+  background:rgba(255,255,255,.08); color:#fff;
+  border:1px solid rgba(255,255,255,.35);
+}
+.car #rpmCocheBar .toggle-pill:hover{
+  border-color:rgba(255,255,255,.6);
+}
+.car #rpmCocheBar .toggle-pill.on{
+  border-color:#2FBF71; color:#fff; background:rgba(47,191,113,.25);
+}
+.car #rpmCocheBar .toggle-pill.on .dot{
+  background:#2FBF71;
+}
+.car #rpmCocheBar .toggle-pill:disabled{
+  opacity:.45; cursor:not-allowed;
+}
+.car #rpmCocheBar .toggle-pill:focus-visible{
+  outline:2px solid #fff; outline-offset:2px;
+}
+
+/* Nota de "sin soporte" (voz o anuncios no disponibles). */
+.rpm-coche-note{
+  margin:6px 0 0; font-size:13px; line-height:1.4;
+  color:rgba(255,255,255,.65); max-width:640px; text-align:center;
+}
+
+/* Botones extragrandes: solo cuando el overlay lleva .rpm-coche-xl.
+   Base verificada en index.html (líneas 650-656): .car-btn 96px,
+   .car-play 136px, .car-rate 16px. Al salir del coche, coche.js
+   quita la clase y todo vuelve a su tamaño normal. */
+#carOverlay.rpm-coche-xl .car-controls{ gap:28px; }
+#carOverlay.rpm-coche-xl .car-btn{ width:120px; height:120px; }
+#carOverlay.rpm-coche-xl .car-btn svg{ width:54px; height:54px; }
+#carOverlay.rpm-coche-xl .car-play{ width:172px; height:172px; }
+#carOverlay.rpm-coche-xl .car-play svg{ width:76px; height:76px; }
+#carOverlay.rpm-coche-xl .car-rate{
+  font-size:19px; padding:18px 28px;
+}
+#carOverlay.rpm-coche-xl .car-rate svg{ width:26px; height:26px; }
+#carOverlay.rpm-coche-xl h2{ font-size:clamp(30px,7vw,46px); }
+#carOverlay.rpm-coche-xl .car-artist{ font-size:21px; }
+#carOverlay.rpm-coche-xl .car-progress{ height:10px; }

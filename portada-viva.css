@@ -1,0 +1,44 @@
+/* Portada animada con la música — «Portada viva» (v4.2.0).
+   Solo presentación: el módulo (portada-viva.js) escribe transform /
+   filter en la portada visible (#coverImg o #coverFallback) y la
+   variable --pv-halo-shadow en #coverWrap. Este CSS solo pone la
+   transición suave entre valores (0,12 s) y el halo alrededor del
+   wrap. El box-shadow inline NO se usa: #coverWrap ya tiene un inset
+   en index.html (línea 810) y se conserva sumándole el halo con la
+   variable. La animación de entrada de temas.js (rpmCoverIn, 0,45 s)
+   tiene prioridad sobre el transform inline mientras dura; al
+   terminar, retoma este módulo sin tocar nada. En reposo (pausa, fin,
+   apagado, movimiento reducido) los valores son escala 1, brillo 1 y
+   halo 0, así que estas reglas no cambian nada visible. */
+
+/* Halo alrededor de la portada + transición suave del halo. */
+#coverWrap.rpm-portada-viva{
+  box-shadow: inset 0 -30px 60px rgba(0,0,0,.12), var(--pv-halo-shadow, 0 0 0 rgba(0,0,0,0));
+  transition: box-shadow .12s linear;
+}
+
+/* Transición suave del zoom y el brillo que escribe el módulo.
+   will-change avisa al navegador de que transform/filter cambian
+   cada ~80 ms mientras suena música. */
+#coverImg.rpm-portada-viva,
+#coverFallback.rpm-portada-viva{
+  will-change: transform, filter;
+  transition: transform .12s linear, filter .12s linear;
+}
+
+/* Botón del módulo (toggle-pill, igual que #btnLuces): apagado con
+   movimiento reducido. */
+#btnPortadaViva:disabled{
+  opacity:.55;
+  cursor:not-allowed;
+}
+
+/* Con movimiento reducido no hay transiciones del módulo (el JS ya
+   impide encenderlo; esto es solo por si acaso). */
+@media (prefers-reduced-motion: reduce){
+  #coverWrap.rpm-portada-viva,
+  #coverImg.rpm-portada-viva,
+  #coverFallback.rpm-portada-viva{
+    transition:none;
+  }
+}

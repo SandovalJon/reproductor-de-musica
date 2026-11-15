@@ -72,6 +72,10 @@
   var LAST_SEEN_KEY = 'reproductor-novedades:ultima-version-vista';
 
   var CHANGELOG_TEXT = [
+    'v4.2.0: portada animada con la música (la portada late con el ritmo usando el analizador que ya existe; se puede apagar y respeta el movimiento reducido).',
+    'v4.2.0: modo coche simplificado (voz manos libres al entrar, anuncio por voz de la canción que suena y botones extragrandes; al salir, todo vuelve a lo normal).',
+    'v4.2.0: compartir canción con letra (imagen PNG local con portada, letra y tu nota, o texto plano, por Web Share; nunca comparte el audio).',
+    'v4.2.0: recordatorio de respaldo (avisa cuando pasan los días de "Cada" desde la última copia JSON o .rpmbak, con posponer 7 días y opción de desactivarlo; una vez por apertura, nunca dos días seguidos).',
     'v4.1.0: letras traducidas en karaoke (la traducción línea por línea junto a la original, usando las traducciones que ya guardas; sin traducción, el karaoke se ve como siempre).',
     'v4.1.0: estadísticas por artista dentro de "Tu año en música" (artistas más escuchados, con horas, canciones y racha; solo con los datos de escucha que la app ya guarda).',
     'v4.1.0: modo fiesta con votos en la escucha conjunta (los participantes proponen y votan la siguiente canción por el mismo canal WebRTC; gana la más votada).',

@@ -19,6 +19,7 @@
 <link rel="stylesheet" href="./temas.css">
 <link rel="stylesheet" href="./visual.css">
 <link rel="stylesheet" href="./luces.css">
+<link rel="stylesheet" href="./portada-viva.css">
 <link rel="stylesheet" href="./atajos.css">
 <link rel="stylesheet" href="./a11y.css">
 <link rel="stylesheet" href="./karaoke.css">
@@ -49,8 +50,11 @@
 <link rel="stylesheet" href="./novedades.css">
   <link rel="stylesheet" href="./animo.css">
 <link rel="stylesheet" href="./whatsapp.css">
+<link rel="stylesheet" href="./compartir-letra.css">
 <link rel="stylesheet" href="./salida.css">
 <link rel="stylesheet" href="./redisenio.css">
+<link rel="stylesheet" href="./coche.css">
+<link rel="stylesheet" href="./respaldo-aviso.css">
 <style>
   :root{
     --bg:#F4F1EC;
@@ -2335,7 +2339,7 @@
 
   // ---------- State ----------
   var tracks = []; // {id,name,title,artist,album,duration,size,type,addedAt,url,coverUrl,color,rating,stars}
-  var APP_VERSION = '4.1.0'; // al publicar cambios, subir este número y el CACHE de sw.js
+  var APP_VERSION = '4.2.0'; // al publicar cambios, subir este número y el CACHE de sw.js
   var currentId = null;
   var isPlaying = false;
   var shuffle = false;
@@ -9137,7 +9141,7 @@
   // ---------- Pack de mejoras: actualización, reanudar, deshacer, tap tempo ----------
 
   // ----- 1. Actualización sin atascos -----
-  var APP_VERSION = '4.1.0';
+  var APP_VERSION = '4.2.0';
   document.getElementById('appVersionNote').textContent = APP_VERSION;
   // 4.0.0: cmpVersion vive en src/core/format.js (window.RpmFormat).
   function cmpVersion(a, b){
@@ -12776,6 +12780,7 @@
 <script src="./temas.js"></script>
 <script src="./visual.js"></script>
 <script src="./luces.js"></script>
+<script src="./portada-viva.js"></script>
 <script src="./atajos.js"></script>
 <script src="./a11y.js"></script>
 <script src="./karaoke.js"></script>
@@ -12803,6 +12808,7 @@
 <script src="./buscar-letra.js"></script>
 <script src="./limpio.js"></script>
 <script src="./whatsapp.js"></script>
+<script src="./compartir-letra.js"></script>
 <script src="./salida.js"></script>
 <script src="./animo.js"></script>
 <script src="./redisenio.js"></script>
@@ -12810,6 +12816,8 @@
 <script src="./nube.js"></script>
 <script src="./mediasession.js"></script>
 <script src="./novedades.js"></script>
+<script src="./coche.js"></script>
+<script src="./respaldo-aviso.js"></script>
 <script type="module" src="./src/sync/sync-bridge.js"></script>
 <link rel="stylesheet" href="./src/folders/folders.css" />
 <script src="./src/folders/folders.js"></script>
