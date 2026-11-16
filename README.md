@@ -6,7 +6,8 @@ Abre `index.html` y agrega tus canciones con el botón, eligiendo una carpeta o 
 
 Tu biblioteca se guarda en IndexedDB de tu dispositivo.
 
-Versión actual de la app: 4.3.4 (se muestra también en el pie del reproductor).
+Versión actual de la app: 4.3.5 (se muestra también en el pie del reproductor).
+v4.3.5: arreglo de «Repetir esta canción» en Android: antes al terminar la canción se trababa ~1 s al rebobinar; ahora usa el bucle nativo del navegador y repite sin pausa.
 v4.3.4: el botón «Carpeta» vuelve a abrir el selector de carpeta también en Android, como antes de la 4.3.3 (al usuario sí le funcionaba elegir carpetas); si el selector no devuelve archivos, avisa y sugiere «Añadir canciones».
 v4.3.3: arreglo de la subida en Android con el botón «Carpeta»: en Android no se puede elegir una carpeta completa, así que el botón abre directamente el selector de canciones y avisa; si el selector no devuelve archivos, ya no se queda en silencio.
 v4.3.2: arreglo de la subida en Android para archivos sin extensión ni tipo (WhatsApp/Drive): se detecta el audio por sus bytes iniciales (MP3, FLAC, WAV, OGG, M4A, AAC) y se avisa al momento lo que llega del selector.

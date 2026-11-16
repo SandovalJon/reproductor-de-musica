@@ -2347,11 +2347,23 @@
 
   // ---------- State ----------
   var tracks = []; // {id,name,title,artist,album,duration,size,type,addedAt,url,coverUrl,color,rating,stars}
-  var APP_VERSION = '4.3.4'; // al publicar cambios, subir este número y el CACHE de sw.js
+  var APP_VERSION = '4.3.5'; // al publicar cambios, subir este número y el CACHE de sw.js
   var currentId = null;
   var isPlaying = false;
   var shuffle = false;
   var repeatMode = 0; // 0 off, 1 all, 2 one
+  // 4.3.5: bucle nativo para «Repetir esta canción». Antes la repetición
+  // pasaba por 'ended' → next(true) → currentTime=0 + play(), y en
+  // Android ese re-arranque del decodificador tardaba ~1 s. Con loop
+  // nativo el decodificador repite solo, sin rebobinar y sin pausa. Se
+  // aplica a los dos decks de audio y al de vídeo; si el bucle nativo
+  // no disparara, el camino de next(true) sigue como respaldo.
+  function applyRepeatLoop(){
+    var on = repeatMode === 2;
+    try{ audioEl.loop = on; }catch(e){}
+    try{ audioB.loop = on; }catch(e){}
+    try{ videoEl.loop = on; }catch(e){}
+  }
   var shuffleOrder = [];
   var everPlayed = false; // ya sonó alguna canción en esta sesión
   var filterText = '';
@@ -4569,6 +4581,7 @@
     currentId = id;
     v2PrepareDeck(t);
     audio.src = t.url;
+    applyRepeatLoop(); // 4.3.5: el modo ya podía estar en 2 antes de elegir la canción
     audio.playbackRate = (typeof t.memSpeed==='number') ? t.memSpeed : settings.speed;
     audio.volume = effVolume();
     applyNorm(audio, t);
@@ -4583,6 +4596,7 @@
   function play(){
     cancelFadePause();
     cancelSleepFade(); // volver a reproducir: el volumen del usuario regresa intacto
+    applyRepeatLoop(); // 4.3.5: por si el modo 2 ya estaba activo al pulsar play
     var cur = currentTrack();
     // Arranque: con aleatorio activado, la primera canción es al azar
     if(!cur || (shuffle && !everPlayed && !isPlaying && audio.currentTime===0)){
@@ -5238,6 +5252,7 @@
   var btnRepeat = document.getElementById('btnRepeat');
   btnRepeat.addEventListener('click', function(){
     repeatMode = (repeatMode+1)%3;
+    applyRepeatLoop(); // 4.3.5: bucle nativo con «Repetir esta canción»
     btnRepeat.classList.toggle('active', repeatMode!==0);
     btnRepeat.setAttribute('aria-pressed', repeatMode!==0?'true':'false');
     document.getElementById('repeatOne').style.display = repeatMode===2 ? 'grid' : 'none';
@@ -9293,7 +9308,7 @@
   // ---------- Pack de mejoras: actualización, reanudar, deshacer, tap tempo ----------
 
   // ----- 1. Actualización sin atascos -----
-  var APP_VERSION = '4.3.4';
+  var APP_VERSION = '4.3.5';
   document.getElementById('appVersionNote').textContent = APP_VERSION;
   // 4.0.0: cmpVersion vive en src/core/format.js (window.RpmFormat).
   function cmpVersion(a, b){
