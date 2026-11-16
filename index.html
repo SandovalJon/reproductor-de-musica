@@ -2347,7 +2347,7 @@
 
   // ---------- State ----------
   var tracks = []; // {id,name,title,artist,album,duration,size,type,addedAt,url,coverUrl,color,rating,stars}
-  var APP_VERSION = '4.3.2'; // al publicar cambios, subir este número y el CACHE de sw.js
+  var APP_VERSION = '4.3.3'; // al publicar cambios, subir este número y el CACHE de sw.js
   var currentId = null;
   var isPlaying = false;
   var shuffle = false;
@@ -2533,7 +2533,15 @@
     if(dbPromise) return dbPromise;
     dbPromise = new Promise(function(resolve, reject){
       if(!('indexedDB' in window)){ reject(new Error('no-idb')); return; }
+      var settled = false;
+      function done(fn, arg){ if(settled) return; settled = true; clearTimeout(timer); fn(arg); }
+      // 4.3.3: si la apertura se queda bloqueada (otra pestaña con la
+      // base vieja, o el navegador no responde), antes la promesa no se
+      // resolvía nunca y la subida se quedaba en 0 canciones en silencio.
+      // Ahora se rechaza a los 8 s y quien llama sigue sin base de datos.
+      var timer = setTimeout(function(){ done(reject, new Error('db-timeout')); }, 8000);
       var req = indexedDB.open(DB_NAME, DB_VER);
+      req.onblocked = function(){ done(reject, new Error('db-blocked')); };
       req.onupgradeneeded = function(ev){
         var db = req.result;
         if(!db.objectStoreNames.contains(STORE)) db.createObjectStore(STORE, {keyPath:'id'});
@@ -2576,9 +2584,12 @@
           }catch(e){ /* la migración no debe impedir abrir la DB */ }
         }
       };
-      req.onsuccess = function(){ resolve(req.result); };
-      req.onerror = function(){ reject(req.error); };
+      req.onsuccess = function(){ done(resolve, req.result); };
+      req.onerror = function(){ done(reject, req.error); };
     });
+    // Si la apertura falló, no dejar la promesa rechazada guardada:
+    // el siguiente intento debe poder reabrir la base de datos.
+    dbPromise.catch(function(){ dbPromise = null; });
     return dbPromise;
   }
   function idbMetaGet(key){
@@ -3064,6 +3075,9 @@
   var adding = false;
   function addFiles(fileList){
     var all = Array.prototype.slice.call(fileList || []);
+    // 4.3.3: lista vacía (en Android el selector de carpeta no
+    // devuelve archivos): avisar en vez de devolver 0 en silencio.
+    if(!all.length){ toast('No se recibió ningún archivo. En Android, usa «Añadir canciones» y selecciona todos los archivos de la carpeta.'); return Promise.resolve(0); }
     var coverByDir = {};
     all.forEach(function(f){
       if(isFolderCoverFile(f)){
@@ -3167,13 +3181,19 @@
   // audio" tras un sync (metadatos en IndexedDB sin blob), se
   // re-vincula a esa pista en vez de crear un duplicado.
   function findPendingRecord(file){
-    return idbAll().then(function(records){
+    // 4.3.3: no esperar más de 3 s a la base de datos: si está
+    // bloqueada, la canción se añade igual como nueva y no se queda
+    // la subida en 0. El timeout de openDB (8 s) ya la rechazaría,
+    // pero aquí no hace falta esperar tanto para seguir.
+    var lookup = idbAll().then(function(records){
       var found = null;
       (records || []).forEach(function(r){
         if(!found && !r.blob && r.name === file.name && r.size === file.size) found = r;
       });
       return found;
     }).catch(function(){ return null; });
+    var giveUp = new Promise(function(resolve){ setTimeout(function(){ resolve(null); }, 3000); });
+    return Promise.race([lookup, giveUp]);
   }
   function processFile(file){
     return findPendingRecord(file).then(function(pending){
@@ -5263,7 +5283,17 @@
   document.getElementById('btnAddEmpty').addEventListener('click', openPicker);
   dropzone.addEventListener('click', openPicker);
   dropzone.addEventListener('keydown', function(ev){ if(ev.key==='Enter'||ev.key===' '){ ev.preventDefault(); openPicker(); } });
-  document.getElementById('btnFolder').addEventListener('click', function(){ folderInput.value=''; folderInput.click(); });
+  // 4.3.3: en Android el selector de carpeta (webkitdirectory) no
+  // devuelve archivos; abrir directamente el selector de canciones.
+  function isAndroidDevice(){ try{ return /Android/i.test(navigator.userAgent || ''); }catch(e){ return false; } }
+  document.getElementById('btnFolder').addEventListener('click', function(){
+    if(isAndroidDevice()){
+      toast('En Android no se puede elegir una carpeta completa. Usa «Añadir canciones» y selecciona todos los archivos de la carpeta.');
+      openPicker();
+      return;
+    }
+    folderInput.value=''; folderInput.click();
+  });
   // 4.3.1: si el selector no devuelve ningún archivo, avisar en vez
   // de no hacer nada en silencio.
   fileInput.addEventListener('change', function(){
@@ -5280,7 +5310,19 @@
     }catch(_e){}
     addFiles(fileInput.files);
   });
-  folderInput.addEventListener('change', function(){ addFiles(folderInput.files); });
+  // 4.3.3: mismo diagnóstico inmediato que fileInput. Si la lista
+  // viene vacía (Android no permite elegir carpeta completa), avisar
+  // en vez de no hacer nada en silencio.
+  folderInput.addEventListener('change', function(){
+    if(!folderInput.files || !folderInput.files.length){ toast('Android no permite elegir una carpeta completa. Usa «Añadir canciones» y selecciona todos los archivos de la carpeta.'); return; }
+    try{
+      var _f0 = folderInput.files[0];
+      var _sz = (_f0.size || 0);
+      var _szTxt = _sz >= 1048576 ? (_sz/1048576).toFixed(1)+' MB' : Math.max(1, Math.round(_sz/1024))+' KB';
+      toast('Recibidos ' + folderInput.files.length + ' archivo(s): ' + (_f0.name || 'sin-nombre') + ' · ' + (_f0.type || 'sin tipo') + ' · ' + _szTxt);
+    }catch(_e){}
+    addFiles(folderInput.files);
+  });
 
   // ---------- Search / sort ----------
   searchEl.addEventListener('input', function(){ filterText = searchEl.value.trim(); renderList(); });
@@ -9255,7 +9297,7 @@
   // ---------- Pack de mejoras: actualización, reanudar, deshacer, tap tempo ----------
 
   // ----- 1. Actualización sin atascos -----
-  var APP_VERSION = '4.3.2';
+  var APP_VERSION = '4.3.3';
   document.getElementById('appVersionNote').textContent = APP_VERSION;
   // 4.0.0: cmpVersion vive en src/core/format.js (window.RpmFormat).
   function cmpVersion(a, b){

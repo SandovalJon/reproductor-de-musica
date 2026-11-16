@@ -1,4 +1,4 @@
-/* Historial de versiones / Qué hay de nuevo — Reproductor de Música v4.3.2.
+/* Historial de versiones / Qué hay de nuevo — Reproductor de Música v4.3.3.
    Módulo aparte: NO toca index.html ni ningún otro módulo. Se engancha
    solo a lo que ya existe en la app:
      - window.APP_VERSION (var global del script principal de
@@ -70,6 +70,7 @@
   var LAST_SEEN_KEY = 'reproductor-novedades:ultima-version-vista';
 
   var CHANGELOG_TEXT = [
+    'v4.3.3: arreglo de la subida en Android con el botón «Carpeta»: en Android no se puede elegir una carpeta completa, así que el botón abre directamente el selector de canciones y avisa; si el selector no devuelve archivos, ya no se queda en silencio.',
     'v4.3.2: arreglo de la subida en Android para archivos sin extensión ni tipo (WhatsApp/Drive): se detecta el audio por sus bytes iniciales (MP3, FLAC, WAV, OGG, M4A, AAC) y se avisa al momento lo que llega del selector.',
     'v4.3.1: arreglo de la subida en Android (si una canción falla al cargar ya no se rompe el lote en silencio: las demás se añaden igual y se avisa cuáles fallaron; un archivo con metadatos raros se añade con su nombre como título).',
     'v4.3.0: buscar por tarareo mejorado (compara también el ritmo contra la rejilla de pulsos del BPM analizado; aproximado, la melodía no se compara nota a nota).',

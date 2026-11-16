@@ -3,7 +3,7 @@
 /* 3.0.0: los módulos de sync entran en ASSETS para que la app
    funcione offline desde la primera carga (antes, lyrics.js y
    mejoras.js solo se cacheaban tras la primera carga). */
-var CACHE = 'reproductor-musica-4.3.2';
+var CACHE = 'reproductor-musica-4.3.3';
 var ASSETS = [
   './',
   './index.html',
