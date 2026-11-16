@@ -2347,7 +2347,7 @@
 
   // ---------- State ----------
   var tracks = []; // {id,name,title,artist,album,duration,size,type,addedAt,url,coverUrl,color,rating,stars}
-  var APP_VERSION = '4.3.3'; // al publicar cambios, subir este número y el CACHE de sw.js
+  var APP_VERSION = '4.3.4'; // al publicar cambios, subir este número y el CACHE de sw.js
   var currentId = null;
   var isPlaying = false;
   var shuffle = false;
@@ -5283,15 +5283,11 @@
   document.getElementById('btnAddEmpty').addEventListener('click', openPicker);
   dropzone.addEventListener('click', openPicker);
   dropzone.addEventListener('keydown', function(ev){ if(ev.key==='Enter'||ev.key===' '){ ev.preventDefault(); openPicker(); } });
-  // 4.3.3: en Android el selector de carpeta (webkitdirectory) no
-  // devuelve archivos; abrir directamente el selector de canciones.
-  function isAndroidDevice(){ try{ return /Android/i.test(navigator.userAgent || ''); }catch(e){ return false; } }
+  // 4.3.4: el botón «Carpeta» vuelve a abrir SIEMPRE el selector de
+  // carpeta (folderInput), también en Android, como era antes de la
+  // 4.3.3: al usuario sí le funcionaba elegir carpetas y el desvío
+  // al selector de canciones le quitó ese camino.
   document.getElementById('btnFolder').addEventListener('click', function(){
-    if(isAndroidDevice()){
-      toast('En Android no se puede elegir una carpeta completa. Usa «Añadir canciones» y selecciona todos los archivos de la carpeta.');
-      openPicker();
-      return;
-    }
     folderInput.value=''; folderInput.click();
   });
   // 4.3.1: si el selector no devuelve ningún archivo, avisar en vez
@@ -5311,10 +5307,10 @@
     addFiles(fileInput.files);
   });
   // 4.3.3: mismo diagnóstico inmediato que fileInput. Si la lista
-  // viene vacía (Android no permite elegir carpeta completa), avisar
-  // en vez de no hacer nada en silencio.
+  // viene vacía, avisar en vez de no hacer nada en silencio, y
+  // sugerir «Añadir canciones» como alternativa.
   folderInput.addEventListener('change', function(){
-    if(!folderInput.files || !folderInput.files.length){ toast('Android no permite elegir una carpeta completa. Usa «Añadir canciones» y selecciona todos los archivos de la carpeta.'); return; }
+    if(!folderInput.files || !folderInput.files.length){ toast('No se recibió ningún archivo de la carpeta. Prueba de nuevo o usa «Añadir canciones» y selecciona todos los archivos de la carpeta.'); return; }
     try{
       var _f0 = folderInput.files[0];
       var _sz = (_f0.size || 0);
@@ -9297,7 +9293,7 @@
   // ---------- Pack de mejoras: actualización, reanudar, deshacer, tap tempo ----------
 
   // ----- 1. Actualización sin atascos -----
-  var APP_VERSION = '4.3.3';
+  var APP_VERSION = '4.3.4';
   document.getElementById('appVersionNote').textContent = APP_VERSION;
   // 4.0.0: cmpVersion vive en src/core/format.js (window.RpmFormat).
   function cmpVersion(a, b){
