@@ -2347,7 +2347,7 @@
 
   // ---------- State ----------
   var tracks = []; // {id,name,title,artist,album,duration,size,type,addedAt,url,coverUrl,color,rating,stars}
-  var APP_VERSION = '4.3.1'; // al publicar cambios, subir este número y el CACHE de sw.js
+  var APP_VERSION = '4.3.2'; // al publicar cambios, subir este número y el CACHE de sw.js
   var currentId = null;
   var isPlaying = false;
   var shuffle = false;
@@ -3016,6 +3016,38 @@
   }
   function isMediaFile(f){ return isAudioFile(f) || isVideoFile(f); }
 
+  // 4.3.2: detección de audio por contenido (magic bytes). En Android,
+  // los archivos que llegan de WhatsApp o Drive a veces NO traen
+  // extensión ni tipo MIME, así que isAudioFile() los rechaza aunque
+  // sean audio de verdad. Devuelve la extensión detectada o null.
+  // No lee más de 16 bytes; no decide por el nombre ni por el tipo.
+  function detectAudioExtFromBytes(buf){
+    if(!buf) return null;
+    var b = buf instanceof Uint8Array ? buf : new Uint8Array(buf);
+    if(b.length < 4) return null;
+    function strAt(off, len){
+      var s = '';
+      for(var i=0;i<len;i++){ s += String.fromCharCode(b[off+i] || 0); }
+      return s;
+    }
+    if(strAt(0,3)==='ID3') return 'mp3';
+    if(strAt(0,4)==='fLaC') return 'flac';
+    if(strAt(0,4)==='OggS') return 'ogg';
+    if(strAt(0,4)==='RIFF' && b.length >= 12 && strAt(8,4)==='WAVE') return 'wav';
+    if(b.length >= 8 && strAt(4,4)==='ftyp') return 'm4a';
+    if(b[0]===0xFF && (b[1]===0xF1 || b[1]===0xF9)) return 'aac'; // ADTS
+    if(b[0]===0xFF && (b[1]&0xE0)===0xE0) return 'mp3'; // frame sync MPEG
+    return null;
+  }
+  function sniffAudioFile(file){
+    try{
+      if(!file || typeof file.slice !== 'function') return Promise.resolve(null);
+      return file.slice(0,16).arrayBuffer().then(function(buf){
+        try{ return detectAudioExtFromBytes(buf); }catch(e){ return null; }
+      }).catch(function(){ return null; });
+    }catch(e){ return Promise.resolve(null); }
+  }
+
   // Pack 9: portada desde la carpeta. Si en el lote viene una imagen llamada
   // cover, folder, portada, frontal o album (.jpg/.jpeg/.png/.webp, sin
   // distinguir mayúsculas), se aplica como carátula a las canciones de SU
@@ -3040,6 +3072,24 @@
       }
     });
     var files = all.filter(isMediaFile);
+    // 4.3.2: los archivos dudosos (sin extensión ni tipo) no se
+    // descartan de inmediato: se comprueban sus bytes. Solo los que
+    // tampoco son audio por contenido quedan fuera del lote.
+    var doubtful = all.filter(function(f){ return !isMediaFile(f) && !isFolderCoverFile(f); });
+    var sniffedCount = 0;
+    var sniffChain = Promise.resolve();
+    doubtful.forEach(function(f){
+      sniffChain = sniffChain.then(function(){
+        return sniffAudioFile(f).then(function(ext){
+          if(ext){
+            try{ f._audioExt = ext; }catch(_e){}
+            sniffedCount++;
+            files.push(f);
+          }
+        }).catch(function(){});
+      });
+    });
+    return sniffChain.then(function(){
     if(!files.length){
       if(Object.keys(coverByDir).length) toast('La imagen de portada necesita venir junto a las canciones de su carpeta para poder aplicarse.');
       else if(all.length){
@@ -3094,6 +3144,8 @@
         if(failedNames.length) addMsg += ' (' + failedNames.slice(0,3).join(', ') + (failedNames.length>3 ? ', …' : '') + ')';
       }
       if(coversApplied) addMsg += (addMsg ? ' · ' : '') + coversApplied + (coversApplied===1 ? ' carátula aplicada' : ' carátulas aplicadas') + ' desde la carpeta';
+      // 4.3.2: avisar cuántas se aceptaron por su contenido (sin extensión).
+      if(sniffedCount) addMsg += (addMsg ? ' · ' : '') + sniffedCount + (sniffedCount===1 ? ' detectada por su contenido (sin extensión)' : ' detectadas por su contenido (sin extensión)');
       if(addMsg) toast(addMsg);
       if(!currentId && tracks.length){
         var fp = firstPlayableId();
@@ -3108,6 +3160,7 @@
       try{ console.log('[reproductor] error al añadir canciones:', err); }catch(e){}
       toast('No se pudo cargar: ' + ((err && err.message) || 'error desconocido'));
       return added;
+    });
     });
   }
   // 3.0.0: al re-añadir un archivo cuya pista quedó "pendiente de
@@ -3147,6 +3200,15 @@
           meta = {title:'',artist:'',album:'',genre:'',year:'',coverBlob:null,chapters:null};
         }
         var fallback = cleanName(file.name);
+        // 4.3.2: archivo aceptado por sus bytes sin extensión en el
+        // nombre: el registro interno lleva la extensión detectada
+        // (p. ej. ".mp3") para que el resto de la app lo trate como
+        // audio; el título que ve el usuario sigue saliendo del
+        // nombre original, sin cambios.
+        var recordName = file.name;
+        if(file._audioExt && !/\.[a-z0-9]{2,5}$/i.test(String(file.name || ''))){
+          recordName = file.name + '.' + file._audioExt;
+        }
         var title = meta.title || fallback || file.name;
         var artist = meta.artist || '';
         // Common "Artist - Title" filename pattern
@@ -3163,7 +3225,7 @@
         var folderPath = relPath ? String(relPath).replace(/^\/+/, '').split('/').slice(0,-1).join('/') : '';
         var kind = isVideoFile(file) ? 'video' : 'audio';
         var track = {
-          id:id, name:file.name, title:title, artist:artist, album:meta.album||'',
+          id:id, name:recordName, title:title, artist:artist, album:meta.album||'',
           duration:0, size:file.size, type:file.type, addedAt:addedAt, updatedAt:Date.now(),
           url:url, coverUrl:coverUrl, color:colorFor(title+file.name), rating:null, stars:0,
           normDb:null, volAdj:0,
@@ -5206,6 +5268,16 @@
   // de no hacer nada en silencio.
   fileInput.addEventListener('change', function(){
     if(!fileInput.files || !fileInput.files.length){ toast('No se recibió ningún archivo del selector. Vuelve a intentarlo.'); return; }
+    // 4.3.2: diagnóstico visible inmediato: qué llegó del selector
+    // (cantidad, nombre, tipo y tamaño del primero), antes de
+    // cualquier filtro o lectura de metadatos. Sale siempre, aunque
+    // luego todo falle.
+    try{
+      var _f0 = fileInput.files[0];
+      var _sz = (_f0.size || 0);
+      var _szTxt = _sz >= 1048576 ? (_sz/1048576).toFixed(1)+' MB' : Math.max(1, Math.round(_sz/1024))+' KB';
+      toast('Recibidos ' + fileInput.files.length + ' archivo(s): ' + (_f0.name || 'sin-nombre') + ' · ' + (_f0.type || 'sin tipo') + ' · ' + _szTxt);
+    }catch(_e){}
     addFiles(fileInput.files);
   });
   folderInput.addEventListener('change', function(){ addFiles(folderInput.files); });
@@ -9183,7 +9255,7 @@
   // ---------- Pack de mejoras: actualización, reanudar, deshacer, tap tempo ----------
 
   // ----- 1. Actualización sin atascos -----
-  var APP_VERSION = '4.3.1';
+  var APP_VERSION = '4.3.2';
   document.getElementById('appVersionNote').textContent = APP_VERSION;
   // 4.0.0: cmpVersion vive en src/core/format.js (window.RpmFormat).
   function cmpVersion(a, b){
