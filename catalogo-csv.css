@@ -1,0 +1,3 @@
+/* Catálogo CSV — v4.4.0. El botón #btnCatalogoCsv reusa .btn de la app;
+   aquí solo un ajuste mínimo por si el navegador lo pinta distinto. */
+#btnCatalogoCsv { white-space: nowrap; }

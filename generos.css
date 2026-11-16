@@ -1,0 +1,4 @@
+/* Géneros en el Wrapped — v4.4.0. Reusa .wrapped-section,
+   .wrapped-rank y .wrapped-bar de wrapped.css; aquí solo el marcador
+   propio de la sección. */
+.gn-section { margin-top: 14px; }

@@ -6,7 +6,11 @@ Abre `index.html` y agrega tus canciones con el botón, eligiendo una carpeta o 
 
 Tu biblioteca se guarda en IndexedDB de tu dispositivo.
 
-Versión actual de la app: 4.3.5 (se muestra también en el pie del reproductor).
+Versión actual de la app: 4.4.0 (se muestra también en el pie del reproductor).
+v4.4.0: exportar el catálogo a CSV (toda la biblioteca en un archivo para Excel/Sheets, con reproducciones, estrellas y likes).
+v4.4.0: géneros más escuchados dentro de "Tu año en música" (top 8 por minutos realmente escuchados; sin escucha medida, estimado y avisado).
+v4.4.0: canción del día (una distinta cada día, de tus favoritas; los dislike nunca salen).
+v4.4.0: favoritas olvidadas (tus like y 2-3 estrellas sin sonar 90 días o más, con mezcla para redescubrirlas).
 v4.3.5: arreglo de «Repetir esta canción» en Android: antes al terminar la canción se trababa ~1 s al rebobinar; ahora usa el bucle nativo del navegador y repite sin pausa.
 v4.3.4: el botón «Carpeta» vuelve a abrir el selector de carpeta también en Android, como antes de la 4.3.3 (al usuario sí le funcionaba elegir carpetas); si el selector no devuelve archivos, avisa y sugiere «Añadir canciones».
 v4.3.3: arreglo de la subida en Android con el botón «Carpeta»: en Android no se puede elegir una carpeta completa, así que el botón abre directamente el selector de canciones y avisa; si el selector no devuelve archivos, ya no se queda en silencio.

@@ -1,0 +1,2 @@
+/* Canción del día — v4.4.0. El botón #btnCancionDia reusa .btn de la app. */
+#btnCancionDia { white-space: nowrap; }

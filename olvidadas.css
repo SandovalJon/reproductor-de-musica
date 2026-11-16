@@ -1,0 +1,11 @@
+/* Favoritas olvidadas — v4.4.0. El modal reusa .modal-overlay / .modal /
+   .modal-actions / .btn de la app; aquí solo la lista propia. */
+.olv-modal { max-width: 560px; }
+.olv-status { color: var(--muted, #888); font-size: 13.5px; line-height: 1.5; }
+.olv-list { list-style: none; margin: 10px 0 0; padding: 0; max-height: 55vh; overflow-y: auto; }
+.olv-row { display: flex; gap: 10px; align-items: center; padding: 8px 2px; border-bottom: 1px dashed var(--line, #e5e5e5); }
+.olv-row:last-child { border-bottom: none; }
+.olv-play { flex: 0 0 auto; min-width: 34px; }
+.olv-main { min-width: 0; }
+.olv-t { font-weight: 700; font-size: 14px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.olv-s { font-size: 12.5px; color: var(--muted, #888); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
